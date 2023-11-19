@@ -13,6 +13,9 @@ on:
 jobs:
   tag:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: webapp
     outputs:
       version: ${{ steps.print_version.outputs.version }}
     steps:
