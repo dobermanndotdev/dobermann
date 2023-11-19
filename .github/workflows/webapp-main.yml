@@ -1,0 +1,27 @@
+name: webapp-main
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "webapp/**"
+
+jobs:
+  ci:
+    uses: ./.github/workflows/webapp-ci.yml
+
+  tag:
+    uses: ./.github/workflows/webapp-tag.yml
+    needs: ci
+    secrets:
+      PAT: ${{ secrets.PAT }}
+
+  deploy-staging:
+    uses: ./.github/workflows/webapp-deploy-staging.yml
+    needs: [ci, tag]
+    with:
+      version: ${{ needs.tag.outputs.version }}
+
+    secrets:
+      PAT: ${{ secrets.PAT }}
+      FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}

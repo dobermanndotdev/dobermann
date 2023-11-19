@@ -1,0 +1,47 @@
+name: webapp-tag
+
+on:
+  workflow_call:
+    outputs:
+      version:
+        description: "Version recently released"
+        value: ${{ jobs.tag.outputs.version }}
+    secrets:
+      PAT:
+        required: true
+
+jobs:
+  tag:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.print_version.outputs.version }}
+    steps:
+      - name: Clone
+        uses: actions/checkout@v3
+
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Install deps
+        run: |
+          yarn add \
+            @semantic-release/commit-analyzer \
+            @semantic-release/release-notes-generator \
+            @semantic-release/changelog \
+            @semantic-release/npm \
+            @semantic-release/git \
+            @semantic-release/github
+          git restore package.json yarn.lock
+
+      - name: Tag
+        env:
+          GH_TOKEN: ${{ secrets.PAT }}
+        run: npx semantic-release
+
+      - id: print_version
+        shell: bash
+        run: |
+          version=$(node ./version.js)
+          echo "version=$version" >> $GITHUB_OUTPUT
