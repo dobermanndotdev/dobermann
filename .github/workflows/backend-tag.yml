@@ -15,6 +15,9 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.print_version.outputs.version }}
+    defaults:
+      run:
+        working-directory: backend
     steps:
       - name: Clone
         uses: actions/checkout@v3
