@@ -5,6 +5,7 @@ on:
       - main
     paths:
       - "backend/**"
+      - ".github/workflows/backend-*.yml"
 
 jobs:
   ci:
