@@ -1,0 +1,143 @@
+openapi: 3.0.3
+info:
+  title: dobermann/backend
+  description: Dobermann's backend
+  termsOfService: https://github.com/flowck/dobermann
+  contact:
+    email: firmino.changani@gmail.com
+  license:
+    name: MIT
+    url: https://github.com/flowck/dobermann/LICENSE.md
+  version: 0.0.1
+externalDocs:
+  description: https://github.com/flowck/dobermann/README.md
+  url: https://github.com/flowck/dobermann
+servers:
+  - url: http://localhost:8080
+paths:
+  /monitors:
+    post:
+      tags:
+        - Monitors
+      operationId: createMonitor
+      summary: Create a new monitor
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateMonitorRequest'
+      responses:
+        '201':
+          description: CREATED
+        default:
+          $ref: '#/components/responses/DefaultError'
+  /auth/sign-up:
+    post:
+      tags:
+        - Auth
+      operationId: signUp
+      summary: Creates a new account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SignUpRequest'
+      responses:
+        '201':
+          description: CREATED
+        default:
+          $ref: '#/components/responses/DefaultError'
+  /auth/sign-in:
+    post:
+      tags:
+        - Auth
+      operationId: signIn
+      summary: Sign in
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SignInRequest'
+      responses:
+        '200':
+          description: SIGNED UP
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SignInPayload'
+        default:
+          $ref: '#/components/responses/DefaultError'
+components:
+  schemas:
+    SignInPayload:
+      required: [ token ]
+      properties:
+        token:
+          type: string
+    SignInRequest:
+      required: [ email, password ]
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+    SignUpRequest:
+      required: [ first_name, last_name, email, password ]
+      properties:
+        first_name:
+          type: string
+        last_name:
+          type: string
+        email:
+          type: string
+        password:
+          type: string
+    CreateMonitorRequest:
+      required: [endpoint_url]
+      properties:
+        endpoint_url:
+          type: string
+    GenericResponse:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          type: string
+    ErrorResponse:
+      type: object
+      required: [error, message]
+      properties:
+        message:
+          type: string
+          description: A description about the error
+        error:
+          type: string
+          description: Error custom error code such as 'email_in_use'
+  responses:
+    UnauthorizedError:
+      description: 'Usually causes by an authentication token missing'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    DefaultSuccess:
+      description: 'Default message when an operation succeeds'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/GenericResponse'
+    DefaultError:
+      description: 'A generic error response'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

@@ -13,9 +13,9 @@ tasks:
     cmds:
       - task watch -- go run ./cmd/worker
 
-  simulator:
+  endpoint_simulator:
     cmds:
-      - go run ./cmd/simulator
+      - task watch -- go run ./cmd/endpoint_simulator
 
   watch:
     cmds:
