@@ -2,6 +2,7 @@ package users
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/volatiletech/sqlboiler/v4/boil"
 
@@ -19,6 +20,11 @@ type PsqlRepository struct {
 }
 
 func (p PsqlRepository) Insert(ctx context.Context, user *account.User) error {
-	//TODO implement me
-	panic("implement me")
+	model := mapUserToModel(user)
+	err := model.Insert(ctx, p.db, boil.Infer())
+	if err != nil {
+		return fmt.Errorf("unable to save user %s: %v", model.ID, err)
+	}
+
+	return nil
 }

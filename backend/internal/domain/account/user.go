@@ -2,20 +2,39 @@ package account
 
 import (
 	"strings"
+	"time"
 
 	"errors"
+
+	"github.com/flowck/dobermann/backend/internal/domain"
 )
 
 type User struct {
-	id        string
-	firstName string
-	lastName  string
-	email     string
-	role      Role
-	accountID string
+	id                domain.ID
+	firstName         string
+	lastName          string
+	email             string
+	password          string
+	role              Role
+	verificationToken *domain.ID
+	verifiedAt        *time.Time
+	accountID         domain.ID
+	createdAt         time.Time
 }
 
-func (u *User) ID() string {
+func (u *User) VerificationToken() *domain.ID {
+	return u.verificationToken
+}
+
+func (u *User) VerifiedAt() *time.Time {
+	return u.verifiedAt
+}
+
+func (u *User) CreatedAt() time.Time {
+	return u.createdAt
+}
+
+func (u *User) ID() domain.ID {
 	return u.id
 }
 
@@ -35,29 +54,30 @@ func (u *User) Role() Role {
 	return u.role
 }
 
-func (u *User) AccountID() string {
+func (u *User) AccountID() domain.ID {
 	return u.accountID
 }
 
 func NewUser(
-	id string,
+	id domain.ID,
 	firstName string,
 	lastName string,
 	email string,
-	role string,
-	accountID string,
+	role Role,
+	password string,
+	accountID domain.ID,
 ) (*User, error) {
 	firstName = strings.TrimSpace(firstName)
 	lastName = strings.TrimSpace(lastName)
 	email = strings.TrimSpace(email)
-
-	userRole, err := NewRole(role)
-	if err != nil {
-		return nil, err
-	}
+	password = strings.TrimSpace(password)
 
 	if email == "" {
 		return nil, errors.New("email cannot be invalid")
+	}
+
+	if password == "" {
+		return nil, errors.New("password cannot be empty")
 	}
 
 	return &User{
@@ -65,7 +85,8 @@ func NewUser(
 		firstName: firstName,
 		lastName:  lastName,
 		email:     email,
-		role:      userRole,
+		password:  password,
+		role:      role,
 		accountID: accountID,
 	}, nil
 }

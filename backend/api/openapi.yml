@@ -21,6 +21,8 @@ paths:
         - Monitors
       operationId: createMonitor
       summary: Create a new monitor
+      security:
+        - BearerAuth: []
       requestBody:
         required: true
         content:
@@ -32,64 +34,62 @@ paths:
           description: CREATED
         default:
           $ref: '#/components/responses/DefaultError'
-  /auth/sign-up:
+  /auth/accounts:
     post:
       tags:
         - Auth
-      operationId: signUp
+      operationId: createAccount
       summary: Creates a new account
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/SignUpRequest'
+              $ref: '#/components/schemas/CreateAccountRequest'
       responses:
         '201':
           description: CREATED
         default:
           $ref: '#/components/responses/DefaultError'
-  /auth/sign-in:
+  /auth/login:
     post:
       tags:
         - Auth
-      operationId: signIn
-      summary: Sign in
+      operationId: login
+      summary: Log in
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/SignInRequest'
+              $ref: '#/components/schemas/LogInRequest'
       responses:
         '200':
           description: SIGNED UP
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SignInPayload'
+                $ref: '#/components/schemas/LogInPayload'
         default:
           $ref: '#/components/responses/DefaultError'
 components:
   schemas:
-    SignInPayload:
+    LogInPayload:
       required: [ token ]
       properties:
         token:
           type: string
-    SignInRequest:
+    LogInRequest:
       required: [ email, password ]
       properties:
         email:
           type: string
         password:
           type: string
-    SignUpRequest:
-      required: [ first_name, last_name, email, password ]
+    CreateAccountRequest:
+      required: [ account_name, email, password ]
       properties:
-        first_name:
-          type: string
-        last_name:
+        account_name:
           type: string
         email:
           type: string

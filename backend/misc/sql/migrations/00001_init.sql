@@ -2,6 +2,8 @@
 -- +goose StatementBegin
 CREATE TABLE accounts (
     id VARCHAR(26) NOT NULL PRIMARY KEY,
+    name VARCHAR(128) NOT NULL,
+    verified_at TIMESTAMPTZ,
     created_at TIMESTAMPTZ DEFAULT now() NOT NULL
 );
 

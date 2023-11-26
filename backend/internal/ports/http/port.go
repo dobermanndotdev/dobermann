@@ -7,7 +7,10 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
+	oapimiddleware "github.com/oapi-codegen/echo-middleware"
 
 	"github.com/flowck/dobermann/backend/internal/app"
 	"github.com/flowck/dobermann/backend/internal/common/logs"
@@ -19,14 +22,31 @@ type Port struct {
 }
 
 type Config struct {
-	Port        int
-	Application *app.App
-	Logger      *logs.Logger
-	Ctx         context.Context
+	Port              int
+	Application       *app.App
+	Logger            *logs.Logger
+	Ctx               context.Context
+	AllowedCorsOrigin []string
 }
 
-func NewPort(config Config) *Port {
+type handlers struct {
+	application *app.App
+}
+
+func NewPort(config Config) (*Port, error) {
 	router := echo.New()
+	portHandlers := handlers{
+		application: config.Application,
+	}
+
+	spec, err := GetSwagger()
+	if err != nil {
+		return nil, err
+	}
+
+	registerMiddlewares(router, spec, config)
+	RegisterHandlers(router, portHandlers)
+
 	router.GET("/healthz", func(c echo.Context) error {
 		return c.JSON(http.StatusOK, map[string]string{"message": "i am ok"})
 	})
@@ -44,7 +64,7 @@ func NewPort(config Config) *Port {
 				return config.Ctx
 			},
 		},
-	}
+	}, nil
 }
 
 func (p *Port) Start() error {
@@ -53,4 +73,19 @@ func (p *Port) Start() error {
 
 func (p *Port) Stop(ctx context.Context) error {
 	return p.server.Shutdown(ctx)
+}
+
+func registerMiddlewares(router *echo.Echo, spec *openapi3.T, config Config) {
+	router.HTTPErrorHandler = errorHandler(config.Logger)
+	router.Use(middleware.Recover())
+	router.Use(middleware.RequestID())
+	router.Use(loggerMiddleware(config.Logger))
+	router.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+		AllowOrigins: config.AllowedCorsOrigin,
+		AllowHeaders: []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept, echo.HeaderAuthorization},
+	}))
+
+	router.Use(oapimiddleware.OapiRequestValidatorWithOptions(spec, &oapimiddleware.Options{
+		SilenceServersWarning: true,
+	}))
 }

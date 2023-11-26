@@ -64,12 +64,15 @@ func main() {
 		},
 	}
 
-	httpPort := httpport.NewPort(httpport.Config{
+	httpPort, err := httpport.NewPort(httpport.Config{
 		Ctx:         ctx,
 		Logger:      logger,
 		Port:        config.Port,
 		Application: application,
 	})
+	if err != nil {
+		logger.Fatal(err)
+	}
 
 	go func() {
 		logger.Infof("The http port is running successfully at the port %d", config.Port)

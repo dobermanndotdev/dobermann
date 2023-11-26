@@ -16,24 +16,23 @@ import (
 	"path"
 	"strings"
 
-	"github.com/deepmap/oapi-codegen/pkg/runtime"
 	"github.com/getkin/kin-openapi/openapi3"
 )
 
-// CreateAnAccountRequest defines model for CreateAnAccountRequest.
-type CreateAnAccountRequest struct {
+const (
+	BearerAuthScopes = "BearerAuth.Scopes"
+)
+
+// CreateAccountRequest defines model for CreateAccountRequest.
+type CreateAccountRequest struct {
 	AccountName string `json:"account_name"`
 	Email       string `json:"email"`
-	FirstName   string `json:"first_name"`
-	LastName    string `json:"last_name"`
 	Password    string `json:"password"`
 }
 
 // CreateMonitorRequest defines model for CreateMonitorRequest.
 type CreateMonitorRequest struct {
-	AlertTriggers    []string         `json:"alert_triggers"`
-	Endpoint         string           `json:"endpoint"`
-	OnCallEscalation OnCallEscalation `json:"on_call_escalation"`
+	EndpointUrl string `json:"endpoint_url"`
 }
 
 // ErrorResponse defines model for ErrorResponse.
@@ -45,17 +44,25 @@ type ErrorResponse struct {
 	Message string `json:"message"`
 }
 
-// OnCallEscalation defines model for OnCallEscalation.
-type OnCallEscalation struct {
-	NotificationMethods     []string `json:"notification_methods"`
-	TeamMembersToBeNotified []string `json:"team_members_to_be_notified"`
+// LogInPayload defines model for LogInPayload.
+type LogInPayload struct {
+	Token string `json:"token"`
+}
+
+// LogInRequest defines model for LogInRequest.
+type LogInRequest struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
 }
 
 // DefaultError defines model for DefaultError.
 type DefaultError = ErrorResponse
 
-// CreateAnAccountJSONRequestBody defines body for CreateAnAccount for application/json ContentType.
-type CreateAnAccountJSONRequestBody = CreateAnAccountRequest
+// CreateAccountJSONRequestBody defines body for CreateAccount for application/json ContentType.
+type CreateAccountJSONRequestBody = CreateAccountRequest
+
+// LoginJSONRequestBody defines body for Login for application/json ContentType.
+type LoginJSONRequestBody = LogInRequest
 
 // CreateMonitorJSONRequestBody defines body for CreateMonitor for application/json ContentType.
 type CreateMonitorJSONRequestBody = CreateMonitorRequest
@@ -133,13 +140,15 @@ func WithRequestEditorFn(fn RequestEditorFn) ClientOption {
 
 // The interface specification for the client above.
 type ClientInterface interface {
-	// CreateAnAccount request with any body
-	CreateAnAccountWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// CreateAccount request with any body
+	CreateAccountWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	CreateAnAccount(ctx context.Context, body CreateAnAccountJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+	CreateAccount(ctx context.Context, body CreateAccountJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// ConfirmAccount request
-	ConfirmAccount(ctx context.Context, confirmationCode string, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// Login request with any body
+	LoginWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	Login(ctx context.Context, body LoginJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// CreateMonitor request with any body
 	CreateMonitorWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -147,8 +156,8 @@ type ClientInterface interface {
 	CreateMonitor(ctx context.Context, body CreateMonitorJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 }
 
-func (c *Client) CreateAnAccountWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewCreateAnAccountRequestWithBody(c.Server, contentType, body)
+func (c *Client) CreateAccountWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateAccountRequestWithBody(c.Server, contentType, body)
 	if err != nil {
 		return nil, err
 	}
@@ -159,8 +168,8 @@ func (c *Client) CreateAnAccountWithBody(ctx context.Context, contentType string
 	return c.Client.Do(req)
 }
 
-func (c *Client) CreateAnAccount(ctx context.Context, body CreateAnAccountJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewCreateAnAccountRequest(c.Server, body)
+func (c *Client) CreateAccount(ctx context.Context, body CreateAccountJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateAccountRequest(c.Server, body)
 	if err != nil {
 		return nil, err
 	}
@@ -171,8 +180,20 @@ func (c *Client) CreateAnAccount(ctx context.Context, body CreateAnAccountJSONRe
 	return c.Client.Do(req)
 }
 
-func (c *Client) ConfirmAccount(ctx context.Context, confirmationCode string, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewConfirmAccountRequest(c.Server, confirmationCode)
+func (c *Client) LoginWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewLoginRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) Login(ctx context.Context, body LoginJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewLoginRequest(c.Server, body)
 	if err != nil {
 		return nil, err
 	}
@@ -207,19 +228,19 @@ func (c *Client) CreateMonitor(ctx context.Context, body CreateMonitorJSONReques
 	return c.Client.Do(req)
 }
 
-// NewCreateAnAccountRequest calls the generic CreateAnAccount builder with application/json body
-func NewCreateAnAccountRequest(server string, body CreateAnAccountJSONRequestBody) (*http.Request, error) {
+// NewCreateAccountRequest calls the generic CreateAccount builder with application/json body
+func NewCreateAccountRequest(server string, body CreateAccountJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
 	buf, err := json.Marshal(body)
 	if err != nil {
 		return nil, err
 	}
 	bodyReader = bytes.NewReader(buf)
-	return NewCreateAnAccountRequestWithBody(server, "application/json", bodyReader)
+	return NewCreateAccountRequestWithBody(server, "application/json", bodyReader)
 }
 
-// NewCreateAnAccountRequestWithBody generates requests for CreateAnAccount with any type of body
-func NewCreateAnAccountRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+// NewCreateAccountRequestWithBody generates requests for CreateAccount with any type of body
+func NewCreateAccountRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
 	var err error
 
 	serverURL, err := url.Parse(server)
@@ -227,7 +248,7 @@ func NewCreateAnAccountRequestWithBody(server string, contentType string, body i
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/accounts")
+	operationPath := fmt.Sprintf("/auth/accounts")
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -247,23 +268,27 @@ func NewCreateAnAccountRequestWithBody(server string, contentType string, body i
 	return req, nil
 }
 
-// NewConfirmAccountRequest generates requests for ConfirmAccount
-func NewConfirmAccountRequest(server string, confirmationCode string) (*http.Request, error) {
-	var err error
-
-	var pathParam0 string
-
-	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "confirmationCode", runtime.ParamLocationPath, confirmationCode)
+// NewLoginRequest calls the generic Login builder with application/json body
+func NewLoginRequest(server string, body LoginJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
 	if err != nil {
 		return nil, err
 	}
+	bodyReader = bytes.NewReader(buf)
+	return NewLoginRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewLoginRequestWithBody generates requests for Login with any type of body
+func NewLoginRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
 
 	serverURL, err := url.Parse(server)
 	if err != nil {
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/accounts/confirm/%s", pathParam0)
+	operationPath := fmt.Sprintf("/auth/login")
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -273,10 +298,12 @@ func NewConfirmAccountRequest(server string, confirmationCode string) (*http.Req
 		return nil, err
 	}
 
-	req, err := http.NewRequest("POST", queryURL.String(), nil)
+	req, err := http.NewRequest("POST", queryURL.String(), body)
 	if err != nil {
 		return nil, err
 	}
+
+	req.Header.Add("Content-Type", contentType)
 
 	return req, nil
 }
@@ -364,13 +391,15 @@ func WithBaseURL(baseURL string) ClientOption {
 
 // ClientWithResponsesInterface is the interface specification for the client with responses above.
 type ClientWithResponsesInterface interface {
-	// CreateAnAccount request with any body
-	CreateAnAccountWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateAnAccountResponse, error)
+	// CreateAccount request with any body
+	CreateAccountWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateAccountResponse, error)
 
-	CreateAnAccountWithResponse(ctx context.Context, body CreateAnAccountJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateAnAccountResponse, error)
+	CreateAccountWithResponse(ctx context.Context, body CreateAccountJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateAccountResponse, error)
 
-	// ConfirmAccount request
-	ConfirmAccountWithResponse(ctx context.Context, confirmationCode string, reqEditors ...RequestEditorFn) (*ConfirmAccountResponse, error)
+	// Login request with any body
+	LoginWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*LoginResponse, error)
+
+	LoginWithResponse(ctx context.Context, body LoginJSONRequestBody, reqEditors ...RequestEditorFn) (*LoginResponse, error)
 
 	// CreateMonitor request with any body
 	CreateMonitorWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateMonitorResponse, error)
@@ -378,14 +407,14 @@ type ClientWithResponsesInterface interface {
 	CreateMonitorWithResponse(ctx context.Context, body CreateMonitorJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateMonitorResponse, error)
 }
 
-type CreateAnAccountResponse struct {
+type CreateAccountResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSONDefault  *ErrorResponse
 }
 
 // Status returns HTTPResponse.Status
-func (r CreateAnAccountResponse) Status() string {
+func (r CreateAccountResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -393,21 +422,22 @@ func (r CreateAnAccountResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r CreateAnAccountResponse) StatusCode() int {
+func (r CreateAccountResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
 	return 0
 }
 
-type ConfirmAccountResponse struct {
+type LoginResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
+	JSON200      *LogInPayload
 	JSONDefault  *ErrorResponse
 }
 
 // Status returns HTTPResponse.Status
-func (r ConfirmAccountResponse) Status() string {
+func (r LoginResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -415,7 +445,7 @@ func (r ConfirmAccountResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r ConfirmAccountResponse) StatusCode() int {
+func (r LoginResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -444,30 +474,38 @@ func (r CreateMonitorResponse) StatusCode() int {
 	return 0
 }
 
-// CreateAnAccountWithBodyWithResponse request with arbitrary body returning *CreateAnAccountResponse
-func (c *ClientWithResponses) CreateAnAccountWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateAnAccountResponse, error) {
-	rsp, err := c.CreateAnAccountWithBody(ctx, contentType, body, reqEditors...)
+// CreateAccountWithBodyWithResponse request with arbitrary body returning *CreateAccountResponse
+func (c *ClientWithResponses) CreateAccountWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateAccountResponse, error) {
+	rsp, err := c.CreateAccountWithBody(ctx, contentType, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseCreateAnAccountResponse(rsp)
+	return ParseCreateAccountResponse(rsp)
 }
 
-func (c *ClientWithResponses) CreateAnAccountWithResponse(ctx context.Context, body CreateAnAccountJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateAnAccountResponse, error) {
-	rsp, err := c.CreateAnAccount(ctx, body, reqEditors...)
+func (c *ClientWithResponses) CreateAccountWithResponse(ctx context.Context, body CreateAccountJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateAccountResponse, error) {
+	rsp, err := c.CreateAccount(ctx, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseCreateAnAccountResponse(rsp)
+	return ParseCreateAccountResponse(rsp)
 }
 
-// ConfirmAccountWithResponse request returning *ConfirmAccountResponse
-func (c *ClientWithResponses) ConfirmAccountWithResponse(ctx context.Context, confirmationCode string, reqEditors ...RequestEditorFn) (*ConfirmAccountResponse, error) {
-	rsp, err := c.ConfirmAccount(ctx, confirmationCode, reqEditors...)
+// LoginWithBodyWithResponse request with arbitrary body returning *LoginResponse
+func (c *ClientWithResponses) LoginWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*LoginResponse, error) {
+	rsp, err := c.LoginWithBody(ctx, contentType, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseConfirmAccountResponse(rsp)
+	return ParseLoginResponse(rsp)
+}
+
+func (c *ClientWithResponses) LoginWithResponse(ctx context.Context, body LoginJSONRequestBody, reqEditors ...RequestEditorFn) (*LoginResponse, error) {
+	rsp, err := c.Login(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseLoginResponse(rsp)
 }
 
 // CreateMonitorWithBodyWithResponse request with arbitrary body returning *CreateMonitorResponse
@@ -487,15 +525,15 @@ func (c *ClientWithResponses) CreateMonitorWithResponse(ctx context.Context, bod
 	return ParseCreateMonitorResponse(rsp)
 }
 
-// ParseCreateAnAccountResponse parses an HTTP response from a CreateAnAccountWithResponse call
-func ParseCreateAnAccountResponse(rsp *http.Response) (*CreateAnAccountResponse, error) {
+// ParseCreateAccountResponse parses an HTTP response from a CreateAccountWithResponse call
+func ParseCreateAccountResponse(rsp *http.Response) (*CreateAccountResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &CreateAnAccountResponse{
+	response := &CreateAccountResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
@@ -513,20 +551,27 @@ func ParseCreateAnAccountResponse(rsp *http.Response) (*CreateAnAccountResponse,
 	return response, nil
 }
 
-// ParseConfirmAccountResponse parses an HTTP response from a ConfirmAccountWithResponse call
-func ParseConfirmAccountResponse(rsp *http.Response) (*ConfirmAccountResponse, error) {
+// ParseLoginResponse parses an HTTP response from a LoginWithResponse call
+func ParseLoginResponse(rsp *http.Response) (*LoginResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &ConfirmAccountResponse{
+	response := &LoginResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
 
 	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest LogInPayload
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
 		var dest ErrorResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
@@ -568,22 +613,20 @@ func ParseCreateMonitorResponse(rsp *http.Response) (*CreateMonitorResponse, err
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"H4sIAAAAAAAC/8xW3Y7bRg99FWG+D8iN1nKam0BXdWwHcLe7C9gLtEVgCPSItibRzCgcalNjoXcvZiT/",
-	"yutkgRToneaPPDw8JPUspNWVNWjYifRZELrKGodhMcE11CVPiSz5tbSG0bD/hKoqlQRW1iSfnTV+z8kC",
-	"Nfiv/xOuRSr+lxyMJ+2pS4K1eedGNE0TixydJFV5YyIVo2iDBknJCP3ViA53485HQDcmBMaRGUlpa8Nz",
-	"/FqjC+AqshUSqzYKaM8zAxr9mrcVilQ4JmU2ookFalDlxZO1InflYQnXTitw7pul/MJhEwvCr7UizEX6",
-	"6RThiddjHzugR5aXTdzRcGeNYs/rSySUSJwxqc0GKewoRu0uAu82gAi2gR+TV1a1ee9dtiaTUJYZOgkl",
-	"tCm8LoAHM4aynB7un9Ox9xefw77ozpNwKqpe9LhT8KnSwqtI1o6t7sQmbY6Rq2URgYveBMIzZbLa4RsR",
-	"96PX6BxssG96FB2tI1jZmiMusPXSt3TOQHdrZ365f2BXn1Gyd92jsRe1sazWXZFmGrmw+Sszzwg606hX",
-	"SC5jm60wa41i/hpDZ9FdsxpfRr0MtY+yJsXbhRdSG+IHBEIa1Vz41SqsPlrSwCIVv/3xKLqO4cG0pwfu",
-	"C+bKY13kX25xG+LxmSsQ8nCtLWzx581icntzO/3r8BIq5V/4t+icsmY2ufZ8uljMHu5vZpO+BR8W/s1I",
-	"BsqJla4vJI/SpUmyUVzUq4G0OlmX9pv8kuR2haTBJPPpaHI3HWjPXk3lDz3y4JVZ211bBxnKu2uFvgVp",
-	"ZexAFmA2YNSvG3/gDYlev96bjEWpJHYF2IV/N3t8Bark99l4er8IsQT5kXYP6wXSk5L4Y3HFghWXeIrr",
-	"Ccm1YIeD4eBt6FsVGqiUSMW7wXDwLnRVLkICkq4fh0Vl23bqCytocpaL9Hz2iFbg6PiDzbc/bVS+MOGa",
-	"04JiqjFsHE3uX4Zv+1Iaz6ejx+mkzWCY7C8B2NtKTn4BQhHWWgNt9xxEYCLYs8Cwcb7ERzsGQ+HuCU2k",
-	"NV5ayXP3EVgZ2xybK1y3Vw9UV0CgkcMc+9SVnU/eoejOrYtzvuKjDJy34mWPy+EFLh/uP87mdz+RzRby",
-	"97nU7aT/rji7P4J/VZpnfx3/MWFGek/BjssdKcumHSj0tFPRoUWlSVJaCWVhHafvh++Holk2/wQAAP//",
-	"U6+q9SgLAAA=",
+	"H4sIAAAAAAAC/8RVUW/jNgz+KwY3oC9GnNu9HPy0XJMNGdrboe2whyIoFJmxdbVEn0RfFxz83wdJdlKf",
+	"U7QDWuzNsqiP5MeP5HeQpBsyaNhB/h0suoaMw3BY4k60Na+sJevPkgyjYf8pmqZWUrAik31xZPw/JyvU",
+	"wn/9bHEHOfyUHcGzeOuygHbVu4Gu61Io0EmrGg8GOSySEg1aJRP0pok92qa9jxDduUXBuJCSWsNX+LVF",
+	"F0JrLDVoWcUcRLy/M0KjP/O+QcjBsVWmhC4F1ELVJ28a4dwD2eLEZZeCxa+tslhAfjt2MkA+Ath0aR/u",
+	"JRnFPv8nwkVTNKQM37W2ft7vyNo7GZM7RR8qOWY8vEpk65h0T7qkAhPXyioRLjkLCd0pc9c6PIN0SpVG",
+	"50SJU+hF8uiciC21nHCF0csU6cf8eqsBfnN4QNsvKNm7vqBybT6LfU2imGbMdI/meSKj2WaAe7o8ryCW",
+	"E+rwwkbZWsX7ay/w6OwjCot20XLlT9tw+o2sFgw5/PH3DfTt4H3F2yOhFXMTmwv/YbRG1EuSblofb+fy",
+	"LCsVV+12Jklnu5oe5H1W0BatFsZkV6vF8nI10wWkEGT5kleeE2V2NMwNIfkRgbBTVitDM1kJUwqjfi39",
+	"hUeCyUBYDphnLtkKeY/GR1Irib3IY2/D5frmv0SYXazPV5+uQ2JdCoxWuz9312i/KYkvTDIFVlx76yPs",
+	"McRvaF1MYT6bz955L9SgEY2CHN7P5rP3QQZchcJkouUq60dJ+NNQ1KBXYBi16wLy8dyDqC10/JGK/asN",
+	"6ZOztRsrmW2L4cejjfHL/N1UY+dXq8XNahkLGzbKU+4PWNlo9YT+aLUWdn/I3yUiMfiQiAMPLErn+ys0",
+	"TOipyGhNpTJP03kRrt+GxtEweRF989f1PczFE2v2ev37p9Uy+evza9XlgsokMHmiEDquvWdV3a/HN1X1",
+	"Dyv4/1V1P/Uhvx3P+9tNt5mKvte8PrA0UH058LvpIqz1syegHudhnmU1SVFX5Dj/MP8wh27T/RsAAP//",
+	"kAYaBwEKAAA=",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

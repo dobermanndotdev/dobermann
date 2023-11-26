@@ -3,9 +3,9 @@ package account
 import "fmt"
 
 var (
-	UserRoleOwner  = Role{name: "owner"}
-	UserRoleAdmin  = Role{name: "admin"}
-	UserRoleWriter = Role{name: "writer"}
+	RoleOwner  = Role{name: "owner"}
+	RoleAdmin  = Role{name: "admin"}
+	RoleWriter = Role{name: "writer"}
 )
 
 type Role struct {
@@ -14,13 +14,17 @@ type Role struct {
 
 func NewRole(role string) (Role, error) {
 	switch role {
-	case UserRoleOwner.name:
-		return UserRoleOwner, nil
-	case UserRoleAdmin.name:
-		return UserRoleAdmin, nil
-	case UserRoleWriter.name:
-		return UserRoleWriter, nil
+	case RoleOwner.name:
+		return RoleOwner, nil
+	case RoleAdmin.name:
+		return RoleAdmin, nil
+	case RoleWriter.name:
+		return RoleWriter, nil
 	default:
 		return Role{}, fmt.Errorf("%s is not a valid user role", role)
 	}
+}
+
+func (r Role) String() string {
+	return r.name
 }
