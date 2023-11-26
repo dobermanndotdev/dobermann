@@ -1,0 +1,26 @@
+package components_test
+
+import (
+	"net/http"
+	"testing"
+
+	"github.com/brianvoe/gofakeit"
+	"github.com/stretchr/testify/require"
+
+	"github.com/flowck/dobermann/backend/tests"
+	"github.com/flowck/dobermann/backend/tests/client"
+)
+
+func createAccount(t *testing.T) client.CreateAccountRequest {
+	payload := client.CreateAccountRequest{
+		Email:       gofakeit.Email(),
+		Password:    tests.FixturePassword(),
+		AccountName: gofakeit.Company(),
+	}
+
+	resp, err := getClient("").CreateAccount(ctx, payload)
+	require.NoError(t, err)
+	require.Equal(t, http.StatusCreated, resp.StatusCode)
+
+	return payload
+}

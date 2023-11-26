@@ -2,21 +2,21 @@ package components_test
 
 import (
 	"context"
-	"database/sql"
-	"encoding/json"
 	"fmt"
+	"log"
+	"net/http"
 	"os"
 	"testing"
 	"time"
 
-	"github.com/ThreeDotsLabs/watermill/message"
+	"github.com/labstack/echo/v4"
 	_ "github.com/lib/pq"
 
-	"github.com/flowck/doberman/tests/client"
+	"github.com/flowck/dobermann/backend/tests/client"
 )
 
 var (
-	db  *sql.DB
+	// db  *sql.DB
 	ctx context.Context
 	cli *client.ClientWithResponses
 )
@@ -37,7 +37,26 @@ func TestMain(m *testing.M) {
 	os.Exit(m.Run())
 }
 
-func unMarshallMessageToEvent[T any](m *message.Message) (T, error) {
+func getClient(token string) *client.ClientWithResponses {
+	host := fmt.Sprintf("http://localhost:%s", os.Getenv("HTTP_PORT"))
+	newClient, err := client.NewClientWithResponses(host, client.WithRequestEditorFn(func(ctx context.Context, req *http.Request) error {
+		if token != "" {
+			req.Header.Add(echo.HeaderAuthorization, fmt.Sprintf("Bearer %s", token))
+		}
+
+		req.Header.Add(echo.HeaderContentType, echo.MIMEApplicationJSON)
+
+		return nil
+	}))
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return newClient
+}
+
+/*func unMarshallMessageToEvent[T any](m *message.Message) (T, error) {
 	var event T
 	err := json.Unmarshal(m.Payload, &event)
 	if err != nil {
@@ -45,4 +64,4 @@ func unMarshallMessageToEvent[T any](m *message.Message) (T, error) {
 	}
 
 	return event, nil
-}
+}*/

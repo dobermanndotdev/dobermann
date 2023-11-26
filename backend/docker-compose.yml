@@ -1,12 +1,6 @@
 version: '3.9'
 
 services:
-  rabbitmq:
-    image: heidiks/rabbitmq-delayed-message-exchange:3.9.13-management
-    ports:
-      - "5672:5672"
-      - "15672:15672"
-
   postgres:
     image: postgres:14.6
     environment:
@@ -35,20 +29,11 @@ services:
     volumes:
       - .:/usr/app
 
-  worker:
+  endpoint_simulator:
     build: ./misc/tools/reflex
-    deploy:
-      replicas: 1
-    links:
-      - postgres
-    depends_on:
-      postgres:
-        condition: service_healthy
     environment:
-      SERVICE: worker
-    env_file:
-      - ./.env
-    # ports:
-    #   - "8080:8080"
+      SERVICE: endpoint_simulator
+    ports:
+      - "8090:8090"
     volumes:
       - .:/usr/app
