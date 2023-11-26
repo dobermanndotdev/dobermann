@@ -5,7 +5,7 @@ import (
 
 	"github.com/volatiletech/sqlboiler/v4/boil"
 
-	"github.com/flowck/doberman/internal/domain/account"
+	"github.com/flowck/dobermann/backend/internal/domain/account"
 )
 
 func NewPsqlRepository(db boil.ContextExecutor) PsqlRepository {

@@ -1,4 +1,4 @@
-module github.com/flowck/doberman
+module github.com/flowck/dobermann/backend
 
 go 1.21
 

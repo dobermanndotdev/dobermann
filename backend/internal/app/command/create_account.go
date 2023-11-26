@@ -4,30 +4,25 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/flowck/doberman/internal/domain/account"
+	"github.com/flowck/dobermann/backend/internal/domain/account"
 )
 
 type CreateAccount struct {
 	Account *account.Account
 }
 
-type CreateAccountTxAdapters struct {
-	AccountRepository account.Repository
-	UserRepository    account.UserRepository
-}
-
 type CreateAccountHandler struct {
-	txProvider TransactionProvider[CreateAccountTxAdapters]
+	txProvider TransactionProvider
 }
 
-func NewCreateAccountHandler(txProvider TransactionProvider[CreateAccountTxAdapters]) CreateAccountHandler {
+func NewCreateAccountHandler(txProvider TransactionProvider) CreateAccountHandler {
 	return CreateAccountHandler{
 		txProvider: txProvider,
 	}
 }
 
 func (h CreateAccountHandler) Execute(ctx context.Context, cmd CreateAccount) error {
-	return h.txProvider.Transact(ctx, func(adapters CreateAccountTxAdapters) error {
+	return h.txProvider.Transact(ctx, func(adapters TransactableAdapters) error {
 		err := adapters.AccountRepository.Insert(ctx, cmd.Account)
 		if err != nil {
 			return fmt.Errorf("unable to save account: %v", err)

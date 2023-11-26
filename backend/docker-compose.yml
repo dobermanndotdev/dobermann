@@ -13,6 +13,22 @@ services:
       timeout: 5s
       retries: 5
 
+  app:
+    build: ./misc/tools/reflex
+    links:
+      - postgres
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      SERVICE: service
+    env_file:
+      - ./.env
+    ports:
+      - "8080:8080"
+    volumes:
+      - .:/usr/app
+
   endpoint_simulator:
     build: ./misc/tools/reflex
     environment:

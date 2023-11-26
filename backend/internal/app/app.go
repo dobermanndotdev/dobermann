@@ -3,7 +3,7 @@ package app
 import (
 	"context"
 
-	"github.com/flowck/doberman/internal/app/command"
+	"github.com/flowck/dobermann/backend/internal/app/command"
 )
 
 type QueryHandler[Q, R any] interface {

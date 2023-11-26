@@ -12,7 +12,7 @@ import (
 	"github.com/ThreeDotsLabs/watermill/message"
 	_ "github.com/lib/pq"
 
-	"github.com/flowck/doberman/tests/client"
+	"github.com/flowck/dobermann/backend/tests/client"
 )
 
 var (

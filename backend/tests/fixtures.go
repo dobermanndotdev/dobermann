@@ -10,9 +10,9 @@ import (
 	"github.com/volatiletech/null/v8"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 
-	"github.com/flowck/doberman/internal/adapters/models"
-	"github.com/flowck/doberman/internal/domain"
-	"github.com/flowck/doberman/internal/domain/monitor"
+	"github.com/flowck/dobermann/backend/internal/adapters/models"
+	"github.com/flowck/dobermann/backend/internal/domain"
+	"github.com/flowck/dobermann/backend/internal/domain/monitor"
 )
 
 func FixtureMonitor(t *testing.T, accountID, teamID, memberID domain.ID) *monitor.Monitor {

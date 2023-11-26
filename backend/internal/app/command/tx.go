@@ -1,9 +1,18 @@
 package command
 
-import "context"
+import (
+	"context"
 
-type TransactionProvider[T any] interface {
-	Transact(ctx context.Context, f TransactFunc[T]) error
+	"github.com/flowck/dobermann/backend/internal/domain/account"
+)
+
+type TransactableAdapters struct {
+	AccountRepository account.Repository
+	UserRepository    account.UserRepository
 }
 
-type TransactFunc[T any] func(adapters T) error
+type TransactionProvider interface {
+	Transact(ctx context.Context, f TransactFunc) error
+}
+
+type TransactFunc func(adapters TransactableAdapters) error
