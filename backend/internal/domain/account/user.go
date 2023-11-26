@@ -1,7 +1,6 @@
 package account
 
 import (
-	"fmt"
 	"strings"
 
 	"errors"
@@ -12,31 +11,32 @@ type User struct {
 	firstName string
 	lastName  string
 	email     string
-	role      UserRole
+	role      Role
 	accountID string
 }
 
-var (
-	UserRoleOwner  = UserRole{name: "owner"}
-	UserRoleAdmin  = UserRole{name: "admin"}
-	UserRoleWriter = UserRole{name: "writer"}
-)
-
-type UserRole struct {
-	name string
+func (u *User) ID() string {
+	return u.id
 }
 
-func NewUserRole(role string) (UserRole, error) {
-	switch role {
-	case UserRoleOwner.name:
-		return UserRoleOwner, nil
-	case UserRoleAdmin.name:
-		return UserRoleAdmin, nil
-	case UserRoleWriter.name:
-		return UserRoleWriter, nil
-	default:
-		return UserRole{}, fmt.Errorf("%s is not a valid user role", role)
-	}
+func (u *User) FirstName() string {
+	return u.firstName
+}
+
+func (u *User) LastName() string {
+	return u.lastName
+}
+
+func (u *User) Email() string {
+	return u.email
+}
+
+func (u *User) Role() Role {
+	return u.role
+}
+
+func (u *User) AccountID() string {
+	return u.accountID
 }
 
 func NewUser(
@@ -51,7 +51,7 @@ func NewUser(
 	lastName = strings.TrimSpace(lastName)
 	email = strings.TrimSpace(email)
 
-	userRole, err := NewUserRole(role)
+	userRole, err := NewRole(role)
 	if err != nil {
 		return nil, err
 	}

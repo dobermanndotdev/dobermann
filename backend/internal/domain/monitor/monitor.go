@@ -8,6 +8,26 @@ type Monitor struct {
 	incidents    []Incident
 }
 
+func (m *Monitor) ID() string {
+	return m.id
+}
+
+func (m *Monitor) EndpointUrl() string {
+	return m.endpointUrl
+}
+
+func (m *Monitor) AccountID() string {
+	return m.accountID
+}
+
+func (m *Monitor) IsEndpointUp() bool {
+	return m.isEndpointUp
+}
+
+func (m *Monitor) Incidents() []Incident {
+	return m.incidents
+}
+
 func NewMonitor(
 	id string,
 	endpointUrl string,
