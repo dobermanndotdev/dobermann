@@ -61,3 +61,9 @@ func (m *Monitor) LastCheckedAt() *time.Time {
 func (m *Monitor) CreatedAt() time.Time {
 	return m.createdAt
 }
+
+func (m *Monitor) SetEndpointCheckResult(isUp bool) {
+	m.isEndpointUp = isUp
+	lastChecked := time.Now().UTC()
+	m.lastCheckedAt = &lastChecked
+}

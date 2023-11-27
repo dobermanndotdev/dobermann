@@ -25,7 +25,7 @@ func NewHeader(name, correlationID string) Header {
 }
 
 type MonitorCreatedEvent struct {
-	Header    Header
+	Header    Header    `json:"header"`
 	ID        string    `json:"id"`
 	CreatedAt time.Time `json:"created_at"`
 }

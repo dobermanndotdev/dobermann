@@ -48,6 +48,7 @@ require (
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/rabbitmq/amqp091-go v1.2.0 // indirect
 	github.com/rogpeppe/go-internal v1.11.0 // indirect
+	github.com/sony/gobreaker v0.5.0 // indirect
 	github.com/spf13/cast v1.5.0 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasttemplate v1.2.2 // indirect
