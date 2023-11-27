@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/getkin/kin-openapi/openapi3"
+	"github.com/getkin/kin-openapi/openapi3filter"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	oapimiddleware "github.com/oapi-codegen/echo-middleware"
@@ -24,9 +25,10 @@ type Port struct {
 type Config struct {
 	Port              int
 	Application       *app.App
-	Logger            *logs.Logger
-	Ctx               context.Context
 	AllowedCorsOrigin []string
+	Logger            *logs.Logger
+	JwtVerifier       jwtVerifier
+	Ctx               context.Context
 }
 
 type handlers struct {
@@ -54,11 +56,11 @@ func NewPort(config Config) (*Port, error) {
 	return &Port{
 		config: config,
 		server: &http.Server{
+			Handler:           router,
 			ReadTimeout:       time.Second * 30,
 			ReadHeaderTimeout: time.Second * 30,
 			WriteTimeout:      time.Second * 30,
 			IdleTimeout:       time.Second * 30,
-			Handler:           router,
 			Addr:              fmt.Sprintf(":%d", config.Port),
 			BaseContext: func(listener net.Listener) context.Context {
 				return config.Ctx
@@ -82,10 +84,18 @@ func registerMiddlewares(router *echo.Echo, spec *openapi3.T, config Config) {
 	router.Use(loggerMiddleware(config.Logger))
 	router.Use(middleware.CORSWithConfig(middleware.CORSConfig{
 		AllowOrigins: config.AllowedCorsOrigin,
-		AllowHeaders: []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept, echo.HeaderAuthorization},
+		AllowHeaders: []string{
+			echo.HeaderOrigin,
+			echo.HeaderContentType,
+			echo.HeaderAccept,
+			echo.HeaderAuthorization,
+		},
 	}))
 
 	router.Use(oapimiddleware.OapiRequestValidatorWithOptions(spec, &oapimiddleware.Options{
 		SilenceServersWarning: true,
+		Options: openapi3filter.Options{
+			AuthenticationFunc: NewAuthenticator(config.JwtVerifier),
+		},
 	}))
 }

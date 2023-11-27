@@ -6,6 +6,7 @@ require (
 	github.com/brianvoe/gofakeit v3.18.0+incompatible
 	github.com/friendsofgo/errors v0.9.2
 	github.com/getkin/kin-openapi v0.120.0
+	github.com/golang-jwt/jwt/v5 v5.1.0
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/labstack/echo/v4 v4.11.2
 	github.com/lib/pq v1.10.9
@@ -26,7 +27,6 @@ require (
 	github.com/go-openapi/swag v0.22.4 // indirect
 	github.com/gofrs/uuid v4.2.0+incompatible // indirect
 	github.com/golang-jwt/jwt v3.2.2+incompatible // indirect
-	github.com/golang-jwt/jwt/v5 v5.1.0 // indirect
 	github.com/gorilla/mux v1.8.0 // indirect
 	github.com/invopop/yaml v0.2.0 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
