@@ -7,7 +7,8 @@ import (
 
 	"github.com/flowck/dobermann/backend/internal/adapters/events"
 	"github.com/flowck/dobermann/backend/internal/app"
-	"github.com/flowck/dobermann/backend/internal/common/logs"
+	"github.com/flowck/dobermann/backend/internal/app/command"
+	"github.com/flowck/dobermann/backend/internal/domain"
 )
 
 type MonitorCreatedHandler struct {
@@ -23,6 +24,22 @@ func (h MonitorCreatedHandler) EventName() string {
 }
 
 func (h MonitorCreatedHandler) Handle(m *message.Message) error {
-	logs.Infof("event consumed: %s", string(m.Payload))
+	event, err := events.NewMonitorCreatedEventFromMessage(m)
+	if err != nil {
+		return err
+	}
+
+	monitorID, err := domain.NewIdFromString(event.ID)
+	if err != nil {
+		return err
+	}
+
+	err = h.application.Commands.CheckEndpoint.Execute(m.Context(), command.CheckEndpoint{
+		MonitorID: monitorID,
+	})
+	if err != nil {
+		return err
+	}
+
 	return nil
 }

@@ -30,6 +30,16 @@ type MonitorCreatedEvent struct {
 	CreatedAt time.Time `json:"created_at"`
 }
 
+func NewMonitorCreatedEventFromMessage(m *message.Message) (MonitorCreatedEvent, error) {
+	var event MonitorCreatedEvent
+	err := json.Unmarshal(m.Payload, &event)
+	if err != nil {
+		return MonitorCreatedEvent{}, err
+	}
+
+	return event, nil
+}
+
 func (e MonitorCreatedEvent) EventName() string {
 	return "MonitorCreatedEvent_v1"
 }

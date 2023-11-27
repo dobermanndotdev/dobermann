@@ -16,6 +16,10 @@ import (
 	"github.com/flowck/dobermann/backend/internal/domain/monitor"
 )
 
+const (
+	SimulatorEndpointUrl = "http://endpoint_simulator:8090" // Hostname within docker's network
+)
+
 func FixturePassword() string {
 	return gofakeit.Password(true, true, true, true, false, 12)
 }
@@ -49,11 +53,12 @@ func FixtureAndInsertAccount(t *testing.T, db *sql.DB) *account.Account {
 func FixtureMonitor(t *testing.T, accountID domain.ID) *monitor.Monitor {
 	newMonitor, err := monitor.NewMonitor(
 		domain.NewID(),
-		"http://localhost:8090",
+		SimulatorEndpointUrl,
 		accountID,
 		false,
 		nil,
 		time.Now().UTC(),
+		nil,
 	)
 	require.NoError(t, err)
 

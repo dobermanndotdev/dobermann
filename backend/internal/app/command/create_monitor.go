@@ -12,30 +12,30 @@ type CreateMonitor struct {
 }
 
 type CreateMonitorHandler struct {
-	txProvider TransactionProvider
+	eventPublisher    EventPublisher
+	monitorRepository monitor.Repository
 }
 
-func NewCreateMonitorHandler(txProvider TransactionProvider) CreateMonitorHandler {
+func NewCreateMonitorHandler(monitorRepository monitor.Repository, eventPublisher EventPublisher) CreateMonitorHandler {
 	return CreateMonitorHandler{
-		txProvider: txProvider,
+		eventPublisher:    eventPublisher,
+		monitorRepository: monitorRepository,
 	}
 }
 
 func (h CreateMonitorHandler) Execute(ctx context.Context, cmd CreateMonitor) error {
-	return h.txProvider.Transact(ctx, func(adapters TransactableAdapters) error {
-		err := adapters.MonitorRepository.Insert(ctx, cmd.Monitor)
-		if err != nil {
-			return err
-		}
+	err := h.monitorRepository.Insert(ctx, cmd.Monitor)
+	if err != nil {
+		return err
+	}
 
-		err = adapters.EventPublisher.PublishMonitorCreated(ctx, MonitorCreatedEvent{
-			ID:        cmd.Monitor.ID().String(),
-			CreatedAt: cmd.Monitor.CreatedAt(),
-		})
-		if err != nil {
-			return fmt.Errorf("unable to publish event: %v", err)
-		}
-
-		return nil
+	err = h.eventPublisher.PublishMonitorCreated(ctx, MonitorCreatedEvent{
+		ID:        cmd.Monitor.ID().String(),
+		CreatedAt: cmd.Monitor.CreatedAt(),
 	})
+	if err != nil {
+		return fmt.Errorf("unable to publish event: %v", err)
+	}
+
+	return nil
 }

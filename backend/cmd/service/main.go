@@ -17,6 +17,8 @@ import (
 	"github.com/kelseyhightower/envconfig"
 	_ "github.com/lib/pq"
 
+	"github.com/flowck/dobermann/backend/internal/adapters/events"
+	"github.com/flowck/dobermann/backend/internal/adapters/monitors"
 	"github.com/flowck/dobermann/backend/internal/adapters/transaction"
 	"github.com/flowck/dobermann/backend/internal/adapters/users"
 	"github.com/flowck/dobermann/backend/internal/app"
@@ -89,25 +91,35 @@ func main() {
 	}
 	defer func() { _ = router.Close() }()
 
+	poisonQueueMiddleware, err := middleware.PoisonQueue(publisher, "failed_events")
+	if err != nil {
+		logger.Fatal(err)
+	}
+
 	router.AddPlugin(plugin.SignalsHandler)
 	router.AddMiddleware(
 		middleware.CorrelationID,
 		middleware.Retry{
 			MaxRetries:      3,
-			InitialInterval: time.Millisecond * 3,
 			Logger:          watermillLogger,
+			InitialInterval: time.Millisecond * 3,
 		}.Middleware,
+		poisonQueueMiddleware,
 		middleware.Recoverer,
 	)
 
 	logger.Info("Connected successfully to RabbitMQ")
 
+	httpChecker := monitors.NewHttpChecker()
 	userRepository := users.NewPsqlRepository(db)
+	eventPublisher := events.NewPublisher(publisher)
+	monitorRepository := monitors.NewPsqlRepository(db)
 	txProvider := transaction.NewPsqlProvider(db, publisher)
 
 	application := &app.App{
 		Commands: app.Commands{
-			CreateMonitor: observability.NewCommandDecorator[command.CreateMonitor](command.NewCreateMonitorHandler(txProvider), logger),
+			CheckEndpoint: observability.NewCommandDecorator[command.CheckEndpoint](command.NewCheckEndpointHandler(httpChecker, monitorRepository), logger),
+			CreateMonitor: observability.NewCommandDecorator[command.CreateMonitor](command.NewCreateMonitorHandler(monitorRepository, eventPublisher), logger),
 			CreateAccount: observability.NewCommandDecorator[command.CreateAccount](command.NewCreateAccountHandler(txProvider), logger),
 			LogIn:         observability.NewCommandWithResultDecorator[command.LogIn, string](command.NewLoginHandler(userRepository, tokenSigner), logger),
 		},

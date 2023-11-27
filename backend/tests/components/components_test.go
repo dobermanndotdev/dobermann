@@ -2,6 +2,7 @@ package components_test
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"log"
 	"net/http"
@@ -12,11 +13,12 @@ import (
 	"github.com/labstack/echo/v4"
 	_ "github.com/lib/pq"
 
+	"github.com/flowck/dobermann/backend/internal/common/psql"
 	"github.com/flowck/dobermann/backend/tests/client"
 )
 
 var (
-	// db  *sql.DB
+	db  *sql.DB
 	ctx context.Context
 )
 
@@ -24,6 +26,17 @@ func TestMain(m *testing.M) {
 	var cancel context.CancelFunc
 	ctx, cancel = context.WithTimeout(context.Background(), time.Minute*2)
 	defer cancel()
+
+	var err error
+	db, err = psql.Connect(os.Getenv("DATABASE_URL"))
+	if err != nil {
+		panic(err)
+	}
+
+	err = psql.ApplyMigrations(db, "../../misc/sql/migrations")
+	if err != nil {
+		panic(err)
+	}
 
 	os.Exit(m.Run())
 }

@@ -1,12 +1,17 @@
 package components_test
 
 import (
+	"fmt"
 	"net/http"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/flowck/dobermann/backend/internal/adapters/models"
+	"github.com/flowck/dobermann/backend/internal/domain"
+	"github.com/flowck/dobermann/backend/tests"
 	"github.com/flowck/dobermann/backend/tests/client"
 )
 
@@ -15,24 +20,20 @@ func TestMonitors(t *testing.T) {
 	token := login(t, user.Email, user.Password)
 	cli := getClient(token)
 
+	endpointUrl := fmt.Sprintf("%s#id=%s", tests.SimulatorEndpointUrl, domain.NewID().String())
 	resp01, err := cli.CreateMonitor(ctx, client.CreateMonitorRequest{
-		EndpointUrl: "http://localhost:8090",
+		EndpointUrl: endpointUrl,
 	})
 	require.NoError(t, err)
 	assert.Equal(t, http.StatusCreated, resp01.StatusCode)
+	assert.Eventually(t, assertMonitorIsWillBeChecked(t, endpointUrl), time.Second*5, time.Millisecond*250)
+}
 
-	/*subscriber, err := amqp.NewSubscriber(
-		amqp.NewDurableQueueConfig(os.Getenv("AMQP_URL")),
-		watermill.NewStdLogger(false, false),
-	)
+func assertMonitorIsWillBeChecked(t *testing.T, endpointUrl string) func() bool {
+	return func() bool {
+		model, err := models.Monitors(models.MonitorWhere.EndpointURL.EQ(endpointUrl)).One(ctx, db)
+		require.NoError(t, err)
 
-	messages, err := subscriber.Subscribe(ctx, events.MonitorCreatedEvent{}.EventName())
-	if err != nil {
-		t.Fatal(err)
+		return model.LastCheckedAt.Ptr() != nil
 	}
-	//
-	for m := range messages {
-		t.Log(m)
-		m.Ack()
-	}*/
 }

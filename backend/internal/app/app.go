@@ -21,6 +21,7 @@ type CommandHandlerWithResult[C, R any] interface {
 type Commands struct {
 	CreateMonitor CommandHandler[command.CreateMonitor]
 	CreateAccount CommandHandler[command.CreateAccount]
+	CheckEndpoint CommandHandler[command.CheckEndpoint]
 	LogIn         CommandHandlerWithResult[command.LogIn, string]
 }
 

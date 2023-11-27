@@ -23,14 +23,16 @@ func NewMonitor(
 	isEndpointUp bool,
 	incidents []Incident,
 	createdAt time.Time,
+	lastCheckedAt *time.Time,
 ) (*Monitor, error) {
 	return &Monitor{
-		id:           id,
-		endpointUrl:  endpointUrl,
-		accountID:    accountID,
-		isEndpointUp: isEndpointUp,
-		incidents:    incidents,
-		createdAt:    createdAt,
+		id:            id,
+		endpointUrl:   endpointUrl,
+		accountID:     accountID,
+		isEndpointUp:  isEndpointUp,
+		incidents:     incidents,
+		createdAt:     createdAt,
+		lastCheckedAt: lastCheckedAt,
 	}, nil
 }
 

@@ -29,6 +29,7 @@ func (h handlers) CreateMonitor(c echo.Context) error {
 		false,
 		nil,
 		time.Now().UTC(),
+		nil,
 	)
 	if err != nil {
 		return NewHandlerErrorWithStatus(err, "validation-error", http.StatusBadRequest)
