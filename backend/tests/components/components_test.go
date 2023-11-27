@@ -18,18 +18,9 @@ import (
 var (
 	// db  *sql.DB
 	ctx context.Context
-	cli *client.ClientWithResponses
 )
 
 func TestMain(m *testing.M) {
-	var err error
-	host := "http://localhost:8080"
-
-	cli, err = client.NewClientWithResponses(fmt.Sprintf("%s/monitor", host))
-	if err != nil {
-		panic(err)
-	}
-
 	var cancel context.CancelFunc
 	ctx, cancel = context.WithTimeout(context.Background(), time.Minute*2)
 	defer cancel()

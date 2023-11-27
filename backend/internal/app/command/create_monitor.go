@@ -29,7 +29,7 @@ func (h CreateMonitorHandler) Execute(ctx context.Context, cmd CreateMonitor) er
 		}
 
 		err = adapters.EventPublisher.PublishMonitorCreated(ctx, MonitorCreatedEvent{
-			ID:        cmd.Monitor.ID(),
+			ID:        cmd.Monitor.ID().String(),
 			CreatedAt: cmd.Monitor.CreatedAt(),
 		})
 		if err != nil {

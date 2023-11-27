@@ -19,7 +19,7 @@ type EventPublisher interface {
 }
 
 type TransactionProvider interface {
-	Transact(ctx context.Context, f TransactFunc) error
+	Transact(ctx context.Context, f TransactFuncc) error
 }
 
-type TransactFunc func(adapters TransactableAdapters) error
+type TransactFuncc func(adapters TransactableAdapters) error

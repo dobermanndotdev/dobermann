@@ -4,13 +4,16 @@ import (
 	"context"
 	"database/sql"
 	"testing"
+	"time"
 
 	"github.com/brianvoe/gofakeit"
 	"github.com/stretchr/testify/require"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 
 	"github.com/flowck/dobermann/backend/internal/adapters/models"
+	"github.com/flowck/dobermann/backend/internal/domain"
 	"github.com/flowck/dobermann/backend/internal/domain/account"
+	"github.com/flowck/dobermann/backend/internal/domain/monitor"
 )
 
 func FixturePassword() string {
@@ -41,4 +44,18 @@ func FixtureAndInsertAccount(t *testing.T, db *sql.DB) *account.Account {
 	require.NoError(t, model.Insert(context.Background(), db, boil.Infer()))
 
 	return acc
+}
+
+func FixtureMonitor(t *testing.T, accountID domain.ID) *monitor.Monitor {
+	newMonitor, err := monitor.NewMonitor(
+		domain.NewID(),
+		"http://localhost:8090",
+		accountID,
+		false,
+		nil,
+		time.Now().UTC(),
+	)
+	require.NoError(t, err)
+
+	return newMonitor
 }

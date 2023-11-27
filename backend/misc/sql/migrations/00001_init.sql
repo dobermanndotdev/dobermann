@@ -23,10 +23,22 @@ CREATE TABLE users (
     CONSTRAINT un_email_is_unique_per_account UNIQUE (email, account_id)
 );
 
+CREATE TABLE monitors (
+    id VARCHAR(26) NOT NULL PRIMARY KEY,
+    account_id VARCHAR(26) NOT NULL,
+    endpoint_url VARCHAR(2048) NOT NULL,
+    is_endpoint_up BOOLEAN DEFAULT false NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT now() NOT NULL,
+    last_checked_at TIMESTAMPTZ,
+
+    CONSTRAINT pk_monitor_belongs_to_account FOREIGN KEY (account_id) REFERENCES accounts(id)
+);
+
 -- +goose StatementEnd
 
 -- +goose Down
 -- +goose StatementBegin
+DROP TABLE monitors;
 DROP TABLE users;
 DROP TABLE accounts;
 DROP TYPE ROLE_TYPE;

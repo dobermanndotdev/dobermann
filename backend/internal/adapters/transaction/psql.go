@@ -7,6 +7,8 @@ import (
 	"github.com/volatiletech/sqlboiler/v4/boil"
 
 	"github.com/flowck/dobermann/backend/internal/adapters/accounts"
+	"github.com/flowck/dobermann/backend/internal/adapters/events"
+	"github.com/flowck/dobermann/backend/internal/adapters/monitors"
 	"github.com/flowck/dobermann/backend/internal/adapters/users"
 	"github.com/flowck/dobermann/backend/internal/app/command"
 )
@@ -21,7 +23,7 @@ func NewPsqlProvider(db boil.ContextBeginner) PsqlProvider {
 	}
 }
 
-func (p PsqlProvider) Transact(ctx context.Context, f command.TransactFunc) error {
+func (p PsqlProvider) Transact(ctx context.Context, f command.TransactFuncc) error {
 	tx, err := p.db.BeginTx(ctx, nil)
 	if err != nil {
 		return fmt.Errorf("unable to begin transaction: %v", err)
@@ -30,6 +32,8 @@ func (p PsqlProvider) Transact(ctx context.Context, f command.TransactFunc) erro
 	adapters := command.TransactableAdapters{
 		AccountRepository: accounts.NewPsqlRepository(tx),
 		UserRepository:    users.NewPsqlRepository(tx),
+		MonitorRepository: monitors.NewPsqlRepository(tx),
+		EventPublisher:    events.NewPublisher(),
 	}
 
 	if err = f(adapters); err != nil {

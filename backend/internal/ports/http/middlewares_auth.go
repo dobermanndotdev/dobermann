@@ -26,9 +26,10 @@ type jwtVerifier interface {
 }
 
 type authenticatedUser struct {
-	ID    domain.ID
-	Email account.Email
-	Role  account.Role
+	ID        domain.ID
+	AccountID domain.ID
+	Email     account.Email
+	Role      account.Role
 }
 
 func NewAuthenticator(verifier jwtVerifier) openapi3filter.AuthenticationFunc {
@@ -65,6 +66,11 @@ func retrieveUserFromCtx(c echo.Context) (*authenticatedUser, error) {
 		return nil, fmt.Errorf("user retrieval from request context:%v", err)
 	}
 
+	accountID, err := domain.NewIdFromString(metadata["account_id"])
+	if err != nil {
+		return nil, fmt.Errorf("user retrieval from request context:%v", err)
+	}
+
 	email, err := account.NewEmail(metadata["email"])
 	if err != nil {
 		return nil, fmt.Errorf("user retrieval from request context:%v", err)
@@ -76,9 +82,10 @@ func retrieveUserFromCtx(c echo.Context) (*authenticatedUser, error) {
 	}
 
 	return &authenticatedUser{
-		ID:    userID,
-		Email: email,
-		Role:  role,
+		ID:        userID,
+		Email:     email,
+		AccountID: accountID,
+		Role:      role,
 	}, nil
 }
 
