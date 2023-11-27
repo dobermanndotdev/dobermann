@@ -28,6 +28,7 @@ type User struct {
 	FirstName null.String `boil:"first_name" json:"first_name,omitempty" toml:"first_name" yaml:"first_name,omitempty"`
 	LastName  null.String `boil:"last_name" json:"last_name,omitempty" toml:"last_name" yaml:"last_name,omitempty"`
 	Email     string      `boil:"email" json:"email" toml:"email" yaml:"email"`
+	Password  string      `boil:"password" json:"password" toml:"password" yaml:"password"`
 	Role      string      `boil:"role" json:"role" toml:"role" yaml:"role"`
 	AccountID string      `boil:"account_id" json:"account_id" toml:"account_id" yaml:"account_id"`
 	CreatedAt time.Time   `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
@@ -41,6 +42,7 @@ var UserColumns = struct {
 	FirstName string
 	LastName  string
 	Email     string
+	Password  string
 	Role      string
 	AccountID string
 	CreatedAt string
@@ -49,6 +51,7 @@ var UserColumns = struct {
 	FirstName: "first_name",
 	LastName:  "last_name",
 	Email:     "email",
+	Password:  "password",
 	Role:      "role",
 	AccountID: "account_id",
 	CreatedAt: "created_at",
@@ -59,6 +62,7 @@ var UserTableColumns = struct {
 	FirstName string
 	LastName  string
 	Email     string
+	Password  string
 	Role      string
 	AccountID string
 	CreatedAt string
@@ -67,6 +71,7 @@ var UserTableColumns = struct {
 	FirstName: "users.first_name",
 	LastName:  "users.last_name",
 	Email:     "users.email",
+	Password:  "users.password",
 	Role:      "users.role",
 	AccountID: "users.account_id",
 	CreatedAt: "users.created_at",
@@ -123,6 +128,7 @@ var UserWhere = struct {
 	FirstName whereHelpernull_String
 	LastName  whereHelpernull_String
 	Email     whereHelperstring
+	Password  whereHelperstring
 	Role      whereHelperstring
 	AccountID whereHelperstring
 	CreatedAt whereHelpertime_Time
@@ -131,6 +137,7 @@ var UserWhere = struct {
 	FirstName: whereHelpernull_String{field: "\"users\".\"first_name\""},
 	LastName:  whereHelpernull_String{field: "\"users\".\"last_name\""},
 	Email:     whereHelperstring{field: "\"users\".\"email\""},
+	Password:  whereHelperstring{field: "\"users\".\"password\""},
 	Role:      whereHelperstring{field: "\"users\".\"role\""},
 	AccountID: whereHelperstring{field: "\"users\".\"account_id\""},
 	CreatedAt: whereHelpertime_Time{field: "\"users\".\"created_at\""},
@@ -164,8 +171,8 @@ func (r *userR) GetAccount() *Account {
 type userL struct{}
 
 var (
-	userAllColumns            = []string{"id", "first_name", "last_name", "email", "role", "account_id", "created_at"}
-	userColumnsWithoutDefault = []string{"id", "email", "account_id"}
+	userAllColumns            = []string{"id", "first_name", "last_name", "email", "password", "role", "account_id", "created_at"}
+	userColumnsWithoutDefault = []string{"id", "email", "password", "account_id"}
 	userColumnsWithDefault    = []string{"first_name", "last_name", "role", "created_at"}
 	userPrimaryKeyColumns     = []string{"id"}
 	userGeneratedColumns      = []string{}

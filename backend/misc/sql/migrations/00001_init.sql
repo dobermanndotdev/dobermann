@@ -14,6 +14,7 @@ CREATE TABLE users (
     first_name VARCHAR(64),
     last_name VARCHAR(64),
     email VARCHAR(128) NOT NULL,
+    password VARCHAR(128) NOT NULL,
     role ROLE_TYPE NOT NULL DEFAULT 'admin',
     account_id VARCHAR(26) NOT NULL,
     created_at TIMESTAMPTZ DEFAULT now() NOT NULL,

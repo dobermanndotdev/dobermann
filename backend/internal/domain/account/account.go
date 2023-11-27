@@ -40,13 +40,10 @@ func (a *Account) FirstAccountOwner() (*User, error) {
 	return a.users[0], nil
 }
 
-func NewFirstTimeAccount(name string, email, password string) (*Account, error) {
+func NewFirstTimeAccount(name string, email Email, password Password) (*Account, error) {
 	accountID := domain.NewID()
 
 	name = strings.TrimSpace(name)
-	email = strings.TrimSpace(email)
-	password = strings.TrimSpace(password)
-
 	if name == "" {
 		return nil, errors.New("account name cannot be empty")
 	}

@@ -7,5 +7,6 @@ type Repository interface {
 }
 
 type UserRepository interface {
+	FindByEmail(ctx context.Context, email Email) (*User, error)
 	Insert(ctx context.Context, user *User) error
 }

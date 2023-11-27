@@ -24,3 +24,15 @@ func createAccount(t *testing.T) client.CreateAccountRequest {
 
 	return payload
 }
+
+func login(t *testing.T, email, password string) string {
+	resp, err := getClient("").LoginWithResponse(ctx, client.LogInRequest{
+		Email:    email,
+		Password: password,
+	})
+	require.NoError(t, err)
+	require.Equal(t, http.StatusOK, resp.StatusCode())
+	require.NotEmpty(t, resp.JSON200.Token)
+
+	return resp.JSON200.Token
+}
