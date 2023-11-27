@@ -46,6 +46,15 @@ func main() {
 	signal.Notify(done, syscall.SIGINT, syscall.SIGTERM)
 
 	router.GET("/", func(c echo.Context) error {
+		if c.Param("is_up") == "true" {
+			return c.NoContent(http.StatusOK)
+		}
+
+		if c.Param("is_up") == "false" {
+			return c.NoContent(http.StatusInternalServerError)
+		}
+
+		// Quasi-random path
 		s := getStatusCode()
 		log.Println("Status code", s)
 		time.Sleep(time.Millisecond * time.Duration(getRandomLatency()))

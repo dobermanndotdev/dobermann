@@ -9,9 +9,16 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/ThreeDotsLabs/watermill"
+	"github.com/ThreeDotsLabs/watermill-amqp/v2/pkg/amqp"
+	"github.com/ThreeDotsLabs/watermill/message"
+	"github.com/ThreeDotsLabs/watermill/message/router/middleware"
+	"github.com/ThreeDotsLabs/watermill/message/router/plugin"
 	"github.com/kelseyhightower/envconfig"
 	_ "github.com/lib/pq"
 
+	"github.com/flowck/dobermann/backend/internal/adapters/events"
+	"github.com/flowck/dobermann/backend/internal/adapters/monitors"
 	"github.com/flowck/dobermann/backend/internal/adapters/transaction"
 	"github.com/flowck/dobermann/backend/internal/adapters/users"
 	"github.com/flowck/dobermann/backend/internal/app"
@@ -20,10 +27,12 @@ import (
 	"github.com/flowck/dobermann/backend/internal/common/logs"
 	"github.com/flowck/dobermann/backend/internal/common/observability"
 	"github.com/flowck/dobermann/backend/internal/common/psql"
+	amqpport "github.com/flowck/dobermann/backend/internal/ports/amqp"
 	httpport "github.com/flowck/dobermann/backend/internal/ports/http"
 )
 
 type Config struct {
+	AmqpUrl     string `envconfig:"AMQP_URL"`
 	Port        int    `envconfig:"HTTP_PORT"`
 	JwtSecret   string `envconfig:"JWT_SECRET"`
 	DebugMode   string `envconfig:"DEBUG_MODE"`
@@ -39,6 +48,7 @@ func main() {
 	}
 
 	logger := logs.New(config.DebugMode == "enabled")
+	watermillLogger := watermill.NewStdLogger(false, false)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -63,15 +73,61 @@ func main() {
 		logger.Fatal(err)
 	}
 
+	publisher, err := amqp.NewPublisher(amqp.NewDurableQueueConfig(config.AmqpUrl), watermillLogger)
+	if err != nil {
+		logger.Fatal(err)
+	}
+	defer func() { _ = publisher.Close() }()
+
+	subscriber, err := amqp.NewSubscriber(amqp.NewDurableQueueConfig(config.AmqpUrl), watermillLogger)
+	if err != nil {
+		logger.Fatal(err)
+	}
+	defer func() { _ = subscriber.Close() }()
+
+	router, err := message.NewRouter(message.RouterConfig{}, watermillLogger)
+	if err != nil {
+		logger.Fatal(err)
+	}
+	defer func() { _ = router.Close() }()
+
+	poisonQueueMiddleware, err := middleware.PoisonQueue(publisher, "failed_events")
+	if err != nil {
+		logger.Fatal(err)
+	}
+
+	router.AddPlugin(plugin.SignalsHandler)
+	router.AddMiddleware(
+		middleware.CorrelationID,
+		middleware.Retry{
+			MaxRetries:      3,
+			Logger:          watermillLogger,
+			InitialInterval: time.Millisecond * 3,
+		}.Middleware,
+		poisonQueueMiddleware,
+		middleware.Recoverer,
+	)
+
+	logger.Info("Connected successfully to RabbitMQ")
+
+	httpChecker := monitors.NewHttpChecker()
 	userRepository := users.NewPsqlRepository(db)
-	txProvider := transaction.NewPsqlProvider(db)
+	eventPublisher := events.NewPublisher(publisher)
+	monitorRepository := monitors.NewPsqlRepository(db)
+	txProvider := transaction.NewPsqlProvider(db, publisher)
 
 	application := &app.App{
 		Commands: app.Commands{
-			CreateMonitor: nil,
+			CheckEndpoint: observability.NewCommandDecorator[command.CheckEndpoint](command.NewCheckEndpointHandler(httpChecker, monitorRepository), logger),
+			CreateMonitor: observability.NewCommandDecorator[command.CreateMonitor](command.NewCreateMonitorHandler(monitorRepository, eventPublisher), logger),
 			CreateAccount: observability.NewCommandDecorator[command.CreateAccount](command.NewCreateAccountHandler(txProvider), logger),
 			LogIn:         observability.NewCommandWithResultDecorator[command.LogIn, string](command.NewLoginHandler(userRepository, tokenSigner), logger),
 		},
+	}
+
+	eventHandlers := amqpport.NewHandlers(application)
+	for _, handler := range eventHandlers {
+		router.AddNoPublisherHandler(handler.HandlerName(), handler.EventName(), subscriber, handler.Handle)
 	}
 
 	httpPort, err := httpport.NewPort(httpport.Config{
@@ -90,6 +146,13 @@ func main() {
 		err = httpPort.Start()
 		if err != nil && !errors.Is(err, http.ErrServerClosed) {
 			logger.Errorf("the http port stopped with the following error: %v", err)
+		}
+	}()
+
+	go func() {
+		err = router.Run(ctx)
+		if err != nil {
+			logger.Errorf("watermill router stopped with the following error: %v", err)
 		}
 	}()
 

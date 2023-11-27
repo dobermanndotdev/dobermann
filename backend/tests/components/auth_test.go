@@ -1,6 +1,7 @@
 package components_test
 
 import (
+	"fmt"
 	"net/http"
 	"testing"
 
@@ -14,7 +15,7 @@ import (
 
 func TestAccessToProtectedEndpoints(t *testing.T) {
 	resp01, err := getClient("").CreateMonitor(ctx, client.CreateMonitorRequest{
-		EndpointUrl: "http://localhost:8090",
+		EndpointUrl: tests.SimulatorEndpointUrl,
 	})
 	require.NoError(t, err)
 	assert.Equal(t, http.StatusForbidden, resp01.StatusCode)
@@ -23,7 +24,7 @@ func TestAccessToProtectedEndpoints(t *testing.T) {
 	token := login(t, acc.Email, acc.Password)
 
 	resp02, err := getClient(token).CreateMonitor(ctx, client.CreateMonitorRequest{
-		EndpointUrl: "http://localhost:8090",
+		EndpointUrl: fmt.Sprintf("%s#testAcccessToProtectedEndpoints", tests.SimulatorEndpointUrl),
 	})
 	require.NoError(t, err)
 	assert.NotEqual(t, http.StatusForbidden, resp02.StatusCode)

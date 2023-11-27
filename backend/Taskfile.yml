@@ -48,6 +48,8 @@ tasks:
 
   orm:
     cmds:
+      - task mig:down
+      - task mig:up
       - sqlboiler psql --wipe --no-tests -o ./internal/adapters/models
 
   test:all:

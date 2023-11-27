@@ -143,19 +143,29 @@ var AccountWhere = struct {
 
 // AccountRels is where relationship names are stored.
 var AccountRels = struct {
-	Users string
+	Monitors string
+	Users    string
 }{
-	Users: "Users",
+	Monitors: "Monitors",
+	Users:    "Users",
 }
 
 // accountR is where relationships are stored.
 type accountR struct {
-	Users UserSlice `boil:"Users" json:"Users" toml:"Users" yaml:"Users"`
+	Monitors MonitorSlice `boil:"Monitors" json:"Monitors" toml:"Monitors" yaml:"Monitors"`
+	Users    UserSlice    `boil:"Users" json:"Users" toml:"Users" yaml:"Users"`
 }
 
 // NewStruct creates a new relationship struct
 func (*accountR) NewStruct() *accountR {
 	return &accountR{}
+}
+
+func (r *accountR) GetMonitors() MonitorSlice {
+	if r == nil {
+		return nil
+	}
+	return r.Monitors
 }
 
 func (r *accountR) GetUsers() UserSlice {
@@ -454,6 +464,20 @@ func (q accountQuery) Exists(ctx context.Context, exec boil.ContextExecutor) (bo
 	return count > 0, nil
 }
 
+// Monitors retrieves all the monitor's Monitors with an executor.
+func (o *Account) Monitors(mods ...qm.QueryMod) monitorQuery {
+	var queryMods []qm.QueryMod
+	if len(mods) != 0 {
+		queryMods = append(queryMods, mods...)
+	}
+
+	queryMods = append(queryMods,
+		qm.Where("\"monitors\".\"account_id\"=?", o.ID),
+	)
+
+	return Monitors(queryMods...)
+}
+
 // Users retrieves all the user's Users with an executor.
 func (o *Account) Users(mods ...qm.QueryMod) userQuery {
 	var queryMods []qm.QueryMod
@@ -466,6 +490,120 @@ func (o *Account) Users(mods ...qm.QueryMod) userQuery {
 	)
 
 	return Users(queryMods...)
+}
+
+// LoadMonitors allows an eager lookup of values, cached into the
+// loaded structs of the objects. This is for a 1-M or N-M relationship.
+func (accountL) LoadMonitors(ctx context.Context, e boil.ContextExecutor, singular bool, maybeAccount interface{}, mods queries.Applicator) error {
+	var slice []*Account
+	var object *Account
+
+	if singular {
+		var ok bool
+		object, ok = maybeAccount.(*Account)
+		if !ok {
+			object = new(Account)
+			ok = queries.SetFromEmbeddedStruct(&object, &maybeAccount)
+			if !ok {
+				return errors.New(fmt.Sprintf("failed to set %T from embedded struct %T", object, maybeAccount))
+			}
+		}
+	} else {
+		s, ok := maybeAccount.(*[]*Account)
+		if ok {
+			slice = *s
+		} else {
+			ok = queries.SetFromEmbeddedStruct(&slice, maybeAccount)
+			if !ok {
+				return errors.New(fmt.Sprintf("failed to set %T from embedded struct %T", slice, maybeAccount))
+			}
+		}
+	}
+
+	args := make([]interface{}, 0, 1)
+	if singular {
+		if object.R == nil {
+			object.R = &accountR{}
+		}
+		args = append(args, object.ID)
+	} else {
+	Outer:
+		for _, obj := range slice {
+			if obj.R == nil {
+				obj.R = &accountR{}
+			}
+
+			for _, a := range args {
+				if a == obj.ID {
+					continue Outer
+				}
+			}
+
+			args = append(args, obj.ID)
+		}
+	}
+
+	if len(args) == 0 {
+		return nil
+	}
+
+	query := NewQuery(
+		qm.From(`monitors`),
+		qm.WhereIn(`monitors.account_id in ?`, args...),
+	)
+	if mods != nil {
+		mods.Apply(query)
+	}
+
+	results, err := query.QueryContext(ctx, e)
+	if err != nil {
+		return errors.Wrap(err, "failed to eager load monitors")
+	}
+
+	var resultSlice []*Monitor
+	if err = queries.Bind(results, &resultSlice); err != nil {
+		return errors.Wrap(err, "failed to bind eager loaded slice monitors")
+	}
+
+	if err = results.Close(); err != nil {
+		return errors.Wrap(err, "failed to close results in eager load on monitors")
+	}
+	if err = results.Err(); err != nil {
+		return errors.Wrap(err, "error occurred during iteration of eager loaded relations for monitors")
+	}
+
+	if len(monitorAfterSelectHooks) != 0 {
+		for _, obj := range resultSlice {
+			if err := obj.doAfterSelectHooks(ctx, e); err != nil {
+				return err
+			}
+		}
+	}
+	if singular {
+		object.R.Monitors = resultSlice
+		for _, foreign := range resultSlice {
+			if foreign.R == nil {
+				foreign.R = &monitorR{}
+			}
+			foreign.R.Account = object
+		}
+		return nil
+	}
+
+	for _, foreign := range resultSlice {
+		for _, local := range slice {
+			if local.ID == foreign.AccountID {
+				local.R.Monitors = append(local.R.Monitors, foreign)
+				if foreign.R == nil {
+					foreign.R = &monitorR{}
+				}
+				foreign.R.Account = local
+				break
+			}
+		}
+	}
+
+	return nil
 }
 
 // LoadUsers allows an eager lookup of values, cached into the
@@ -579,6 +717,59 @@ func (accountL) LoadUsers(ctx context.Context, e boil.ContextExecutor, singular 
 		}
 	}
 
+	return nil
+}
+
+// AddMonitors adds the given related objects to the existing relationships
+// of the account, optionally inserting them as new records.
+// Appends related to o.R.Monitors.
+// Sets related.R.Account appropriately.
+func (o *Account) AddMonitors(ctx context.Context, exec boil.ContextExecutor, insert bool, related ...*Monitor) error {
+	var err error
+	for _, rel := range related {
+		if insert {
+			rel.AccountID = o.ID
+			if err = rel.Insert(ctx, exec, boil.Infer()); err != nil {
+				return errors.Wrap(err, "failed to insert into foreign table")
+			}
+		} else {
+			updateQuery := fmt.Sprintf(
+				"UPDATE \"monitors\" SET %s WHERE %s",
+				strmangle.SetParamNames("\"", "\"", 1, []string{"account_id"}),
+				strmangle.WhereClause("\"", "\"", 2, monitorPrimaryKeyColumns),
+			)
+			values := []interface{}{o.ID, rel.ID}
+
+			if boil.IsDebug(ctx) {
+				writer := boil.DebugWriterFrom(ctx)
+				fmt.Fprintln(writer, updateQuery)
+				fmt.Fprintln(writer, values)
+			}
+			if _, err = exec.ExecContext(ctx, updateQuery, values...); err != nil {
+				return errors.Wrap(err, "failed to update foreign table")
+			}
+
+			rel.AccountID = o.ID
+		}
+	}
+
+	if o.R == nil {
+		o.R = &accountR{
+			Monitors: related,
+		}
+	} else {
+		o.R.Monitors = append(o.R.Monitors, related...)
+	}
+
+	for _, rel := range related {
+		if rel.R == nil {
+			rel.R = &monitorR{
+				Account: o,
+			}
+		} else {
+			rel.R.Account = o
+		}
+	}
 	return nil
 }
 
