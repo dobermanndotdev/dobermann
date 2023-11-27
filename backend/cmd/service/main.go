@@ -79,6 +79,7 @@ func main() {
 		Logger:      logger,
 		Port:        config.Port,
 		Application: application,
+		JwtVerifier: tokenSigner,
 	})
 	if err != nil {
 		logger.Fatal(err)

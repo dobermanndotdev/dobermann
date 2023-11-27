@@ -5,11 +5,29 @@ import (
 	"testing"
 
 	"github.com/brianvoe/gofakeit"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/flowck/dobermann/backend/tests"
 	"github.com/flowck/dobermann/backend/tests/client"
 )
+
+func TestAccessToProtectedEndpoints(t *testing.T) {
+	resp01, err := getClient("").CreateMonitor(ctx, client.CreateMonitorRequest{
+		EndpointUrl: "http://localhost:8090",
+	})
+	require.NoError(t, err)
+	assert.Equal(t, http.StatusForbidden, resp01.StatusCode)
+
+	acc := createAccount(t)
+	token := login(t, acc.Email, acc.Password)
+
+	resp02, err := getClient(token).CreateMonitor(ctx, client.CreateMonitorRequest{
+		EndpointUrl: "http://localhost:8090",
+	})
+	require.NoError(t, err)
+	assert.NotEqual(t, http.StatusForbidden, resp02.StatusCode)
+}
 
 func createAccount(t *testing.T) client.CreateAccountRequest {
 	payload := client.CreateAccountRequest{
