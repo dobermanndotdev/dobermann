@@ -19,7 +19,7 @@ type CommandHandlerWithResult[C, R any] interface {
 }
 
 type Commands struct {
-	CreateMonitor CommandHandler[any]
+	CreateMonitor CommandHandler[command.CreateMonitor]
 	CreateAccount CommandHandler[command.CreateAccount]
 	LogIn         CommandHandlerWithResult[command.LogIn, string]
 }

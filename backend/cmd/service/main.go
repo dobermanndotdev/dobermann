@@ -68,7 +68,7 @@ func main() {
 
 	application := &app.App{
 		Commands: app.Commands{
-			CreateMonitor: nil,
+			CreateMonitor: observability.NewCommandDecorator[command.CreateMonitor](command.NewCreateMonitorHandler(txProvider), logger),
 			CreateAccount: observability.NewCommandDecorator[command.CreateAccount](command.NewCreateAccountHandler(txProvider), logger),
 			LogIn:         observability.NewCommandWithResultDecorator[command.LogIn, string](command.NewLoginHandler(userRepository, tokenSigner), logger),
 		},

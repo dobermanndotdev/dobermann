@@ -39,9 +39,10 @@ func (h LoginHandler) Execute(ctx context.Context, cmd LogIn) (string, error) {
 	}
 
 	token, err := h.tokenSigner.Sign(map[string]string{
-		"id":    user.ID().String(),
-		"email": user.Email().Address(),
-		"role":  user.Role().String(),
+		"id":         user.ID().String(),
+		"email":      user.Email().Address(),
+		"account_id": user.AccountID().String(),
+		"role":       user.Role().String(),
 	})
 	if err != nil {
 		return "", err
