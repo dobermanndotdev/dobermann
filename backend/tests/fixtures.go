@@ -18,7 +18,13 @@ func FixturePassword() string {
 }
 
 func FixtureAccount(t *testing.T) *account.Account {
-	acc, err := account.NewFirstTimeAccount(gofakeit.Company(), gofakeit.Email(), FixturePassword())
+	email, err := account.NewEmail(gofakeit.Email())
+	require.NoError(t, err)
+
+	password, err := account.NewPassword(FixturePassword())
+	require.NoError(t, err)
+
+	acc, err := account.NewFirstTimeAccount(gofakeit.Company(), email, password)
 	require.NoError(t, err)
 
 	return acc

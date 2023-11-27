@@ -13,8 +13,10 @@ import (
 	_ "github.com/lib/pq"
 
 	"github.com/flowck/dobermann/backend/internal/adapters/transaction"
+	"github.com/flowck/dobermann/backend/internal/adapters/users"
 	"github.com/flowck/dobermann/backend/internal/app"
 	"github.com/flowck/dobermann/backend/internal/app/command"
+	"github.com/flowck/dobermann/backend/internal/common/auth"
 	"github.com/flowck/dobermann/backend/internal/common/logs"
 	"github.com/flowck/dobermann/backend/internal/common/observability"
 	"github.com/flowck/dobermann/backend/internal/common/psql"
@@ -23,6 +25,7 @@ import (
 
 type Config struct {
 	Port        int    `envconfig:"HTTP_PORT"`
+	JwtSecret   string `envconfig:"JWT_SECRET"`
 	DebugMode   string `envconfig:"DEBUG_MODE"`
 	DatabaseURL string `envconfig:"DATABASE_URL"`
 }
@@ -55,12 +58,19 @@ func main() {
 		logger.Fatal(err)
 	}
 
+	tokenSigner, err := auth.NewTokenSigner(config.JwtSecret, time.Hour*24*7)
+	if err != nil {
+		logger.Fatal(err)
+	}
+
+	userRepository := users.NewPsqlRepository(db)
 	txProvider := transaction.NewPsqlProvider(db)
 
 	application := &app.App{
 		Commands: app.Commands{
-			CreateAccount: observability.NewCommandDecorator[command.CreateAccount](command.NewCreateAccountHandler(txProvider), logger),
 			CreateMonitor: nil,
+			CreateAccount: observability.NewCommandDecorator[command.CreateAccount](command.NewCreateAccountHandler(txProvider), logger),
+			LogIn:         observability.NewCommandWithResultDecorator[command.LogIn, string](command.NewLoginHandler(userRepository, tokenSigner), logger),
 		},
 	}
 

@@ -6,6 +6,7 @@ import (
 
 	"errors"
 
+	"github.com/flowck/dobermann/backend/internal/common/hashing"
 	"github.com/flowck/dobermann/backend/internal/domain"
 )
 
@@ -13,13 +14,48 @@ type User struct {
 	id                domain.ID
 	firstName         string
 	lastName          string
-	email             string
-	password          string
+	email             Email
+	password          Password
 	role              Role
 	verificationToken *domain.ID
 	verifiedAt        *time.Time
 	accountID         domain.ID
 	createdAt         time.Time
+}
+
+func NewUser(
+	id domain.ID,
+	firstName string,
+	lastName string,
+	email Email,
+	role Role,
+	password Password,
+	accountID domain.ID,
+) (*User, error) {
+	firstName = strings.TrimSpace(firstName)
+	lastName = strings.TrimSpace(lastName)
+
+	if email.IsEmpty() {
+		return nil, errors.New("email cannot be invalid")
+	}
+
+	if password.IsEmpty() {
+		return nil, errors.New("password cannot be invalid")
+	}
+
+	return &User{
+		id:        id,
+		firstName: firstName,
+		lastName:  lastName,
+		email:     email,
+		password:  password,
+		role:      role,
+		accountID: accountID,
+	}, nil
+}
+
+func (u *User) Password() Password {
+	return u.password
 }
 
 func (u *User) VerificationToken() *domain.ID {
@@ -46,7 +82,7 @@ func (u *User) LastName() string {
 	return u.lastName
 }
 
-func (u *User) Email() string {
+func (u *User) Email() Email {
 	return u.email
 }
 
@@ -58,35 +94,11 @@ func (u *User) AccountID() domain.ID {
 	return u.accountID
 }
 
-func NewUser(
-	id domain.ID,
-	firstName string,
-	lastName string,
-	email string,
-	role Role,
-	password string,
-	accountID domain.ID,
-) (*User, error) {
-	firstName = strings.TrimSpace(firstName)
-	lastName = strings.TrimSpace(lastName)
-	email = strings.TrimSpace(email)
-	password = strings.TrimSpace(password)
-
-	if email == "" {
-		return nil, errors.New("email cannot be invalid")
+func (u *User) Authenticate(plainTextPassword string) error {
+	err := hashing.Compare(plainTextPassword, u.password.hash)
+	if err != nil {
+		return ErrAuthenticationFailed
 	}
 
-	if password == "" {
-		return nil, errors.New("password cannot be empty")
-	}
-
-	return &User{
-		id:        id,
-		firstName: firstName,
-		lastName:  lastName,
-		email:     email,
-		password:  password,
-		role:      role,
-		accountID: accountID,
-	}, nil
+	return nil
 }
