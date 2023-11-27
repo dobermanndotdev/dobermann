@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/ThreeDotsLabs/watermill/message"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 
 	"github.com/flowck/dobermann/backend/internal/adapters/accounts"
@@ -14,12 +15,14 @@ import (
 )
 
 type PsqlProvider struct {
-	db boil.ContextBeginner
+	db        boil.ContextBeginner
+	publisher message.Publisher
 }
 
-func NewPsqlProvider(db boil.ContextBeginner) PsqlProvider {
+func NewPsqlProvider(db boil.ContextBeginner, publisher message.Publisher) PsqlProvider {
 	return PsqlProvider{
-		db: db,
+		db:        db,
+		publisher: publisher,
 	}
 }
 
@@ -33,7 +36,7 @@ func (p PsqlProvider) Transact(ctx context.Context, f command.TransactFuncc) err
 		AccountRepository: accounts.NewPsqlRepository(tx),
 		UserRepository:    users.NewPsqlRepository(tx),
 		MonitorRepository: monitors.NewPsqlRepository(tx),
-		EventPublisher:    events.NewPublisher(),
+		EventPublisher:    events.NewPublisher(p.publisher),
 	}
 
 	if err = f(adapters); err != nil {

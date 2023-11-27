@@ -9,6 +9,8 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/ThreeDotsLabs/watermill"
+	"github.com/ThreeDotsLabs/watermill-amqp/v2/pkg/amqp"
 	"github.com/kelseyhightower/envconfig"
 	_ "github.com/lib/pq"
 
@@ -24,6 +26,7 @@ import (
 )
 
 type Config struct {
+	AmqpUrl     string `envconfig:"AMQP_URL"`
 	Port        int    `envconfig:"HTTP_PORT"`
 	JwtSecret   string `envconfig:"JWT_SECRET"`
 	DebugMode   string `envconfig:"DEBUG_MODE"`
@@ -63,8 +66,18 @@ func main() {
 		logger.Fatal(err)
 	}
 
+	publisher, err := amqp.NewPublisher(
+		amqp.NewDurableQueueConfig(config.AmqpUrl),
+		watermill.NewStdLogger(false, false),
+	)
+	if err != nil {
+		logger.Fatal(err)
+	}
+
+	logger.Info("Connected successfully to RabbitMQ")
+
 	userRepository := users.NewPsqlRepository(db)
-	txProvider := transaction.NewPsqlProvider(db)
+	txProvider := transaction.NewPsqlProvider(db, publisher)
 
 	application := &app.App{
 		Commands: app.Commands{

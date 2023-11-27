@@ -89,11 +89,11 @@ func retrieveUserFromCtx(c echo.Context) (*authenticatedUser, error) {
 	}, nil
 }
 
-func retrieveUserIdFromCtx(c echo.Context) (domain.ID, error) {
+/*func retrieveUserIdFromCtx(c echo.Context) (domain.ID, error) {
 	data, err := retrieveUserFromCtx(c)
 	if err != nil {
 		return domain.ID{}, err
 	}
 
 	return data.ID, nil
-}
+}*/
