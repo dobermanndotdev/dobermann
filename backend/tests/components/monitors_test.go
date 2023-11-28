@@ -29,7 +29,7 @@ func TestMonitors(t *testing.T) {
 		})
 		require.NoError(t, err)
 		assert.Equal(t, http.StatusCreated, resp01.StatusCode)
-		assert.Eventually(t, assertMonitorIsWillBeChecked(t, endpointUrl), time.Second*5, time.Millisecond*250)
+		assert.Eventually(t, assertMonitorHasBeenChecked(t, endpointUrl), time.Second*5, time.Millisecond*250)
 	})
 
 	t.Run("create_monitor_with_and_endpoint_down", func(t *testing.T) {
@@ -40,11 +40,11 @@ func TestMonitors(t *testing.T) {
 		})
 		require.NoError(t, err)
 		assert.Equal(t, http.StatusCreated, resp01.StatusCode)
-		assert.Eventually(t, assertIncidentWillBeCreated(t, endpointUrl), time.Second*5, time.Millisecond*250)
+		assert.Eventually(t, assertIncidentExists(t, endpointUrl), time.Second*5, time.Millisecond*250)
 	})
 }
 
-func assertMonitorIsWillBeChecked(t *testing.T, endpointUrl string) func() bool {
+func assertMonitorHasBeenChecked(t *testing.T, endpointUrl string) func() bool {
 	return func() bool {
 		model, err := models.Monitors(models.MonitorWhere.EndpointURL.EQ(endpointUrl)).One(ctx, db)
 		require.NoError(t, err)
@@ -53,7 +53,7 @@ func assertMonitorIsWillBeChecked(t *testing.T, endpointUrl string) func() bool 
 	}
 }
 
-func assertIncidentWillBeCreated(t *testing.T, endpointUrl string) func() bool {
+func assertIncidentExists(t *testing.T, endpointUrl string) func() bool {
 	return func() bool {
 		model, err := models.Monitors(models.MonitorWhere.EndpointURL.EQ(endpointUrl)).One(ctx, db)
 		require.NoError(t, err)
@@ -63,6 +63,6 @@ func assertIncidentWillBeCreated(t *testing.T, endpointUrl string) func() bool {
 			qm.OrderBy("created_at DESC"),
 		).One(ctx, db)
 
-		return err == nil // && incidentModel.MonitorID == model.ID
+		return err == nil
 	}
 }
