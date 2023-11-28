@@ -1,4 +1,4 @@
-package monitors
+package psql
 
 import (
 	"context"
@@ -13,17 +13,17 @@ import (
 	"github.com/flowck/dobermann/backend/internal/domain/monitor"
 )
 
-func NewPsqlRepository(db boil.ContextExecutor) PsqlRepository {
-	return PsqlRepository{
+func NewMonitorRepository(db boil.ContextExecutor) MonitorRepository {
+	return MonitorRepository{
 		db: db,
 	}
 }
 
-type PsqlRepository struct {
+type MonitorRepository struct {
 	db boil.ContextExecutor
 }
 
-func (p PsqlRepository) Insert(ctx context.Context, m *monitor.Monitor) error {
+func (p MonitorRepository) Insert(ctx context.Context, m *monitor.Monitor) error {
 	model := mapMonitorToModel(m)
 	err := model.Insert(ctx, p.db, boil.Infer())
 	if err != nil {
@@ -33,7 +33,7 @@ func (p PsqlRepository) Insert(ctx context.Context, m *monitor.Monitor) error {
 	return nil
 }
 
-func (p PsqlRepository) Update(ctx context.Context, id domain.ID, fn func(monitor *monitor.Monitor) error) error {
+func (p MonitorRepository) Update(ctx context.Context, id domain.ID, fn func(monitor *monitor.Monitor) error) error {
 	model, err := models.FindMonitor(ctx, p.db, id.String())
 	if errors.Is(err, sql.ErrNoRows) {
 		return monitor.ErrMonitorNotFound

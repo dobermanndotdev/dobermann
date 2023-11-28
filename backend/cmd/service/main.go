@@ -18,16 +18,16 @@ import (
 	"github.com/kelseyhightower/envconfig"
 	_ "github.com/lib/pq"
 
+	"github.com/flowck/dobermann/backend/internal/adapters/endpoint_checkers"
 	"github.com/flowck/dobermann/backend/internal/adapters/events"
-	"github.com/flowck/dobermann/backend/internal/adapters/monitors"
+	"github.com/flowck/dobermann/backend/internal/adapters/psql"
 	"github.com/flowck/dobermann/backend/internal/adapters/transaction"
-	"github.com/flowck/dobermann/backend/internal/adapters/users"
 	"github.com/flowck/dobermann/backend/internal/app"
 	"github.com/flowck/dobermann/backend/internal/app/command"
 	"github.com/flowck/dobermann/backend/internal/common/auth"
 	"github.com/flowck/dobermann/backend/internal/common/logs"
 	"github.com/flowck/dobermann/backend/internal/common/observability"
-	"github.com/flowck/dobermann/backend/internal/common/psql"
+	"github.com/flowck/dobermann/backend/internal/common/postgres"
 	amqpport "github.com/flowck/dobermann/backend/internal/ports/amqp"
 	httpport "github.com/flowck/dobermann/backend/internal/ports/http"
 )
@@ -60,14 +60,14 @@ func main() {
 	done := make(chan os.Signal, 1)
 	signal.Notify(done, syscall.SIGINT, syscall.SIGTERM)
 
-	db, err := psql.Connect(config.DatabaseURL)
+	db, err := postgres.Connect(config.DatabaseURL)
 	if err != nil {
 		logger.Fatal(err)
 	}
 
 	logger.Info("Connected successfully to the database")
 
-	err = psql.ApplyMigrations(db, "misc/sql/migrations")
+	err = postgres.ApplyMigrations(db, "misc/sql/migrations")
 	if err != nil {
 		logger.Fatal(err)
 	}
@@ -124,11 +124,11 @@ func main() {
 
 	logger.Info("Connected successfully to RabbitMQ")
 
-	httpChecker := monitors.NewHttpChecker()
-	userRepository := users.NewPsqlRepository(db)
+	httpChecker := endpoint_checkers.NewHttpChecker()
+	userRepository := psql.NewUserRepository(db)
 	eventPublisher := events.NewPublisher(publisher)
-	monitorRepository := monitors.NewPsqlRepository(db)
-	incidentRepository := monitors.NewIncidentRepository(db)
+	monitorRepository := psql.NewMonitorRepository(db)
+	incidentRepository := psql.NewIncidentRepository(db)
 	txProvider := transaction.NewPsqlProvider(db, publisher)
 
 	application := &app.App{

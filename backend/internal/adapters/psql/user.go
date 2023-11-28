@@ -1,4 +1,4 @@
-package users
+package psql
 
 import (
 	"context"
@@ -12,17 +12,17 @@ import (
 	"github.com/flowck/dobermann/backend/internal/domain/account"
 )
 
-func NewPsqlRepository(db boil.ContextExecutor) PsqlRepository {
-	return PsqlRepository{
+func NewUserRepository(db boil.ContextExecutor) UserRepository {
+	return UserRepository{
 		db: db,
 	}
 }
 
-type PsqlRepository struct {
+type UserRepository struct {
 	db boil.ContextExecutor
 }
 
-func (p PsqlRepository) FindByEmail(ctx context.Context, email account.Email) (*account.User, error) {
+func (p UserRepository) FindByEmail(ctx context.Context, email account.Email) (*account.User, error) {
 	model, err := models.Users(models.UserWhere.Email.EQ(email.Address())).One(ctx, p.db)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, account.ErrUserNotFound
@@ -35,7 +35,7 @@ func (p PsqlRepository) FindByEmail(ctx context.Context, email account.Email) (*
 	return mapModelToUser(model)
 }
 
-func (p PsqlRepository) Insert(ctx context.Context, user *account.User) error {
+func (p UserRepository) Insert(ctx context.Context, user *account.User) error {
 	model := mapUserToModel(user)
 	err := model.Insert(ctx, p.db, boil.Infer())
 	if err != nil {

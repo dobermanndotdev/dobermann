@@ -1,4 +1,4 @@
-package accounts
+package psql
 
 import (
 	"context"
@@ -9,17 +9,17 @@ import (
 	"github.com/flowck/dobermann/backend/internal/domain/account"
 )
 
-func NewPsqlRepository(db boil.ContextExecutor) PsqlRepository {
-	return PsqlRepository{
+func NewAccountRepository(db boil.ContextExecutor) AccountRepository {
+	return AccountRepository{
 		db: db,
 	}
 }
 
-type PsqlRepository struct {
+type AccountRepository struct {
 	db boil.ContextExecutor
 }
 
-func (p PsqlRepository) Insert(ctx context.Context, acc *account.Account) error {
+func (p AccountRepository) Insert(ctx context.Context, acc *account.Account) error {
 	model := mapAccountToModel(acc)
 	err := model.Insert(ctx, p.db, boil.Infer())
 	if err != nil {

@@ -1,4 +1,4 @@
-package monitors
+package psql
 
 import (
 	"context"
@@ -9,12 +9,12 @@ import (
 	"github.com/flowck/dobermann/backend/internal/domain/monitor"
 )
 
-type IncidentRepository struct {
-	db boil.ContextExecutor
-}
-
 func NewIncidentRepository(db boil.ContextExecutor) IncidentRepository {
 	return IncidentRepository{db: db}
+}
+
+type IncidentRepository struct {
+	db boil.ContextExecutor
 }
 
 func (i IncidentRepository) Create(ctx context.Context, monitorID domain.ID, incident *monitor.Incident) error {

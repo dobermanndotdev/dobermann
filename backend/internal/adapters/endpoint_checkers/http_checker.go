@@ -1,4 +1,4 @@
-package monitors
+package endpoint_checkers
 
 import (
 	"context"

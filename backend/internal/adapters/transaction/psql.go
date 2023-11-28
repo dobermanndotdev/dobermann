@@ -7,16 +7,14 @@ import (
 	"github.com/ThreeDotsLabs/watermill/message"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 
-	"github.com/flowck/dobermann/backend/internal/adapters/accounts"
 	"github.com/flowck/dobermann/backend/internal/adapters/events"
-	"github.com/flowck/dobermann/backend/internal/adapters/monitors"
-	"github.com/flowck/dobermann/backend/internal/adapters/users"
+	"github.com/flowck/dobermann/backend/internal/adapters/psql"
 	"github.com/flowck/dobermann/backend/internal/app/command"
 )
 
 type PsqlProvider struct {
-	db        boil.ContextBeginner
 	publisher message.Publisher
+	db        boil.ContextBeginner
 }
 
 func NewPsqlProvider(db boil.ContextBeginner, publisher message.Publisher) PsqlProvider {
@@ -33,9 +31,9 @@ func (p PsqlProvider) Transact(ctx context.Context, f command.TransactFuncc) err
 	}
 
 	adapters := command.TransactableAdapters{
-		AccountRepository: accounts.NewPsqlRepository(tx),
-		UserRepository:    users.NewPsqlRepository(tx),
-		MonitorRepository: monitors.NewPsqlRepository(tx),
+		AccountRepository: psql.NewAccountRepository(tx),
+		UserRepository:    psql.NewUserRepository(tx),
+		MonitorRepository: psql.NewMonitorRepository(tx),
 		EventPublisher:    events.NewPublisher(p.publisher),
 	}
 
