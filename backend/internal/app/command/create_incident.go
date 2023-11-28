@@ -4,7 +4,6 @@ import (
 	"context"
 	"time"
 
-	"github.com/flowck/dobermann/backend/internal/adapters/monitors"
 	"github.com/flowck/dobermann/backend/internal/domain"
 	"github.com/flowck/dobermann/backend/internal/domain/monitor"
 )
@@ -14,10 +13,10 @@ type CreateIncident struct {
 }
 
 type CreateIncidentHandler struct {
-	incidentRepository monitors.IncidentRepository
+	incidentRepository monitor.IncidentRepository
 }
 
-func NewCreateIncidentHandler(incidentRepository monitors.IncidentRepository) CreateIncidentHandler {
+func NewCreateIncidentHandler(incidentRepository monitor.IncidentRepository) CreateIncidentHandler {
 	return CreateIncidentHandler{
 		incidentRepository: incidentRepository,
 	}

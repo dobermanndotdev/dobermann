@@ -13,7 +13,7 @@ import (
 	"github.com/labstack/echo/v4"
 	_ "github.com/lib/pq"
 
-	"github.com/flowck/dobermann/backend/internal/common/psql"
+	"github.com/flowck/dobermann/backend/internal/common/postgres"
 	"github.com/flowck/dobermann/backend/tests/client"
 )
 
@@ -28,12 +28,12 @@ func TestMain(m *testing.M) {
 	defer cancel()
 
 	var err error
-	db, err = psql.Connect(os.Getenv("DATABASE_URL"))
+	db, err = postgres.Connect(os.Getenv("DATABASE_URL"))
 	if err != nil {
 		panic(err)
 	}
 
-	err = psql.ApplyMigrations(db, "../../misc/sql/migrations")
+	err = postgres.ApplyMigrations(db, "../../misc/sql/migrations")
 	if err != nil {
 		panic(err)
 	}
@@ -59,13 +59,3 @@ func getClient(token string) *client.ClientWithResponses {
 
 	return newClient
 }
-
-/*func unMarshallMessageToEvent[T any](m *message.Message) (T, error) {
-	var event T
-	err := json.Unmarshal(m.Payload, &event)
-	if err != nil {
-		return event, err
-	}
-
-	return event, nil
-}*/

@@ -1,4 +1,4 @@
-package monitors_test
+package psql_test
 
 import (
 	"context"
@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/flowck/dobermann/backend/internal/common/psql"
+	"github.com/flowck/dobermann/backend/internal/common/postgres"
 )
 
 var (
@@ -22,7 +22,7 @@ func TestMain(m *testing.M) {
 	defer cancel()
 
 	var err error
-	db, err = psql.Connect(os.Getenv("DATABASE_URL"))
+	db, err = postgres.Connect(os.Getenv("DATABASE_URL"))
 	if err != nil {
 		panic(err)
 	}
