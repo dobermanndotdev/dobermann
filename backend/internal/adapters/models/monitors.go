@@ -96,14 +96,17 @@ var MonitorWhere = struct {
 
 // MonitorRels is where relationship names are stored.
 var MonitorRels = struct {
-	Account string
+	Account   string
+	Incidents string
 }{
-	Account: "Account",
+	Account:   "Account",
+	Incidents: "Incidents",
 }
 
 // monitorR is where relationships are stored.
 type monitorR struct {
-	Account *Account `boil:"Account" json:"Account" toml:"Account" yaml:"Account"`
+	Account   *Account      `boil:"Account" json:"Account" toml:"Account" yaml:"Account"`
+	Incidents IncidentSlice `boil:"Incidents" json:"Incidents" toml:"Incidents" yaml:"Incidents"`
 }
 
 // NewStruct creates a new relationship struct
@@ -116,6 +119,13 @@ func (r *monitorR) GetAccount() *Account {
 		return nil
 	}
 	return r.Account
+}
+
+func (r *monitorR) GetIncidents() IncidentSlice {
+	if r == nil {
+		return nil
+	}
+	return r.Incidents
 }
 
 // monitorL is where Load methods for each relationship are stored.
@@ -418,6 +428,20 @@ func (o *Monitor) Account(mods ...qm.QueryMod) accountQuery {
 	return Accounts(queryMods...)
 }
 
+// Incidents retrieves all the incident's Incidents with an executor.
+func (o *Monitor) Incidents(mods ...qm.QueryMod) incidentQuery {
+	var queryMods []qm.QueryMod
+	if len(mods) != 0 {
+		queryMods = append(queryMods, mods...)
+	}
+
+	queryMods = append(queryMods,
+		qm.Where("\"incidents\".\"monitor_id\"=?", o.ID),
+	)
+
+	return Incidents(queryMods...)
+}
+
 // LoadAccount allows an eager lookup of values, cached into the
 // loaded structs of the objects. This is for an N-1 relationship.
 func (monitorL) LoadAccount(ctx context.Context, e boil.ContextExecutor, singular bool, maybeMonitor interface{}, mods queries.Applicator) error {
@@ -538,6 +562,120 @@ func (monitorL) LoadAccount(ctx context.Context, e boil.ContextExecutor, singula
 	return nil
 }
 
+// LoadIncidents allows an eager lookup of values, cached into the
+// loaded structs of the objects. This is for a 1-M or N-M relationship.
+func (monitorL) LoadIncidents(ctx context.Context, e boil.ContextExecutor, singular bool, maybeMonitor interface{}, mods queries.Applicator) error {
+	var slice []*Monitor
+	var object *Monitor
+
+	if singular {
+		var ok bool
+		object, ok = maybeMonitor.(*Monitor)
+		if !ok {
+			object = new(Monitor)
+			ok = queries.SetFromEmbeddedStruct(&object, &maybeMonitor)
+			if !ok {
+				return errors.New(fmt.Sprintf("failed to set %T from embedded struct %T", object, maybeMonitor))
+			}
+		}
+	} else {
+		s, ok := maybeMonitor.(*[]*Monitor)
+		if ok {
+			slice = *s
+		} else {
+			ok = queries.SetFromEmbeddedStruct(&slice, maybeMonitor)
+			if !ok {
+				return errors.New(fmt.Sprintf("failed to set %T from embedded struct %T", slice, maybeMonitor))
+			}
+		}
+	}
+
+	args := make([]interface{}, 0, 1)
+	if singular {
+		if object.R == nil {
+			object.R = &monitorR{}
+		}
+		args = append(args, object.ID)
+	} else {
+	Outer:
+		for _, obj := range slice {
+			if obj.R == nil {
+				obj.R = &monitorR{}
+			}
+
+			for _, a := range args {
+				if a == obj.ID {
+					continue Outer
+				}
+			}
+
+			args = append(args, obj.ID)
+		}
+	}
+
+	if len(args) == 0 {
+		return nil
+	}
+
+	query := NewQuery(
+		qm.From(`incidents`),
+		qm.WhereIn(`incidents.monitor_id in ?`, args...),
+	)
+	if mods != nil {
+		mods.Apply(query)
+	}
+
+	results, err := query.QueryContext(ctx, e)
+	if err != nil {
+		return errors.Wrap(err, "failed to eager load incidents")
+	}
+
+	var resultSlice []*Incident
+	if err = queries.Bind(results, &resultSlice); err != nil {
+		return errors.Wrap(err, "failed to bind eager loaded slice incidents")
+	}
+
+	if err = results.Close(); err != nil {
+		return errors.Wrap(err, "failed to close results in eager load on incidents")
+	}
+	if err = results.Err(); err != nil {
+		return errors.Wrap(err, "error occurred during iteration of eager loaded relations for incidents")
+	}
+
+	if len(incidentAfterSelectHooks) != 0 {
+		for _, obj := range resultSlice {
+			if err := obj.doAfterSelectHooks(ctx, e); err != nil {
+				return err
+			}
+		}
+	}
+	if singular {
+		object.R.Incidents = resultSlice
+		for _, foreign := range resultSlice {
+			if foreign.R == nil {
+				foreign.R = &incidentR{}
+			}
+			foreign.R.Monitor = object
+		}
+		return nil
+	}
+
+	for _, foreign := range resultSlice {
+		for _, local := range slice {
+			if local.ID == foreign.MonitorID {
+				local.R.Incidents = append(local.R.Incidents, foreign)
+				if foreign.R == nil {
+					foreign.R = &incidentR{}
+				}
+				foreign.R.Monitor = local
+				break
+			}
+		}
+	}
+
+	return nil
+}
+
 // SetAccount of the monitor to the related item.
 // Sets o.R.Account to related.
 // Adds o to related.R.Monitors.
@@ -582,6 +720,59 @@ func (o *Monitor) SetAccount(ctx context.Context, exec boil.ContextExecutor, ins
 		related.R.Monitors = append(related.R.Monitors, o)
 	}
 
+	return nil
+}
+
+// AddIncidents adds the given related objects to the existing relationships
+// of the monitor, optionally inserting them as new records.
+// Appends related to o.R.Incidents.
+// Sets related.R.Monitor appropriately.
+func (o *Monitor) AddIncidents(ctx context.Context, exec boil.ContextExecutor, insert bool, related ...*Incident) error {
+	var err error
+	for _, rel := range related {
+		if insert {
+			rel.MonitorID = o.ID
+			if err = rel.Insert(ctx, exec, boil.Infer()); err != nil {
+				return errors.Wrap(err, "failed to insert into foreign table")
+			}
+		} else {
+			updateQuery := fmt.Sprintf(
+				"UPDATE \"incidents\" SET %s WHERE %s",
+				strmangle.SetParamNames("\"", "\"", 1, []string{"monitor_id"}),
+				strmangle.WhereClause("\"", "\"", 2, incidentPrimaryKeyColumns),
+			)
+			values := []interface{}{o.ID, rel.ID}
+
+			if boil.IsDebug(ctx) {
+				writer := boil.DebugWriterFrom(ctx)
+				fmt.Fprintln(writer, updateQuery)
+				fmt.Fprintln(writer, values)
+			}
+			if _, err = exec.ExecContext(ctx, updateQuery, values...); err != nil {
+				return errors.Wrap(err, "failed to update foreign table")
+			}
+
+			rel.MonitorID = o.ID
+		}
+	}
+
+	if o.R == nil {
+		o.R = &monitorR{
+			Incidents: related,
+		}
+	} else {
+		o.R.Incidents = append(o.R.Incidents, related...)
+	}
+
+	for _, rel := range related {
+		if rel.R == nil {
+			rel.R = &incidentR{
+				Monitor: o,
+			}
+		} else {
+			rel.R.Monitor = o
+		}
+	}
 	return nil
 }
 

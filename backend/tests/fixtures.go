@@ -64,3 +64,10 @@ func FixtureMonitor(t *testing.T, accountID domain.ID) *monitor.Monitor {
 
 	return newMonitor
 }
+
+func FixtureIncident(t *testing.T) *monitor.Incident {
+	incident, err := monitor.NewIncident(domain.NewID(), time.Now().UTC(), nil)
+	require.NoError(t, err)
+
+	return incident
+}

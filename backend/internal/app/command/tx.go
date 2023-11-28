@@ -16,6 +16,7 @@ type TransactableAdapters struct {
 
 type EventPublisher interface {
 	PublishMonitorCreated(ctx context.Context, event MonitorCreatedEvent) error
+	PublishEndpointCheckFailed(ctx context.Context, event EndpointCheckFailed) error
 }
 
 type TransactionProvider interface {
