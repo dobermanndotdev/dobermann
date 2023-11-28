@@ -40,3 +40,11 @@ func mapModelToMonitor(model *models.Monitor) (*monitor.Monitor, error) {
 		model.LastCheckedAt.Ptr(),
 	)
 }
+
+func mapIncidentToModel(incident *monitor.Incident, monitorID domain.ID) *models.Incident {
+	return &models.Incident{
+		ID:        incident.ID().String(),
+		MonitorID: monitorID.String(),
+		CreatedAt: incident.CreatedAt(),
+	}
+}

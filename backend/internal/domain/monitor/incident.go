@@ -1,17 +1,25 @@
 package monitor
 
 import (
+	"context"
 	"time"
 
 	"github.com/friendsofgo/errors"
+
+	"github.com/flowck/dobermann/backend/internal/domain"
 )
 
 type Incident struct {
-	id      string
-	actions []IncidentAction
+	id        domain.ID
+	createdAt time.Time
+	actions   []IncidentAction
 }
 
-func (i *Incident) ID() string {
+func (i *Incident) CreatedAt() time.Time {
+	return i.createdAt
+}
+
+func (i *Incident) ID() domain.ID {
 	return i.id
 }
 
@@ -19,44 +27,22 @@ func (i *Incident) Actions() []IncidentAction {
 	return i.actions
 }
 
-func NewIncident(id string, actions []IncidentAction) (*Incident, error) {
-	if id == "" {
+func NewIncident(id domain.ID, createdAt time.Time, actions []IncidentAction) (*Incident, error) {
+	if id.IsEmpty() {
 		return nil, errors.New("id cannot be empty or invalid")
 	}
 
 	return &Incident{
-		id:      id,
-		actions: actions,
+		id:        id,
+		actions:   actions,
+		createdAt: createdAt,
 	}, nil
 }
 
-type IncidentAction struct {
-	takerUserID string
-	takenAt     time.Time
-	actionType  IncidentActionType
-}
+//
+// Repo
+//
 
-func (i IncidentAction) TakerUserID() string {
-	return i.takerUserID
-}
-
-func (i IncidentAction) TakenAt() time.Time {
-	return i.takenAt
-}
-
-func (i IncidentAction) ActionType() IncidentActionType {
-	return i.actionType
-}
-
-var (
-	IncidentActionTypeResolved     = "resolved"
-	IncidentActionTypeAcknowledged = "acknowledged"
-)
-
-type IncidentActionType struct {
-	value string
-}
-
-func (t IncidentActionType) String() string {
-	return t.value
+type IncidentRepository interface {
+	Create(ctx context.Context, monitorID domain.ID, incident *Incident) error
 }

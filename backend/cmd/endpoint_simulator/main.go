@@ -46,11 +46,11 @@ func main() {
 	signal.Notify(done, syscall.SIGINT, syscall.SIGTERM)
 
 	router.GET("/", func(c echo.Context) error {
-		if c.Param("is_up") == "true" {
+		if c.QueryParam("is_up") == "true" {
 			return c.NoContent(http.StatusOK)
 		}
 
-		if c.Param("is_up") == "false" {
+		if c.QueryParam("is_up") == "false" {
 			return c.NoContent(http.StatusInternalServerError)
 		}
 

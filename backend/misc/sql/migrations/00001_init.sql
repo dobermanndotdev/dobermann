@@ -34,10 +34,19 @@ CREATE TABLE monitors (
     CONSTRAINT pk_monitor_belongs_to_account FOREIGN KEY (account_id) REFERENCES accounts(id)
 );
 
+CREATE TABLE incidents (
+    id VARCHAR(26) NOT NULL PRIMARY KEY,
+    monitor_id VARCHAR(26) NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT now() NOT NULL,
+
+    CONSTRAINT pk_incident_belongs_to_monitor FOREIGN KEY (monitor_id) REFERENCES monitors (id)
+);
+
 -- +goose StatementEnd
 
 -- +goose Down
 -- +goose StatementBegin
+DROP TABLE incidents;
 DROP TABLE monitors;
 DROP TABLE users;
 DROP TABLE accounts;

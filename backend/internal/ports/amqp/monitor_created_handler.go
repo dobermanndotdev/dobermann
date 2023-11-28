@@ -1,8 +1,6 @@
 package amqp
 
 import (
-	"fmt"
-
 	"github.com/ThreeDotsLabs/watermill/message"
 
 	"github.com/flowck/dobermann/backend/internal/adapters/events"
@@ -16,7 +14,7 @@ type MonitorCreatedHandler struct {
 }
 
 func (h MonitorCreatedHandler) HandlerName() string {
-	return fmt.Sprintf("%s_Handler", events.MonitorCreatedEvent{}.EventName())
+	return "MonitorCreatedHandler"
 }
 
 func (h MonitorCreatedHandler) EventName() string {

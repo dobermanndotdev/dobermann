@@ -44,6 +44,20 @@ func (e MonitorCreatedEvent) EventName() string {
 	return "MonitorCreatedEvent_v1"
 }
 
+type EndpointCheckFailed struct {
+	Header    Header    `json:"header"`
+	MonitorID string    `json:"monitor_id"`
+	At        time.Time `json:"at"`
+}
+
+func (e EndpointCheckFailed) EventName() string {
+	return "EndpointCheckFailed_v1"
+}
+
+//
+// Utils
+//
+
 func mapEventToMessage(event Event) (*message.Message, error) {
 	data, err := json.Marshal(event)
 	if err != nil {
@@ -53,4 +67,14 @@ func mapEventToMessage(event Event) (*message.Message, error) {
 	return &message.Message{
 		Payload: data,
 	}, nil
+}
+
+func NewEventFromMessage[T any](m *message.Message) (T, error) {
+	var event T
+	err := json.Unmarshal(m.Payload, &event)
+	if err != nil {
+		return event, err
+	}
+
+	return event, nil
 }

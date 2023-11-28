@@ -36,3 +36,21 @@ func (p Publisher) PublishMonitorCreated(ctx context.Context, event command.Moni
 
 	return nil
 }
+
+func (p Publisher) PublishEndpointCheckFailed(ctx context.Context, event command.EndpointCheckFailed) error {
+	m, err := mapEventToMessage(EndpointCheckFailed{
+		At:        event.At,
+		MonitorID: event.MonitorID,
+		Header:    NewHeader(EndpointCheckFailed{}.EventName(), ""),
+	})
+	if err != nil {
+		return err
+	}
+
+	err = p.eventPublisher.Publish(EndpointCheckFailed{}.EventName(), m)
+	if err != nil {
+		return fmt.Errorf("unable to publish event: %v", err)
+	}
+
+	return nil
+}

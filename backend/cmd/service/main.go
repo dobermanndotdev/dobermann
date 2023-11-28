@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
@@ -39,15 +40,18 @@ type Config struct {
 	DatabaseURL string `envconfig:"DATABASE_URL"`
 }
 
+func (c Config) IsDebugMode() bool {
+	return strings.ToLower(c.DebugMode) == "enabled"
+}
+
 func main() {
 	config := &Config{}
-
 	err := envconfig.Process("", config)
 	if err != nil {
 		panic(err)
 	}
 
-	logger := logs.New(config.DebugMode == "enabled")
+	logger := logs.New(config.IsDebugMode())
 	watermillLogger := watermill.NewStdLogger(false, false)
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -91,21 +95,31 @@ func main() {
 	}
 	defer func() { _ = router.Close() }()
 
-	poisonQueueMiddleware, err := middleware.PoisonQueue(publisher, "failed_events")
+	// TODO: https://github.com/ThreeDotsLabs/watermill/issues/173
+	poisonQueueMiddleware, err := middleware.PoisonQueue(publisher, "poison_queue")
 	if err != nil {
 		logger.Fatal(err)
 	}
 
+	retryMiddleware := middleware.Retry{
+		MaxRetries:      3,
+		Logger:          watermillLogger,
+		InitialInterval: time.Millisecond * 3,
+	}
+
 	router.AddPlugin(plugin.SignalsHandler)
 	router.AddMiddleware(
-		middleware.CorrelationID,
-		middleware.Retry{
-			MaxRetries:      3,
-			Logger:          watermillLogger,
-			InitialInterval: time.Millisecond * 3,
-		}.Middleware,
-		poisonQueueMiddleware,
+		// Handle panics
 		middleware.Recoverer,
+
+		// Get the correlation id
+		middleware.CorrelationID,
+
+		// Send failed events to a specific queue
+		poisonQueueMiddleware,
+
+		// Retry failed events
+		retryMiddleware.Middleware,
 	)
 
 	logger.Info("Connected successfully to RabbitMQ")
@@ -114,14 +128,19 @@ func main() {
 	userRepository := users.NewPsqlRepository(db)
 	eventPublisher := events.NewPublisher(publisher)
 	monitorRepository := monitors.NewPsqlRepository(db)
+	incidentRepository := monitors.NewIncidentRepository(db)
 	txProvider := transaction.NewPsqlProvider(db, publisher)
 
 	application := &app.App{
 		Commands: app.Commands{
-			CheckEndpoint: observability.NewCommandDecorator[command.CheckEndpoint](command.NewCheckEndpointHandler(httpChecker, monitorRepository), logger),
-			CreateMonitor: observability.NewCommandDecorator[command.CreateMonitor](command.NewCreateMonitorHandler(monitorRepository, eventPublisher), logger),
+			// Auth
 			CreateAccount: observability.NewCommandDecorator[command.CreateAccount](command.NewCreateAccountHandler(txProvider), logger),
 			LogIn:         observability.NewCommandWithResultDecorator[command.LogIn, string](command.NewLoginHandler(userRepository, tokenSigner), logger),
+
+			// Monitor
+			CreateIncident: observability.NewCommandDecorator[command.CreateIncident](command.NewCreateIncidentHandler(incidentRepository), logger),
+			CreateMonitor:  observability.NewCommandDecorator[command.CreateMonitor](command.NewCreateMonitorHandler(monitorRepository, eventPublisher), logger),
+			CheckEndpoint:  observability.NewCommandDecorator[command.CheckEndpoint](command.NewCheckEndpointHandler(httpChecker, monitorRepository, eventPublisher), logger),
 		},
 	}
 
