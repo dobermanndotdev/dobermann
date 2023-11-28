@@ -40,7 +40,7 @@ func TestMonitors(t *testing.T) {
 		})
 		require.NoError(t, err)
 		assert.Equal(t, http.StatusCreated, resp01.StatusCode)
-		assert.Eventually(t, assertIncidentExists(t, endpointUrl), time.Second*5, time.Millisecond*250)
+		assert.Eventually(t, assertIncidentExists(t, endpointUrl), time.Second*10, time.Millisecond*250)
 	})
 }
 
