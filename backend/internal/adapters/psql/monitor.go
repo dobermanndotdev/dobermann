@@ -101,6 +101,6 @@ func (p MonitorRepository) FindAll(
 		Data:       monitors,
 		Page:       params.Page,
 		PerPage:    params.Limit,
-		PageCount:  len(modelList),
+		PageCount:  mapPaginationPerPageCount(count, params.Limit),
 	}, nil
 }

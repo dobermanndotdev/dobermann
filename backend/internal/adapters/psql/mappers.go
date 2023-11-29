@@ -2,6 +2,7 @@ package psql
 
 import (
 	"fmt"
+	"math"
 	"time"
 
 	"github.com/volatiletech/null/v8"
@@ -161,4 +162,9 @@ func mapPaginationParamsToOffset(page, limit int) int {
 	p := page - 1
 
 	return p * limit
+}
+
+func mapPaginationPerPageCount(total int64, limit int) int {
+	// round up
+	return int(math.Ceil(float64(total) / float64(limit)))
 }
