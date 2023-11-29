@@ -1,6 +1,7 @@
 package psql
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/volatiletech/null/v8"
@@ -64,6 +65,10 @@ func mapMonitorToModel(m *monitor.Monitor) *models.Monitor {
 	}
 }
 
+func mapModelsToMonitors(modelList []*models.Monitor) ([]*monitor.Monitor, error) {
+	return nil, nil
+}
+
 func mapModelToMonitor(model *models.Monitor) (*monitor.Monitor, error) {
 	id, err := domain.NewIdFromString(model.ID)
 	if err != nil {
@@ -75,12 +80,20 @@ func mapModelToMonitor(model *models.Monitor) (*monitor.Monitor, error) {
 		return nil, err
 	}
 
+	var incidents []*monitor.Incident
+	if model.R != nil && model.R.Incidents != nil {
+		incidents, err = mapModelsToIncidents(model.R.Incidents)
+		if err != nil {
+			return nil, fmt.Errorf("error mapping incidents to monitor: %v", err)
+		}
+	}
+
 	return monitor.NewMonitor(
 		id,
 		model.EndpointURL,
 		accountID,
 		model.IsEndpointUp,
-		nil,
+		incidents,
 		model.CreatedAt,
 		model.LastCheckedAt.Ptr(),
 	)
@@ -94,6 +107,32 @@ func mapIncidentToModel(incident *monitor.Incident, monitorID domain.ID) *models
 	}
 }
 
+func mapModelToIncident(model *models.Incident) (*monitor.Incident, error) {
+	id, err := domain.NewIdFromString(model.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	return monitor.NewIncident(id, model.CreatedAt, nil)
+}
+
+func mapModelsToIncidents(modelList []*models.Incident) ([]*monitor.Incident, error) {
+	result := make([]*monitor.Incident, len(modelList))
+
+	var err error
+	var incident *monitor.Incident
+	for i, m := range modelList {
+		incident, err = mapModelToIncident(m)
+		if err != nil {
+			return nil, err
+		}
+
+		result[i] = incident
+	}
+
+	return result, nil
+}
+
 func mapAccountToModel(acc *account.Account) models.Account {
 	return models.Account{
 		ID:         acc.ID().String(),
@@ -101,4 +140,11 @@ func mapAccountToModel(acc *account.Account) models.Account {
 		VerifiedAt: null.TimeFromPtr(acc.VerifiedAt()),
 		CreatedAt:  time.Now(),
 	}
+}
+
+func mapPaginationParamsToOffset(page, limit int) int {
+	// page from query is 1-based whereas postgres offset is 0-based
+	p := page - 1
+
+	return p * limit
 }

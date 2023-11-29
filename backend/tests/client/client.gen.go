@@ -15,7 +15,9 @@ import (
 	"net/url"
 	"path"
 	"strings"
+	"time"
 
+	"github.com/deepmap/oapi-codegen/pkg/runtime"
 	"github.com/getkin/kin-openapi/openapi3"
 )
 
@@ -44,6 +46,21 @@ type ErrorResponse struct {
 	Message string `json:"message"`
 }
 
+// GetAllMonitorsPayload defines model for GetAllMonitorsPayload.
+type GetAllMonitorsPayload struct {
+	Data       []Monitor `json:"data"`
+	Page       int       `json:"page"`
+	PageCount  int       `json:"page_count"`
+	PerPage    int       `json:"per_page"`
+	TotalCount int64     `json:"total_count"`
+}
+
+// Incident defines model for Incident.
+type Incident struct {
+	CreatedAt time.Time `json:"created_at"`
+	Id        string    `json:"id"`
+}
+
 // LogInPayload defines model for LogInPayload.
 type LogInPayload struct {
 	Token string `json:"token"`
@@ -55,8 +72,24 @@ type LogInRequest struct {
 	Password string `json:"password"`
 }
 
+// Monitor defines model for Monitor.
+type Monitor struct {
+	CreatedAt     time.Time  `json:"created_at"`
+	EndpointUrl   string     `json:"endpoint_url"`
+	Id            string     `json:"id"`
+	Incidents     []Incident `json:"incidents"`
+	IsEndpointUp  bool       `json:"is_endpoint_up"`
+	LastCheckedAt *time.Time `json:"last_checked_at,omitempty"`
+}
+
 // DefaultError defines model for DefaultError.
 type DefaultError = ErrorResponse
+
+// GetAllMonitorsParams defines parameters for GetAllMonitors.
+type GetAllMonitorsParams struct {
+	Page  *int `form:"page,omitempty" json:"page,omitempty"`
+	Limit *int `form:"limit,omitempty" json:"limit,omitempty"`
+}
 
 // CreateAccountJSONRequestBody defines body for CreateAccount for application/json ContentType.
 type CreateAccountJSONRequestBody = CreateAccountRequest
@@ -150,6 +183,9 @@ type ClientInterface interface {
 
 	Login(ctx context.Context, body LoginJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// GetAllMonitors request
+	GetAllMonitors(ctx context.Context, params *GetAllMonitorsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// CreateMonitor request with any body
 	CreateMonitorWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -194,6 +230,18 @@ func (c *Client) LoginWithBody(ctx context.Context, contentType string, body io.
 
 func (c *Client) Login(ctx context.Context, body LoginJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewLoginRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) GetAllMonitors(ctx context.Context, params *GetAllMonitorsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetAllMonitorsRequest(c.Server, params)
 	if err != nil {
 		return nil, err
 	}
@@ -308,6 +356,69 @@ func NewLoginRequestWithBody(server string, contentType string, body io.Reader) 
 	return req, nil
 }
 
+// NewGetAllMonitorsRequest generates requests for GetAllMonitors
+func NewGetAllMonitorsRequest(server string, params *GetAllMonitorsParams) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/monitors")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	queryValues := queryURL.Query()
+
+	if params.Page != nil {
+
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "page", runtime.ParamLocationQuery, *params.Page); err != nil {
+			return nil, err
+		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+			return nil, err
+		} else {
+			for k, v := range parsed {
+				for _, v2 := range v {
+					queryValues.Add(k, v2)
+				}
+			}
+		}
+
+	}
+
+	if params.Limit != nil {
+
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "limit", runtime.ParamLocationQuery, *params.Limit); err != nil {
+			return nil, err
+		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+			return nil, err
+		} else {
+			for k, v := range parsed {
+				for _, v2 := range v {
+					queryValues.Add(k, v2)
+				}
+			}
+		}
+
+	}
+
+	queryURL.RawQuery = queryValues.Encode()
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 // NewCreateMonitorRequest calls the generic CreateMonitor builder with application/json body
 func NewCreateMonitorRequest(server string, body CreateMonitorJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
@@ -401,6 +512,9 @@ type ClientWithResponsesInterface interface {
 
 	LoginWithResponse(ctx context.Context, body LoginJSONRequestBody, reqEditors ...RequestEditorFn) (*LoginResponse, error)
 
+	// GetAllMonitors request
+	GetAllMonitorsWithResponse(ctx context.Context, params *GetAllMonitorsParams, reqEditors ...RequestEditorFn) (*GetAllMonitorsResponse, error)
+
 	// CreateMonitor request with any body
 	CreateMonitorWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateMonitorResponse, error)
 
@@ -446,6 +560,29 @@ func (r LoginResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r LoginResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetAllMonitorsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *GetAllMonitorsPayload
+	JSONDefault  *ErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r GetAllMonitorsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetAllMonitorsResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -506,6 +643,15 @@ func (c *ClientWithResponses) LoginWithResponse(ctx context.Context, body LoginJ
 		return nil, err
 	}
 	return ParseLoginResponse(rsp)
+}
+
+// GetAllMonitorsWithResponse request returning *GetAllMonitorsResponse
+func (c *ClientWithResponses) GetAllMonitorsWithResponse(ctx context.Context, params *GetAllMonitorsParams, reqEditors ...RequestEditorFn) (*GetAllMonitorsResponse, error) {
+	rsp, err := c.GetAllMonitors(ctx, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetAllMonitorsResponse(rsp)
 }
 
 // CreateMonitorWithBodyWithResponse request with arbitrary body returning *CreateMonitorResponse
@@ -584,6 +730,39 @@ func ParseLoginResponse(rsp *http.Response) (*LoginResponse, error) {
 	return response, nil
 }
 
+// ParseGetAllMonitorsResponse parses an HTTP response from a GetAllMonitorsWithResponse call
+func ParseGetAllMonitorsResponse(rsp *http.Response) (*GetAllMonitorsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetAllMonitorsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest GetAllMonitorsPayload
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
 // ParseCreateMonitorResponse parses an HTTP response from a CreateMonitorWithResponse call
 func ParseCreateMonitorResponse(rsp *http.Response) (*CreateMonitorResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -613,20 +792,24 @@ func ParseCreateMonitorResponse(rsp *http.Response) (*CreateMonitorResponse, err
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"H4sIAAAAAAAC/8RVUW/jNgz+KwY3oC9GnNu9HPy0XJMNGdrboe2whyIoFJmxdbVEn0RfFxz83wdJdlKf",
-	"U7QDWuzNsqiP5MeP5HeQpBsyaNhB/h0suoaMw3BY4k60Na+sJevPkgyjYf8pmqZWUrAik31xZPw/JyvU",
-	"wn/9bHEHOfyUHcGzeOuygHbVu4Gu61Io0EmrGg8GOSySEg1aJRP0pok92qa9jxDduUXBuJCSWsNX+LVF",
-	"F0JrLDVoWcUcRLy/M0KjP/O+QcjBsVWmhC4F1ELVJ28a4dwD2eLEZZeCxa+tslhAfjt2MkA+Ath0aR/u",
-	"JRnFPv8nwkVTNKQM37W2ft7vyNo7GZM7RR8qOWY8vEpk65h0T7qkAhPXyioRLjkLCd0pc9c6PIN0SpVG",
-	"50SJU+hF8uiciC21nHCF0csU6cf8eqsBfnN4QNsvKNm7vqBybT6LfU2imGbMdI/meSKj2WaAe7o8ryCW",
-	"E+rwwkbZWsX7ay/w6OwjCot20XLlT9tw+o2sFgw5/PH3DfTt4H3F2yOhFXMTmwv/YbRG1EuSblofb+fy",
-	"LCsVV+12Jklnu5oe5H1W0BatFsZkV6vF8nI10wWkEGT5kleeE2V2NMwNIfkRgbBTVitDM1kJUwqjfi39",
-	"hUeCyUBYDphnLtkKeY/GR1Irib3IY2/D5frmv0SYXazPV5+uQ2JdCoxWuz9312i/KYkvTDIFVlx76yPs",
-	"McRvaF1MYT6bz955L9SgEY2CHN7P5rP3QQZchcJkouUq60dJ+NNQ1KBXYBi16wLy8dyDqC10/JGK/asN",
-	"6ZOztRsrmW2L4cejjfHL/N1UY+dXq8XNahkLGzbKU+4PWNlo9YT+aLUWdn/I3yUiMfiQiAMPLErn+ys0",
-	"TOipyGhNpTJP03kRrt+GxtEweRF989f1PczFE2v2ev37p9Uy+evza9XlgsokMHmiEDquvWdV3a/HN1X1",
-	"Dyv4/1V1P/Uhvx3P+9tNt5mKvte8PrA0UH058LvpIqz1syegHudhnmU1SVFX5Dj/MP8wh27T/RsAAP//",
-	"kAYaBwEKAAA=",
+	"H4sIAAAAAAAC/8RX0W/bthP+Vwj+fkBfNMtZh6Hw09zYC7wlbZFk2EMQGGfqLLERSYU8JTUC/+8DKcmS",
+	"YrlxsQR7M0Xyu7vvvuOdn7gwqjAaNTk+eeIWXWG0w7CY4RrKnObWGuvXwmhCTf4nFEUuBZA0Ov7qjPbf",
+	"nMhQgf/1f4trPuH/i1vwuNp1cUC7rM3w7XYb8QSdsLLwYHzCpyxFjVYKhv4os+3ZqLYRvDu1CIRTIUyp",
+	"6RLvS3TBtcKaAi3JKgao9pcaFPo1bQrkE+7ISp3ybcRRgcwHdwpw7tHYZGBzG3GL96W0mPDJTd9IA9kB",
+	"uN1GtbsXRkvy8R9wF3VSGKlpWdr8Zbu9095In9x99CaTfcbDLSZKR0bVpAuTIHOlyBg49i4EtJR6WTp8",
+	"x6N9qhQ6BynuQ09ZZ81gZUpilGFlZR/peXz1qQb+dnfBrL6iIG/6DGma5zWv7gtscgPJfugJUJCmJFTu",
+	"JY3WaB6+tgfWwqYSRdrVkdSEKdpmZxl0cGAf7fLwbTIEeXt9bawCqo78+ktL1O7GM6YCcMdGz50+elRx",
+	"4eWy0EImdUX36RJBrckS+t4kQPgTyaDyPRHIIypFJjzqgnsvzk260AcTR+YO9cvA1bEd3OECe4VyH6zv",
+	"RjOvQuULz8ABriMu64S6o6W+k8CA1qVbto4UHYMrY3IE7c/k4GgpMhR3PxTikCx6Qe9Z7wb3TEK+L6Ao",
+	"raTNlQ+r4v0jgkU7LSnzq1VY/d649sff17zuJiGgsNu6mREVVW/Cb4RWQz4zwu0/b/6cm8RxKikrVyNh",
+	"VLzOzaO4ixOzQqtA6/hyPp1dzEfKhxjSecytKplr07RdENRRL19Lq6Q2I5GBTkHL31K/4ZH4Xj+dNZjv",
+	"HFuBuEPtPcmlwLpHVK2RXyyuf8TD+HxxOv90FQLz2kGr3Of1FdoHKfDIICNOknJ/uoVtXXxA66oQxqPx",
+	"6MRbMQVqKCSf8Pej8eh9qEHKQmJiKCmL604cvhSmegB8MYZJZZHwSX9s4JUM0dFHk2xebcYZHE22fdGT",
+	"LTF86AxcP49P9jV2ejmfXs9nVWLDQHbI/A4r7k1uoT5KpcBudvE7BkzjI4MdDwSp86UYCibUVMVoblKp",
+	"D9N5HrbfhsbeS34UfePXtd00pYEp9Wpx9mk+Y399ea28nJuUBSYHEqHq6cYbSHEgC/0hKJSFBYWE/s7N",
+	"E/cZ5Pcl2g2Pmnqv54SWDiW1VKXik5OhcWMYJJdKUh8FvtUo43H0fczbN8zf8Fg4kMjPf/7LDNadJ/Dc",
+	"7Tk3tz7ANsFnSAzynDXJZFIzYI+SMlZAKnWIspP/XTb9dPG9t6yZPN7yLXv2v+W/fcuOZbxyvX7p1I6l",
+	"AYIrWPvQ1EvbBSdxnBsBeWYcTT6MP4z59nb7TwAAAP//DvjY2DYPAAA=",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

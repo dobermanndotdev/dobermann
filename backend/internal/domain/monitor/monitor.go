@@ -11,7 +11,7 @@ type Monitor struct {
 	accountID     domain.ID
 	endpointUrl   string
 	isEndpointUp  bool
-	incidents     []Incident
+	incidents     []*Incident
 	createdAt     time.Time
 	lastCheckedAt *time.Time
 }
@@ -21,7 +21,7 @@ func NewMonitor(
 	endpointUrl string,
 	accountID domain.ID,
 	isEndpointUp bool,
-	incidents []Incident,
+	incidents []*Incident,
 	createdAt time.Time,
 	lastCheckedAt *time.Time,
 ) (*Monitor, error) {
@@ -52,7 +52,7 @@ func (m *Monitor) IsEndpointUp() bool {
 	return m.isEndpointUp
 }
 
-func (m *Monitor) Incidents() []Incident {
+func (m *Monitor) Incidents() []*Incident {
 	return m.incidents
 }
 

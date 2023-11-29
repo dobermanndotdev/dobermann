@@ -7,8 +7,10 @@ import (
 	"fmt"
 
 	"github.com/volatiletech/sqlboiler/v4/boil"
+	"github.com/volatiletech/sqlboiler/v4/queries/qm"
 
 	"github.com/flowck/dobermann/backend/internal/adapters/models"
+	"github.com/flowck/dobermann/backend/internal/app/query"
 	"github.com/flowck/dobermann/backend/internal/domain"
 	"github.com/flowck/dobermann/backend/internal/domain/monitor"
 )
@@ -60,4 +62,41 @@ func (p MonitorRepository) Update(ctx context.Context, id domain.ID, fn func(mon
 	}
 
 	return nil
+}
+
+func (p MonitorRepository) FindAll(
+	ctx context.Context,
+	accID domain.ID,
+	params query.PaginationParams,
+) (query.PaginatedResult[*monitor.Monitor], error) {
+	mods := []qm.QueryMod{
+		models.MonitorWhere.AccountID.EQ(accID.String()),
+		qm.Load(models.MonitorRels.Incidents),
+		qm.Offset(mapPaginationParamsToOffset(params.Page, params.Limit)),
+		qm.Limit(params.Limit),
+		qm.OrderBy("created_at DESC"),
+	}
+
+	modelList, err := models.Monitors(mods...).All(ctx, p.db)
+	if err != nil {
+		return query.PaginatedResult[*monitor.Monitor]{}, fmt.Errorf("error while querying monitors: %v", err)
+	}
+
+	count, err := models.Monitors(models.MonitorWhere.AccountID.EQ(accID.String())).Count(ctx, p.db)
+	if err != nil {
+		return query.PaginatedResult[*monitor.Monitor]{}, fmt.Errorf("error while counting monitors: %v", err)
+	}
+
+	monitors, err := mapModelsToMonitors(modelList)
+	if err != nil {
+		return query.PaginatedResult[*monitor.Monitor]{}, err
+	}
+
+	return query.PaginatedResult[*monitor.Monitor]{
+		Page:       params.Page,
+		PerPage:    params.Limit,
+		PageCount:  len(modelList),
+		TotalCount: count,
+		Data:       monitors,
+	}, nil
 }

@@ -42,6 +42,17 @@ func TestMonitors(t *testing.T) {
 		assert.Equal(t, http.StatusCreated, resp01.StatusCode)
 		assert.Eventually(t, assertIncidentExists(t, endpointUrl), time.Second*10, time.Millisecond*250)
 	})
+
+	t.Run("get_all_monitors", func(t *testing.T) {
+		// not parallel
+
+		resp01, err := cli.GetAllMonitorsWithResponse(ctx, &client.GetAllMonitorsParams{
+			Page:  tests.ToPtr(1),
+			Limit: tests.ToPtr(100),
+		})
+		require.NoError(t, err)
+		require.Equal(t, http.StatusOK, resp01.StatusCode())
+	})
 }
 
 func assertMonitorHasBeenChecked(t *testing.T, endpointUrl string) func() bool {
