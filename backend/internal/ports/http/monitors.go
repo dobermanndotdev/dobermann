@@ -68,3 +68,27 @@ func (h handlers) GetAllMonitors(c echo.Context, params GetAllMonitorsParams) er
 		TotalCount: result.TotalCount,
 	})
 }
+
+func (h handlers) GetMonitorByID(c echo.Context, monitorID string) error {
+	user, err := retrieveUserFromCtx(c)
+	if err != nil {
+		return NewUnableToRetrieveUserFromCtx(err)
+	}
+
+	mID, err := domain.NewIdFromString(monitorID)
+	if err != nil {
+		return NewHandlerErrorWithStatus(err, "invalid-monitor-id", http.StatusBadRequest)
+	}
+
+	foundMonitor, err := h.application.Queries.MonitorByID.Execute(c.Request().Context(), query.MonitorByID{
+		ID:        mID,
+		AccountID: user.AccountID,
+	})
+	if err != nil {
+		return NewHandlerError(err, "unable-to-get-monitor")
+	}
+
+	return c.JSON(http.StatusOK, GetAllMonitorByIdPayload{
+		Data: mapMonitorToResponseItem(foundMonitor),
+	})
+}

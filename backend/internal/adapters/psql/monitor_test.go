@@ -36,4 +36,27 @@ func TestMonitorRepository_Lifecycle(t *testing.T) {
 	assert.Equal(t, limitPerPage, result.PerPage)
 	assert.Equal(t, maxMonitors/limitPerPage, result.PageCount)
 	assert.Len(t, result.Data, limitPerPage)
+
+	t.Run("find_by_id", func(t *testing.T) {
+		expected := result.Data[0]
+		var found *monitor.Monitor
+
+		found, err = repo.FindByID(ctx, acc.ID(), expected.ID())
+		require.NoError(t, err)
+
+		assert.Equal(t, expected.ID(), found.ID())
+		assert.Equal(t, expected.AccountID(), found.AccountID())
+		assert.Equal(t, expected.EndpointUrl(), found.EndpointUrl())
+		assert.Equal(t, expected.LastCheckedAt(), found.LastCheckedAt())
+		assert.Equal(t, expected.CreatedAt(), found.CreatedAt())
+		assert.Equal(t, expected.IsEndpointUp(), found.IsEndpointUp())
+	})
+
+	t.Run("error_not_found_while_finding_by_id", func(t *testing.T) {
+		_, err = repo.FindByID(ctx, acc.ID(), domain.NewID())
+		assert.ErrorIs(t, err, monitor.ErrMonitorNotFound)
+
+		_, err = repo.FindByID(ctx, domain.NewID(), result.Data[0].ID())
+		assert.ErrorIs(t, err, monitor.ErrMonitorNotFound)
+	})
 }

@@ -74,6 +74,18 @@ func TestMonitors(t *testing.T) {
 
 		require.Len(t, resp02.JSON200.Data, 5)
 	})
+
+	t.Run("get_monitor_by_id", func(t *testing.T) {
+		endpointUrl := fixtureMonitors(t, cli, 1)[0]
+		monitor00 := getMonitorByEndpointUrl(t, endpointUrl)
+
+		resp01, err := cli.GetMonitorByIDWithResponse(ctx, monitor00.ID)
+		require.NoError(t, err)
+		require.Equal(t, http.StatusOK, resp01.StatusCode())
+
+		assert.Equal(t, monitor00.ID, resp01.JSON200.Data.Id)
+		assert.Equal(t, monitor00.EndpointURL, resp01.JSON200.Data.EndpointUrl)
+	})
 }
 
 func endpointUrlGenerator(isUp bool) string {
@@ -86,14 +98,22 @@ func endpointUrlGenerator(isUp bool) string {
 	return fmt.Sprintf("%s?id=%s&is_up=%s", tests.SimulatorEndpointUrl, domain.NewID().String(), isUpParam)
 }
 
-func fixtureMonitors(t *testing.T, cli *client.ClientWithResponses, maxEndpoints int) {
+func fixtureMonitors(t *testing.T, cli *client.ClientWithResponses, maxEndpoints int) []string {
+	endpointUrls := make([]string, maxEndpoints)
+
+	var endpointUrl string
 	for i := 0; i < maxEndpoints; i++ {
+		endpointUrl = fmt.Sprintf("%s?id=%s", tests.SimulatorEndpointUrl, domain.NewID().String())
+		endpointUrls[i] = endpointUrl
+
 		resp01, err := cli.CreateMonitor(ctx, client.CreateMonitorRequest{
-			EndpointUrl: fmt.Sprintf("%s?id=%s", tests.SimulatorEndpointUrl, domain.NewID().String()),
+			EndpointUrl: endpointUrl,
 		})
 		require.NoError(t, err)
 		require.Equal(t, http.StatusCreated, resp01.StatusCode)
 	}
+
+	return endpointUrls
 }
 
 func assertMonitorHasBeenChecked(t *testing.T, endpointUrl string) func() bool {

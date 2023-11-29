@@ -29,6 +29,7 @@ type Commands struct {
 }
 
 type Queries struct {
+	MonitorByID QueryHandler[query.MonitorByID, *monitor.Monitor]
 	AllMonitors QueryHandler[query.AllMonitors, query.PaginatedResult[*monitor.Monitor]]
 }
 
