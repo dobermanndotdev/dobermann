@@ -35,7 +35,11 @@ func (p MonitorRepository) Insert(ctx context.Context, m *monitor.Monitor) error
 	return nil
 }
 
-func (p MonitorRepository) Update(ctx context.Context, id domain.ID, fn func(monitor *monitor.Monitor) error) error {
+func (p MonitorRepository) Update(
+	ctx context.Context,
+	id domain.ID,
+	fn func(monitor *monitor.Monitor) error,
+) error {
 	model, err := models.FindMonitor(ctx, p.db, id.String())
 	if errors.Is(err, sql.ErrNoRows) {
 		return monitor.ErrMonitorNotFound
@@ -93,10 +97,10 @@ func (p MonitorRepository) FindAll(
 	}
 
 	return query.PaginatedResult[*monitor.Monitor]{
+		TotalCount: count,
+		Data:       monitors,
 		Page:       params.Page,
 		PerPage:    params.Limit,
 		PageCount:  len(modelList),
-		TotalCount: count,
-		Data:       monitors,
 	}, nil
 }

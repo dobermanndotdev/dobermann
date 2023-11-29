@@ -66,7 +66,21 @@ func mapMonitorToModel(m *monitor.Monitor) *models.Monitor {
 }
 
 func mapModelsToMonitors(modelList []*models.Monitor) ([]*monitor.Monitor, error) {
-	return nil, nil
+	result := make([]*monitor.Monitor, len(modelList))
+
+	var err error
+	var m *monitor.Monitor
+
+	for i, model := range modelList {
+		m, err = mapModelToMonitor(model)
+		if err != nil {
+			return nil, err
+		}
+
+		result[i] = m
+	}
+
+	return result, nil
 }
 
 func mapModelToMonitor(model *models.Monitor) (*monitor.Monitor, error) {

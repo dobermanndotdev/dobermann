@@ -46,13 +46,41 @@ func TestMonitors(t *testing.T) {
 	t.Run("get_all_monitors", func(t *testing.T) {
 		// not parallel
 
+		fixtureMonitors(t, cli, 5)
+
 		resp01, err := cli.GetAllMonitorsWithResponse(ctx, &client.GetAllMonitorsParams{
 			Page:  tests.ToPtr(1),
 			Limit: tests.ToPtr(100),
 		})
 		require.NoError(t, err)
 		require.Equal(t, http.StatusOK, resp01.StatusCode())
+		require.NotEmpty(t, resp01.JSON200.Data)
+
+		for _, m := range resp01.JSON200.Data {
+			assert.NotEmpty(t, m.Id)
+			assert.NotEmpty(t, m.EndpointUrl)
+			assert.NotEmpty(t, m.CreatedAt)
+		}
+
+		resp02, err := cli.GetAllMonitorsWithResponse(ctx, &client.GetAllMonitorsParams{
+			Page:  tests.ToPtr(1),
+			Limit: tests.ToPtr(10),
+		})
+		require.NoError(t, err)
+		require.Equal(t, http.StatusOK, resp02.StatusCode())
+
+		require.Len(t, resp02.JSON200.Data, 5)
 	})
+}
+
+func fixtureMonitors(t *testing.T, cli *client.ClientWithResponses, maxEndpoints int) {
+	for i := 0; i < maxEndpoints; i++ {
+		resp01, err := cli.CreateMonitor(ctx, client.CreateMonitorRequest{
+			EndpointUrl: fmt.Sprintf("%s#id=%s", tests.SimulatorEndpointUrl, domain.NewID().String()),
+		})
+		require.NoError(t, err)
+		require.Equal(t, http.StatusCreated, resp01.StatusCode)
+	}
 }
 
 func assertMonitorHasBeenChecked(t *testing.T, endpointUrl string) func() bool {
