@@ -4,6 +4,8 @@ import (
 	"context"
 
 	"github.com/flowck/dobermann/backend/internal/app/command"
+	"github.com/flowck/dobermann/backend/internal/app/query"
+	"github.com/flowck/dobermann/backend/internal/domain/monitor"
 )
 
 type QueryHandler[Q, R any] interface {
@@ -26,6 +28,11 @@ type Commands struct {
 	LogIn          CommandHandlerWithResult[command.LogIn, string]
 }
 
+type Queries struct {
+	AllMonitors QueryHandler[query.AllMonitors, query.PaginatedResult[*monitor.Monitor]]
+}
+
 type App struct {
 	Commands Commands
+	Queries  Queries
 }

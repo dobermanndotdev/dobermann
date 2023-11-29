@@ -40,3 +40,11 @@ func (e HandlerError) Error() string {
 
 	return e.HTTPError.Error()
 }
+
+//
+// Helpers
+//
+
+func NewUnableToRetrieveUserFromCtx(err error) error {
+	return NewHandlerErrorWithStatus(err, "unable-to-retrieve-user-details", http.StatusInternalServerError)
+}

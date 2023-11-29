@@ -24,10 +24,12 @@ import (
 	"github.com/flowck/dobermann/backend/internal/adapters/transaction"
 	"github.com/flowck/dobermann/backend/internal/app"
 	"github.com/flowck/dobermann/backend/internal/app/command"
+	"github.com/flowck/dobermann/backend/internal/app/query"
 	"github.com/flowck/dobermann/backend/internal/common/auth"
 	"github.com/flowck/dobermann/backend/internal/common/logs"
 	"github.com/flowck/dobermann/backend/internal/common/observability"
 	"github.com/flowck/dobermann/backend/internal/common/postgres"
+	"github.com/flowck/dobermann/backend/internal/domain/monitor"
 	amqpport "github.com/flowck/dobermann/backend/internal/ports/amqp"
 	httpport "github.com/flowck/dobermann/backend/internal/ports/http"
 )
@@ -141,6 +143,9 @@ func main() {
 			CreateIncident: observability.NewCommandDecorator[command.CreateIncident](command.NewCreateIncidentHandler(incidentRepository), logger),
 			CreateMonitor:  observability.NewCommandDecorator[command.CreateMonitor](command.NewCreateMonitorHandler(monitorRepository, eventPublisher), logger),
 			CheckEndpoint:  observability.NewCommandDecorator[command.CheckEndpoint](command.NewCheckEndpointHandler(httpChecker, monitorRepository, eventPublisher), logger),
+		},
+		Queries: app.Queries{
+			AllMonitors: observability.NewQueryDecorator[query.AllMonitors, query.PaginatedResult[*monitor.Monitor]](query.NewAllMonitorsHandler(monitorRepository), logger),
 		},
 	}
 

@@ -14,6 +14,8 @@ import (
 	"github.com/brianvoe/gofakeit"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+
+	"github.com/flowck/dobermann/backend/internal/common/logs"
 )
 
 var failureStatusCode = []int{
@@ -28,15 +30,33 @@ func getStatusCode() int {
 	return failureStatusCode[gofakeit.Number(0, len(failureStatusCode)-1)]
 }
 
-func getRandomLatency() int {
-	return gofakeit.Number(50, 250)
-}
-
 func main() {
 	gofakeit.Seed(0)
+	logger := logs.New(true)
 
 	router := echo.New()
-	router.Use(middleware.Logger())
+	router.Use(middleware.RequestLoggerWithConfig(middleware.RequestLoggerConfig{
+		LogURI:    true,
+		LogStatus: true,
+		LogMethod: true,
+		LogError:  false,
+		LogValuesFunc: func(c echo.Context, v middleware.RequestLoggerValues) error {
+			fields := logs.Fields{
+				"method": v.Method,
+				"uri":    v.URI,
+
+				"status": v.Status,
+			}
+
+			if v.Error != nil || v.Status > http.StatusBadRequest {
+				logger.WithFields(fields).Error("request handled with an error")
+			} else {
+				logger.WithFields(fields).Info("request handled successfully")
+			}
+
+			return nil
+		},
+	}))
 	router.Use(middleware.Recover())
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -56,8 +76,6 @@ func main() {
 
 		// Quasi-random path
 		s := getStatusCode()
-		log.Println("Status code", s)
-		time.Sleep(time.Millisecond * time.Duration(getRandomLatency()))
 		return c.NoContent(s)
 	})
 

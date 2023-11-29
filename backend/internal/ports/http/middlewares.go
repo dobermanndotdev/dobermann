@@ -18,14 +18,20 @@ func loggerMiddleware(logger *logs.Logger) echo.MiddlewareFunc {
 		LogURI:    true,
 		LogStatus: true,
 		LogMethod: true,
-		LogError:  true,
+		LogError:  false,
 		LogValuesFunc: func(c echo.Context, v middleware.RequestLoggerValues) error {
-			logger.WithFields(logs.Fields{
+			fields := logs.Fields{
 				"method": v.Method,
-				"URI":    v.URI,
+				"uri":    v.URI,
 				"status": v.Status,
-				"error":  v.Error,
-			}).Info("")
+			}
+
+			if v.Error != nil || v.Status > http.StatusBadRequest {
+				logger.WithFields(fields).Error("request handled with an error")
+			} else {
+				logger.WithFields(fields).Info("request handled successfully")
+			}
+
 			return nil
 		},
 	})
