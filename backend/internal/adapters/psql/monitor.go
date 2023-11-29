@@ -25,6 +25,22 @@ type MonitorRepository struct {
 	db boil.ContextExecutor
 }
 
+func (p MonitorRepository) FindByID(ctx context.Context, accountID, id domain.ID) (*monitor.Monitor, error) {
+	model, err := models.Monitors(
+		models.MonitorWhere.AccountID.EQ(accountID.String()),
+		models.MonitorWhere.ID.EQ(id.String()),
+	).One(ctx, p.db)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, monitor.ErrMonitorNotFound
+	}
+
+	if err != nil {
+		return nil, fmt.Errorf("unable to query to find monitor with id %s: %v", id, err)
+	}
+
+	return mapModelToMonitor(model)
+}
+
 func (p MonitorRepository) Insert(ctx context.Context, m *monitor.Monitor) error {
 	model := mapMonitorToModel(m)
 	err := model.Insert(ctx, p.db, boil.Infer())

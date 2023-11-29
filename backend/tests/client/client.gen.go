@@ -46,6 +46,11 @@ type ErrorResponse struct {
 	Message string `json:"message"`
 }
 
+// GetAllMonitorByIdPayload defines model for GetAllMonitorByIdPayload.
+type GetAllMonitorByIdPayload struct {
+	Data Monitor `json:"data"`
+}
+
 // GetAllMonitorsPayload defines model for GetAllMonitorsPayload.
 type GetAllMonitorsPayload struct {
 	Data       []Monitor `json:"data"`
@@ -190,6 +195,9 @@ type ClientInterface interface {
 	CreateMonitorWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	CreateMonitor(ctx context.Context, body CreateMonitorJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetMonitorByID request
+	GetMonitorByID(ctx context.Context, monitorID string, reqEditors ...RequestEditorFn) (*http.Response, error)
 }
 
 func (c *Client) CreateAccountWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
@@ -266,6 +274,18 @@ func (c *Client) CreateMonitorWithBody(ctx context.Context, contentType string, 
 
 func (c *Client) CreateMonitor(ctx context.Context, body CreateMonitorJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewCreateMonitorRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) GetMonitorByID(ctx context.Context, monitorID string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetMonitorByIDRequest(c.Server, monitorID)
 	if err != nil {
 		return nil, err
 	}
@@ -459,6 +479,40 @@ func NewCreateMonitorRequestWithBody(server string, contentType string, body io.
 	return req, nil
 }
 
+// NewGetMonitorByIDRequest generates requests for GetMonitorByID
+func NewGetMonitorByIDRequest(server string, monitorID string) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "monitorID", runtime.ParamLocationPath, monitorID)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/monitors/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 func (c *Client) applyEditors(ctx context.Context, req *http.Request, additionalEditors []RequestEditorFn) error {
 	for _, r := range c.RequestEditors {
 		if err := r(ctx, req); err != nil {
@@ -519,6 +573,9 @@ type ClientWithResponsesInterface interface {
 	CreateMonitorWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateMonitorResponse, error)
 
 	CreateMonitorWithResponse(ctx context.Context, body CreateMonitorJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateMonitorResponse, error)
+
+	// GetMonitorByID request
+	GetMonitorByIDWithResponse(ctx context.Context, monitorID string, reqEditors ...RequestEditorFn) (*GetMonitorByIDResponse, error)
 }
 
 type CreateAccountResponse struct {
@@ -611,6 +668,29 @@ func (r CreateMonitorResponse) StatusCode() int {
 	return 0
 }
 
+type GetMonitorByIDResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *GetAllMonitorByIdPayload
+	JSONDefault  *ErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r GetMonitorByIDResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetMonitorByIDResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 // CreateAccountWithBodyWithResponse request with arbitrary body returning *CreateAccountResponse
 func (c *ClientWithResponses) CreateAccountWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateAccountResponse, error) {
 	rsp, err := c.CreateAccountWithBody(ctx, contentType, body, reqEditors...)
@@ -669,6 +749,15 @@ func (c *ClientWithResponses) CreateMonitorWithResponse(ctx context.Context, bod
 		return nil, err
 	}
 	return ParseCreateMonitorResponse(rsp)
+}
+
+// GetMonitorByIDWithResponse request returning *GetMonitorByIDResponse
+func (c *ClientWithResponses) GetMonitorByIDWithResponse(ctx context.Context, monitorID string, reqEditors ...RequestEditorFn) (*GetMonitorByIDResponse, error) {
+	rsp, err := c.GetMonitorByID(ctx, monitorID, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetMonitorByIDResponse(rsp)
 }
 
 // ParseCreateAccountResponse parses an HTTP response from a CreateAccountWithResponse call
@@ -789,27 +878,61 @@ func ParseCreateMonitorResponse(rsp *http.Response) (*CreateMonitorResponse, err
 	return response, nil
 }
 
+// ParseGetMonitorByIDResponse parses an HTTP response from a GetMonitorByIDWithResponse call
+func ParseGetMonitorByIDResponse(rsp *http.Response) (*GetMonitorByIDResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetMonitorByIDResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest GetAllMonitorByIdPayload
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"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",
+	"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",
+	"ppqzNNEWJx/HH8d0t9z9FQAA//+WdC1qWxEAAA==",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

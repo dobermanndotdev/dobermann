@@ -146,6 +146,7 @@ func main() {
 		},
 		Queries: app.Queries{
 			AllMonitors: observability.NewQueryDecorator[query.AllMonitors, query.PaginatedResult[*monitor.Monitor]](query.NewAllMonitorsHandler(monitorRepository), logger),
+			MonitorByID: observability.NewQueryDecorator[query.MonitorByID, *monitor.Monitor](query.NewMonitorByIdHandler(monitorRepository), logger),
 		},
 	}
 

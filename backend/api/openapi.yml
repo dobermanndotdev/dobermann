@@ -64,6 +64,28 @@ paths:
           description: CREATED
         default:
           $ref: '#/components/responses/DefaultError'
+  /monitors/{monitorID}:
+    get:
+      tags:
+        - Monitors
+      operationId: getMonitorByID
+      summary: Get all monitors in a with pagination
+      parameters:
+        - name: monitorID
+          in: path
+          schema:
+            type: string
+      security:
+        - BearerAuth: [ ]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetAllMonitorByIdPayload'
+        default:
+          $ref: '#/components/responses/DefaultError'
   /auth/accounts:
     post:
       tags:
@@ -120,6 +142,11 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Monitor'
+    GetAllMonitorByIdPayload:
+      required: [ data ]
+      properties:
+        data:
+          $ref: '#/components/schemas/Monitor'
     Monitor:
       required: [id, endpoint_url, is_endpoint_up, incidents, created_at]
       properties:
