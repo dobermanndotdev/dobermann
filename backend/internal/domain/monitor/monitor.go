@@ -11,6 +11,7 @@ type Monitor struct {
 	accountID     domain.ID
 	endpointUrl   string
 	isEndpointUp  bool
+	subscribers   []*Subscriber
 	incidents     []*Incident
 	createdAt     time.Time
 	lastCheckedAt *time.Time
@@ -68,4 +69,8 @@ func (m *Monitor) SetEndpointCheckResult(isUp bool) {
 	m.isEndpointUp = isUp
 	lastChecked := time.Now().UTC()
 	m.lastCheckedAt = &lastChecked
+}
+
+func (m *Monitor) Subscribers() []*Subscriber {
+	return m.subscribers
 }

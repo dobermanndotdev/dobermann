@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/flowck/dobermann/backend/internal/domain"
+	"github.com/flowck/dobermann/backend/internal/domain/account"
 	"github.com/flowck/dobermann/backend/internal/domain/monitor"
 )
 
@@ -13,7 +14,14 @@ type CreateIncident struct {
 }
 
 type CreateIncidentHandler struct {
+	monitorRepository  monitor.Repository
+	userRepository     account.UserRepository
+	subscriberNotifier subscriberNotifier
 	incidentRepository monitor.IncidentRepository
+}
+
+type subscriberNotifier interface {
+	SendEmailAboutIncident(ctx context.Context, user *account.User, incident *monitor.Incident) error
 }
 
 func NewCreateIncidentHandler(incidentRepository monitor.IncidentRepository) CreateIncidentHandler {
@@ -28,5 +36,14 @@ func (h CreateIncidentHandler) Execute(ctx context.Context, cmd CreateIncident) 
 		return err
 	}
 
-	return h.incidentRepository.Create(ctx, cmd.MonitorID, incident)
+	err = h.incidentRepository.Create(ctx, cmd.MonitorID, incident)
+	if err != nil {
+		return err
+	}
+
+	// m, err := h.monitorRepository.
+
+	// h.userRepository.FindByID(ctx, c)
+
+	return nil
 }
