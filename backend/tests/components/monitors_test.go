@@ -23,7 +23,7 @@ func TestMonitors(t *testing.T) {
 
 	t.Run("create_monitor", func(t *testing.T) {
 		t.Parallel()
-		endpointUrl := fmt.Sprintf("%s#id=%s", tests.SimulatorEndpointUrl, domain.NewID().String())
+		endpointUrl := endpointUrlGenerator(false)
 		resp01, err := cli.CreateMonitor(ctx, client.CreateMonitorRequest{
 			EndpointUrl: endpointUrl,
 		})
@@ -34,13 +34,16 @@ func TestMonitors(t *testing.T) {
 
 	t.Run("create_monitor_with_and_endpoint_down", func(t *testing.T) {
 		t.Parallel()
-		endpointUrl := fmt.Sprintf("%s#id=%s&is_up=false", tests.SimulatorEndpointUrl, domain.NewID().String())
+		endpointUrl := endpointUrlGenerator(false)
 		resp01, err := cli.CreateMonitor(ctx, client.CreateMonitorRequest{
 			EndpointUrl: endpointUrl,
 		})
 		require.NoError(t, err)
 		assert.Equal(t, http.StatusCreated, resp01.StatusCode)
-		assert.Eventually(t, assertIncidentExists(t, endpointUrl), time.Second*10, time.Millisecond*250)
+
+		//POST_IDEA: How to test eventually consistent features
+		createdMonitor := getMonitorByEndpointUrl(t, endpointUrl)
+		assert.Eventually(t, assertIncidentHasBeenCreated(createdMonitor.ID), time.Second*10, time.Millisecond*250)
 	})
 
 	t.Run("get_all_monitors", func(t *testing.T) {
@@ -73,10 +76,20 @@ func TestMonitors(t *testing.T) {
 	})
 }
 
+func endpointUrlGenerator(isUp bool) string {
+	isUpParam := "false"
+
+	if isUp {
+		isUpParam = "true"
+	}
+
+	return fmt.Sprintf("%s?id=%s&is_up=%s", tests.SimulatorEndpointUrl, domain.NewID().String(), isUpParam)
+}
+
 func fixtureMonitors(t *testing.T, cli *client.ClientWithResponses, maxEndpoints int) {
 	for i := 0; i < maxEndpoints; i++ {
 		resp01, err := cli.CreateMonitor(ctx, client.CreateMonitorRequest{
-			EndpointUrl: fmt.Sprintf("%s#id=%s", tests.SimulatorEndpointUrl, domain.NewID().String()),
+			EndpointUrl: fmt.Sprintf("%s?id=%s", tests.SimulatorEndpointUrl, domain.NewID().String()),
 		})
 		require.NoError(t, err)
 		require.Equal(t, http.StatusCreated, resp01.StatusCode)
@@ -92,16 +105,19 @@ func assertMonitorHasBeenChecked(t *testing.T, endpointUrl string) func() bool {
 	}
 }
 
-func assertIncidentExists(t *testing.T, endpointUrl string) func() bool {
+func assertIncidentHasBeenCreated(monitorID string) func() bool {
 	return func() bool {
-		model, err := models.Monitors(models.MonitorWhere.EndpointURL.EQ(endpointUrl)).One(ctx, db)
-		require.NoError(t, err)
-
-		_, err = models.Incidents(
-			models.IncidentWhere.MonitorID.EQ(model.ID),
+		_, err := models.Incidents(
+			models.IncidentWhere.MonitorID.EQ(monitorID),
 			qm.OrderBy("created_at DESC"),
 		).One(ctx, db)
 
 		return err == nil
 	}
+}
+
+func getMonitorByEndpointUrl(t *testing.T, endpointUrl string) *models.Monitor {
+	model, err := models.Monitors(models.MonitorWhere.EndpointURL.EQ(endpointUrl)).One(ctx, db)
+	require.NoError(t, err)
+	return model
 }
