@@ -27,5 +27,10 @@ func TestMain(m *testing.M) {
 		panic(err)
 	}
 
+	err = postgres.ApplyMigrations(db, "../../../misc/sql/migrations")
+	if err != nil {
+		panic(err)
+	}
+
 	os.Exit(m.Run())
 }

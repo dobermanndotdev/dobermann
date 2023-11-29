@@ -55,12 +55,12 @@ tasks:
   test:all:
     cmds:
       - task wait-for -- 8080
-      - go clean -testcache
       - task test
       - task test:components
 
   test:
     cmds:
+      - go clean -testcache
       - go test -v ./internal/...
 
   test:components:
