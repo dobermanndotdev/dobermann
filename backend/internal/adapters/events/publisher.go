@@ -2,7 +2,6 @@ package events
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/ThreeDotsLabs/watermill/message"
 
@@ -31,13 +30,13 @@ func (p Publisher) PublishMonitorCreated(ctx context.Context, event command.Moni
 
 	err = p.eventPublisher.Publish(MonitorCreatedEvent{}.EventName(), m)
 	if err != nil {
-		return fmt.Errorf("unable to publish event: %v", err)
+		return err
 	}
 
 	return nil
 }
 
-func (p Publisher) PublishEndpointCheckFailed(ctx context.Context, event command.EndpointCheckFailed) error {
+func (p Publisher) PublishEndpointCheckFailed(ctx context.Context, event command.EndpointCheckFailedEvent) error {
 	m, err := mapEventToMessage(EndpointCheckFailed{
 		At:        event.At,
 		MonitorID: event.MonitorID,
@@ -49,7 +48,26 @@ func (p Publisher) PublishEndpointCheckFailed(ctx context.Context, event command
 
 	err = p.eventPublisher.Publish(EndpointCheckFailed{}.EventName(), m)
 	if err != nil {
-		return fmt.Errorf("unable to publish event: %v", err)
+		return err
+	}
+
+	return nil
+}
+
+func (p Publisher) PublishIncidentCreated(ctx context.Context, event command.IncidentCreatedEvent) error {
+	m, err := mapEventToMessage(IncidentCreatedEvent{
+		At:         event.At,
+		IncidentID: event.IncidentID,
+		MonitorID:  event.MonitorID,
+		Header:     NewHeader(IncidentCreatedEvent{}.EventName(), ""),
+	})
+	if err != nil {
+		return err
+	}
+
+	err = p.eventPublisher.Publish(IncidentCreatedEvent{}.EventName(), m)
+	if err != nil {
+		return err
 	}
 
 	return nil

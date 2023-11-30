@@ -10,7 +10,6 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/ThreeDotsLabs/watermill"
 	"github.com/ThreeDotsLabs/watermill-amqp/v2/pkg/amqp"
 	"github.com/ThreeDotsLabs/watermill/message"
 	"github.com/ThreeDotsLabs/watermill/message/router/middleware"
@@ -21,6 +20,7 @@ import (
 	"github.com/flowck/dobermann/backend/internal/adapters/endpoint_checkers"
 	"github.com/flowck/dobermann/backend/internal/adapters/events"
 	"github.com/flowck/dobermann/backend/internal/adapters/psql"
+	"github.com/flowck/dobermann/backend/internal/adapters/resend"
 	"github.com/flowck/dobermann/backend/internal/adapters/transaction"
 	"github.com/flowck/dobermann/backend/internal/app"
 	"github.com/flowck/dobermann/backend/internal/app/command"
@@ -29,17 +29,22 @@ import (
 	"github.com/flowck/dobermann/backend/internal/common/logs"
 	"github.com/flowck/dobermann/backend/internal/common/observability"
 	"github.com/flowck/dobermann/backend/internal/common/postgres"
+	"github.com/flowck/dobermann/backend/internal/common/watermill_logger"
 	"github.com/flowck/dobermann/backend/internal/domain/monitor"
 	amqpport "github.com/flowck/dobermann/backend/internal/ports/amqp"
 	httpport "github.com/flowck/dobermann/backend/internal/ports/http"
 )
 
 type Config struct {
-	AmqpUrl     string `envconfig:"AMQP_URL"`
-	Port        int    `envconfig:"HTTP_PORT"`
-	JwtSecret   string `envconfig:"JWT_SECRET"`
-	DebugMode   string `envconfig:"DEBUG_MODE"`
-	DatabaseURL string `envconfig:"DATABASE_URL"`
+	AmqpUrl                  string `envconfig:"AMQP_URL"`
+	Port                     int    `envconfig:"HTTP_PORT"`
+	JwtSecret                string `envconfig:"JWT_SECRET"`
+	DebugMode                string `envconfig:"DEBUG_MODE"`
+	DatabaseURL              string `envconfig:"DATABASE_URL"`
+	ResendApiKey             string `envconfig:"RESEND_API_KEY"`
+	ResendMockEnabled        bool   `envconfig:"RESEND_MOCK_ENABLED"`
+	HostnameForNotifications string `envconfig:"HOSTNAME_NOTIFICATION"`
+	SentFromEmailAddress     string `envconfig:"SENT_FROM_EMAIL_ADDRESS"`
 }
 
 func (c Config) IsDebugMode() bool {
@@ -54,7 +59,7 @@ func main() {
 	}
 
 	logger := logs.New(config.IsDebugMode())
-	watermillLogger := watermill.NewStdLogger(false, false)
+	watermillLogger := watermill_logger.NewWatermillLogger(logger)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -130,8 +135,17 @@ func main() {
 	userRepository := psql.NewUserRepository(db)
 	eventPublisher := events.NewPublisher(publisher)
 	monitorRepository := psql.NewMonitorRepository(db)
-	incidentRepository := psql.NewIncidentRepository(db)
 	txProvider := transaction.NewPsqlProvider(db, publisher)
+
+	//POST_IDEA: Mocking services and its dynamic initialisation
+	var resendService resend.Service
+	if config.ResendMockEnabled {
+		resendService = resend.NewServiceMock(logger)
+		logger.Warn("Resend service mock has been initialised")
+	} else {
+		resendService = resend.NewService(config.ResendApiKey, config.SentFromEmailAddress, config.HostnameForNotifications)
+		logger.Info("Resend service has been initialised")
+	}
 
 	application := &app.App{
 		Commands: app.Commands{
@@ -140,9 +154,10 @@ func main() {
 			LogIn:         observability.NewCommandWithResultDecorator[command.LogIn, string](command.NewLoginHandler(userRepository, tokenSigner), logger),
 
 			// Monitor
-			CreateIncident: observability.NewCommandDecorator[command.CreateIncident](command.NewCreateIncidentHandler(incidentRepository), logger),
-			CreateMonitor:  observability.NewCommandDecorator[command.CreateMonitor](command.NewCreateMonitorHandler(monitorRepository, eventPublisher), logger),
-			CheckEndpoint:  observability.NewCommandDecorator[command.CheckEndpoint](command.NewCheckEndpointHandler(httpChecker, monitorRepository, eventPublisher), logger),
+			CreateIncident:                     observability.NewCommandDecorator[command.CreateIncident](command.NewCreateIncidentHandler(txProvider), logger),
+			CreateMonitor:                      observability.NewCommandDecorator[command.CreateMonitor](command.NewCreateMonitorHandler(monitorRepository, eventPublisher), logger),
+			CheckEndpoint:                      observability.NewCommandDecorator[command.CheckEndpoint](command.NewCheckEndpointHandler(httpChecker, monitorRepository, eventPublisher), logger),
+			NotifyMonitorSubscribersOnIncident: observability.NewCommandDecorator[command.NotifyMonitorSubscribersOnIncident](command.NewNotifyMonitorSubscribersOnIncidentHandler(txProvider, resendService), logger),
 		},
 		Queries: app.Queries{
 			AllMonitors: observability.NewQueryDecorator[query.AllMonitors, query.PaginatedResult[*monitor.Monitor]](query.NewAllMonitorsHandler(monitorRepository), logger),

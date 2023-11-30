@@ -103,15 +103,50 @@ func mapModelToMonitor(model *models.Monitor) (*monitor.Monitor, error) {
 		}
 	}
 
+	var subscribers []*monitor.Subscriber
+	if model.R != nil && model.R.Users != nil {
+		subscribers, err = mapModelsToSubscribers(model.R.Users)
+		if err != nil {
+			return nil, fmt.Errorf("error mapping subscribers to monitor: %v", err)
+		}
+	}
+
 	return monitor.NewMonitor(
 		id,
 		model.EndpointURL,
 		accountID,
 		model.IsEndpointUp,
 		incidents,
+		subscribers,
 		model.CreatedAt,
 		model.LastCheckedAt.Ptr(),
 	)
+}
+
+func mapModelsToSubscribers(modelList []*models.User) ([]*monitor.Subscriber, error) {
+	result := make([]*monitor.Subscriber, len(modelList))
+
+	var err error
+	var subscriber *monitor.Subscriber
+	for i, m := range modelList {
+		subscriber, err = mapModelToSubscriber(m)
+		if err != nil {
+			return nil, err
+		}
+
+		result[i] = subscriber
+	}
+
+	return result, nil
+}
+
+func mapModelToSubscriber(model *models.User) (*monitor.Subscriber, error) {
+	userID, err := domain.NewIdFromString(model.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	return monitor.NewSubscriber(userID)
 }
 
 func mapIncidentToModel(incident *monitor.Incident, monitorID domain.ID) *models.Incident {

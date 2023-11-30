@@ -31,10 +31,11 @@ func (p PsqlProvider) Transact(ctx context.Context, f command.TransactFuncc) err
 	}
 
 	adapters := command.TransactableAdapters{
-		AccountRepository: psql.NewAccountRepository(tx),
-		UserRepository:    psql.NewUserRepository(tx),
-		MonitorRepository: psql.NewMonitorRepository(tx),
-		EventPublisher:    events.NewPublisher(p.publisher),
+		AccountRepository:  psql.NewAccountRepository(tx),
+		UserRepository:     psql.NewUserRepository(tx),
+		MonitorRepository:  psql.NewMonitorRepository(tx),
+		IncidentRepository: psql.NewIncidentRepository(tx),
+		EventPublisher:     events.NewPublisher(p.publisher),
 	}
 
 	if err = f(adapters); err != nil {

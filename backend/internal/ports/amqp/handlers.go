@@ -14,6 +14,7 @@ type Handler interface {
 
 func NewHandlers(application *app.App) []Handler {
 	return []Handler{
+		IncidentCreatedHandler{application: application},
 		MonitorCreatedHandler{application: application},
 		EndpointCheckFailedHandler{application: application},
 	}

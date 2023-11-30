@@ -1,12 +1,17 @@
 package account
 
-import "context"
+import (
+	"context"
+
+	"github.com/flowck/dobermann/backend/internal/domain"
+)
 
 type Repository interface {
 	Insert(ctx context.Context, acc *Account) error
 }
 
 type UserRepository interface {
-	FindByEmail(ctx context.Context, email Email) (*User, error)
 	Insert(ctx context.Context, user *User) error
+	FindByID(ctx context.Context, id domain.ID) (*User, error)
+	FindByEmail(ctx context.Context, email Email) (*User, error)
 }

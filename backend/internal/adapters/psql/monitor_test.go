@@ -16,17 +16,17 @@ import (
 func TestMonitorRepository_Lifecycle(t *testing.T) {
 	const maxMonitors = 10
 	repo := psql.NewMonitorRepository(db)
-	acc := tests.FixtureAndInsertAccount(t, db)
+	account00 := tests.FixtureAndInsertAccount(t, db, true)
 	monitors := make(map[domain.ID]*monitor.Monitor)
 
 	for i := 0; i < maxMonitors; i++ {
-		m := tests.FixtureMonitor(t, acc.ID())
+		m := tests.FixtureMonitor(t, account00)
 		monitors[m.ID()] = m
 		require.NoError(t, repo.Insert(ctx, m))
 	}
 
 	limitPerPage := 2
-	result, err := repo.FindAll(ctx, acc.ID(), query.PaginationParams{
+	result, err := repo.FindAll(ctx, account00.ID(), query.PaginationParams{
 		Page:  1,
 		Limit: limitPerPage,
 	})
@@ -41,22 +41,31 @@ func TestMonitorRepository_Lifecycle(t *testing.T) {
 		expected := result.Data[0]
 		var found *monitor.Monitor
 
-		found, err = repo.FindByID(ctx, acc.ID(), expected.ID())
+		found, err = repo.FindByID(ctx, expected.ID())
 		require.NoError(t, err)
 
-		assert.Equal(t, expected.ID(), found.ID())
-		assert.Equal(t, expected.AccountID(), found.AccountID())
-		assert.Equal(t, expected.EndpointUrl(), found.EndpointUrl())
-		assert.Equal(t, expected.LastCheckedAt(), found.LastCheckedAt())
-		assert.Equal(t, expected.CreatedAt(), found.CreatedAt())
-		assert.Equal(t, expected.IsEndpointUp(), found.IsEndpointUp())
+		assertMonitor(t, expected, found)
+
+		owner, err := account00.FirstAccountOwner()
+		require.NoError(t, err)
+
+		assert.Equal(t, found.Subscribers()[0].UserID(), owner.ID())
 	})
 
 	t.Run("error_not_found_while_finding_by_id", func(t *testing.T) {
-		_, err = repo.FindByID(ctx, acc.ID(), domain.NewID())
-		assert.ErrorIs(t, err, monitor.ErrMonitorNotFound)
-
-		_, err = repo.FindByID(ctx, domain.NewID(), result.Data[0].ID())
+		_, err = repo.FindByID(ctx, domain.NewID())
 		assert.ErrorIs(t, err, monitor.ErrMonitorNotFound)
 	})
+}
+
+func assertMonitor(t *testing.T, expected, found *monitor.Monitor) {
+	t.Helper()
+
+	assert.Equal(t, expected.ID(), found.ID())
+	assert.Equal(t, expected.AccountID(), found.AccountID())
+	assert.Equal(t, expected.EndpointUrl(), found.EndpointUrl())
+	assert.Equal(t, expected.LastCheckedAt(), found.LastCheckedAt())
+	assert.Equal(t, expected.CreatedAt(), found.CreatedAt())
+	assert.Equal(t, expected.IsEndpointUp(), found.IsEndpointUp())
+	assert.NotEmpty(t, found.Subscribers(), "has subscribers")
 }

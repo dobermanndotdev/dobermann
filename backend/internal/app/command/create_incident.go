@@ -2,6 +2,7 @@ package command
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/flowck/dobermann/backend/internal/domain"
@@ -13,20 +14,36 @@ type CreateIncident struct {
 }
 
 type CreateIncidentHandler struct {
-	incidentRepository monitor.IncidentRepository
+	txProvider TransactionProvider
 }
 
-func NewCreateIncidentHandler(incidentRepository monitor.IncidentRepository) CreateIncidentHandler {
+func NewCreateIncidentHandler(txProvider TransactionProvider) CreateIncidentHandler {
 	return CreateIncidentHandler{
-		incidentRepository: incidentRepository,
+		txProvider: txProvider,
 	}
 }
 
 func (h CreateIncidentHandler) Execute(ctx context.Context, cmd CreateIncident) error {
-	incident, err := monitor.NewIncident(domain.NewID(), time.Now().UTC(), nil)
-	if err != nil {
-		return err
-	}
+	return h.txProvider.Transact(ctx, func(adapters TransactableAdapters) error {
+		incident, err := monitor.NewIncident(domain.NewID(), time.Now().UTC(), nil)
+		if err != nil {
+			return err
+		}
 
-	return h.incidentRepository.Create(ctx, cmd.MonitorID, incident)
+		err = adapters.IncidentRepository.Create(ctx, cmd.MonitorID, incident)
+		if err != nil {
+			return fmt.Errorf("unable to save incident: %v", err)
+		}
+
+		err = adapters.EventPublisher.PublishIncidentCreated(ctx, IncidentCreatedEvent{
+			MonitorID:  cmd.MonitorID.String(),
+			IncidentID: incident.ID().String(),
+			At:         incident.CreatedAt(),
+		})
+		if err != nil {
+			return fmt.Errorf("unable to publish event IncidentCreatedEvent: %v", err)
+		}
+
+		return nil
+	})
 }

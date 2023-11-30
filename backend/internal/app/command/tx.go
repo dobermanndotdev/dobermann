@@ -8,15 +8,22 @@ import (
 )
 
 type TransactableAdapters struct {
+	// IAM
 	AccountRepository account.Repository
-	MonitorRepository monitor.Repository
 	UserRepository    account.UserRepository
-	EventPublisher    EventPublisher
+
+	// Monitor
+	MonitorRepository  monitor.Repository
+	IncidentRepository monitor.IncidentRepository
+
+	// Event publisher
+	EventPublisher EventPublisher
 }
 
 type EventPublisher interface {
 	PublishMonitorCreated(ctx context.Context, event MonitorCreatedEvent) error
-	PublishEndpointCheckFailed(ctx context.Context, event EndpointCheckFailed) error
+	PublishIncidentCreated(ctx context.Context, event IncidentCreatedEvent) error
+	PublishEndpointCheckFailed(ctx context.Context, event EndpointCheckFailedEvent) error
 }
 
 type TransactionProvider interface {

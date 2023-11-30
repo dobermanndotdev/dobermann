@@ -44,6 +44,9 @@ func TestMonitors(t *testing.T) {
 		//POST_IDEA: How to test eventually consistent features
 		createdMonitor := getMonitorByEndpointUrl(t, endpointUrl)
 		assert.Eventually(t, assertIncidentHasBeenCreated(createdMonitor.ID), time.Second*10, time.Millisecond*250)
+
+		//TODO: extend this test by refactoring the simulator to be more generic such that it can be used as a mock service
+		//TODO: for all external services such as Resend and then used to check whether a certain call has been made
 	})
 
 	t.Run("get_all_monitors", func(t *testing.T) {

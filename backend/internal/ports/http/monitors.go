@@ -23,12 +23,18 @@ func (h handlers) CreateMonitor(c echo.Context) error {
 		return NewHandlerError(err, "error-loading-the-payload")
 	}
 
+	subscriber, err := monitor.NewSubscriber(user.ID)
+	if err != nil {
+		return NewHandlerError(err, "unable-to-create-monitor-subscriber")
+	}
+
 	newMonitor, err := monitor.NewMonitor(
 		domain.NewID(),
 		body.EndpointUrl,
 		user.AccountID,
 		false,
 		nil,
+		[]*monitor.Subscriber{subscriber},
 		time.Now().UTC(),
 		nil,
 	)
@@ -70,7 +76,7 @@ func (h handlers) GetAllMonitors(c echo.Context, params GetAllMonitorsParams) er
 }
 
 func (h handlers) GetMonitorByID(c echo.Context, monitorID string) error {
-	user, err := retrieveUserFromCtx(c)
+	_, err := retrieveUserFromCtx(c)
 	if err != nil {
 		return NewUnableToRetrieveUserFromCtx(err)
 	}
@@ -81,8 +87,7 @@ func (h handlers) GetMonitorByID(c echo.Context, monitorID string) error {
 	}
 
 	foundMonitor, err := h.application.Queries.MonitorByID.Execute(c.Request().Context(), query.MonitorByID{
-		ID:        mID,
-		AccountID: user.AccountID,
+		ID: mID,
 	})
 	if err != nil {
 		return NewHandlerError(err, "unable-to-get-monitor")

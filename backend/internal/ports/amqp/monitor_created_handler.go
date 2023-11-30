@@ -14,7 +14,7 @@ type MonitorCreatedHandler struct {
 }
 
 func (h MonitorCreatedHandler) HandlerName() string {
-	return "MonitorCreatedHandler"
+	return "MonitorCreated_CheckEndpoint_Handler"
 }
 
 func (h MonitorCreatedHandler) EventName() string {

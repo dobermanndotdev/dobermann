@@ -42,10 +42,20 @@ CREATE TABLE incidents (
     CONSTRAINT pk_incident_belongs_to_monitor FOREIGN KEY (monitor_id) REFERENCES monitors (id)
 );
 
+CREATE TABLE subscribers (
+    user_id VARCHAR(26) NOT NULL,
+    monitor_id VARCHAR(26) NOT NULL,
+
+    CONSTRAINT pk_user_id_monitor_id PRIMARY KEY (user_id, monitor_id),
+    CONSTRAINT fk_is_attached_to_a_user FOREIGN KEY (user_id) REFERENCES users (id),
+    CONSTRAINT fk_is_attached_to_a_monitor FOREIGN KEY (monitor_id) REFERENCES monitors (id)
+);
+
 -- +goose StatementEnd
 
 -- +goose Down
 -- +goose StatementBegin
+DROP TABLE subscribers;
 DROP TABLE incidents;
 DROP TABLE monitors;
 DROP TABLE users;

@@ -145,14 +145,17 @@ var UserWhere = struct {
 
 // UserRels is where relationship names are stored.
 var UserRels = struct {
-	Account string
+	Account  string
+	Monitors string
 }{
-	Account: "Account",
+	Account:  "Account",
+	Monitors: "Monitors",
 }
 
 // userR is where relationships are stored.
 type userR struct {
-	Account *Account `boil:"Account" json:"Account" toml:"Account" yaml:"Account"`
+	Account  *Account     `boil:"Account" json:"Account" toml:"Account" yaml:"Account"`
+	Monitors MonitorSlice `boil:"Monitors" json:"Monitors" toml:"Monitors" yaml:"Monitors"`
 }
 
 // NewStruct creates a new relationship struct
@@ -165,6 +168,13 @@ func (r *userR) GetAccount() *Account {
 		return nil
 	}
 	return r.Account
+}
+
+func (r *userR) GetMonitors() MonitorSlice {
+	if r == nil {
+		return nil
+	}
+	return r.Monitors
 }
 
 // userL is where Load methods for each relationship are stored.
@@ -467,6 +477,21 @@ func (o *User) Account(mods ...qm.QueryMod) accountQuery {
 	return Accounts(queryMods...)
 }
 
+// Monitors retrieves all the monitor's Monitors with an executor.
+func (o *User) Monitors(mods ...qm.QueryMod) monitorQuery {
+	var queryMods []qm.QueryMod
+	if len(mods) != 0 {
+		queryMods = append(queryMods, mods...)
+	}
+
+	queryMods = append(queryMods,
+		qm.InnerJoin("\"subscribers\" on \"monitors\".\"id\" = \"subscribers\".\"monitor_id\""),
+		qm.Where("\"subscribers\".\"user_id\"=?", o.ID),
+	)
+
+	return Monitors(queryMods...)
+}
+
 // LoadAccount allows an eager lookup of values, cached into the
 // loaded structs of the objects. This is for an N-1 relationship.
 func (userL) LoadAccount(ctx context.Context, e boil.ContextExecutor, singular bool, maybeUser interface{}, mods queries.Applicator) error {
@@ -587,6 +612,137 @@ func (userL) LoadAccount(ctx context.Context, e boil.ContextExecutor, singular b
 	return nil
 }
 
+// LoadMonitors allows an eager lookup of values, cached into the
+// loaded structs of the objects. This is for a 1-M or N-M relationship.
+func (userL) LoadMonitors(ctx context.Context, e boil.ContextExecutor, singular bool, maybeUser interface{}, mods queries.Applicator) error {
+	var slice []*User
+	var object *User
+
+	if singular {
+		var ok bool
+		object, ok = maybeUser.(*User)
+		if !ok {
+			object = new(User)
+			ok = queries.SetFromEmbeddedStruct(&object, &maybeUser)
+			if !ok {
+				return errors.New(fmt.Sprintf("failed to set %T from embedded struct %T", object, maybeUser))
+			}
+		}
+	} else {
+		s, ok := maybeUser.(*[]*User)
+		if ok {
+			slice = *s
+		} else {
+			ok = queries.SetFromEmbeddedStruct(&slice, maybeUser)
+			if !ok {
+				return errors.New(fmt.Sprintf("failed to set %T from embedded struct %T", slice, maybeUser))
+			}
+		}
+	}
+
+	args := make([]interface{}, 0, 1)
+	if singular {
+		if object.R == nil {
+			object.R = &userR{}
+		}
+		args = append(args, object.ID)
+	} else {
+	Outer:
+		for _, obj := range slice {
+			if obj.R == nil {
+				obj.R = &userR{}
+			}
+
+			for _, a := range args {
+				if a == obj.ID {
+					continue Outer
+				}
+			}
+
+			args = append(args, obj.ID)
+		}
+	}
+
+	if len(args) == 0 {
+		return nil
+	}
+
+	query := NewQuery(
+		qm.Select("\"monitors\".\"id\", \"monitors\".\"account_id\", \"monitors\".\"endpoint_url\", \"monitors\".\"is_endpoint_up\", \"monitors\".\"created_at\", \"monitors\".\"last_checked_at\", \"a\".\"user_id\""),
+		qm.From("\"monitors\""),
+		qm.InnerJoin("\"subscribers\" as \"a\" on \"monitors\".\"id\" = \"a\".\"monitor_id\""),
+		qm.WhereIn("\"a\".\"user_id\" in ?", args...),
+	)
+	if mods != nil {
+		mods.Apply(query)
+	}
+
+	results, err := query.QueryContext(ctx, e)
+	if err != nil {
+		return errors.Wrap(err, "failed to eager load monitors")
+	}
+
+	var resultSlice []*Monitor
+
+	var localJoinCols []string
+	for results.Next() {
+		one := new(Monitor)
+		var localJoinCol string
+
+		err = results.Scan(&one.ID, &one.AccountID, &one.EndpointURL, &one.IsEndpointUp, &one.CreatedAt, &one.LastCheckedAt, &localJoinCol)
+		if err != nil {
+			return errors.Wrap(err, "failed to scan eager loaded results for monitors")
+		}
+		if err = results.Err(); err != nil {
+			return errors.Wrap(err, "failed to plebian-bind eager loaded slice monitors")
+		}
+
+		resultSlice = append(resultSlice, one)
+		localJoinCols = append(localJoinCols, localJoinCol)
+	}
+
+	if err = results.Close(); err != nil {
+		return errors.Wrap(err, "failed to close results in eager load on monitors")
+	}
+	if err = results.Err(); err != nil {
+		return errors.Wrap(err, "error occurred during iteration of eager loaded relations for monitors")
+	}
+
+	if len(monitorAfterSelectHooks) != 0 {
+		for _, obj := range resultSlice {
+			if err := obj.doAfterSelectHooks(ctx, e); err != nil {
+				return err
+			}
+		}
+	}
+	if singular {
+		object.R.Monitors = resultSlice
+		for _, foreign := range resultSlice {
+			if foreign.R == nil {
+				foreign.R = &monitorR{}
+			}
+			foreign.R.Users = append(foreign.R.Users, object)
+		}
+		return nil
+	}
+
+	for i, foreign := range resultSlice {
+		localJoinCol := localJoinCols[i]
+		for _, local := range slice {
+			if local.ID == localJoinCol {
+				local.R.Monitors = append(local.R.Monitors, foreign)
+				if foreign.R == nil {
+					foreign.R = &monitorR{}
+				}
+				foreign.R.Users = append(foreign.R.Users, local)
+				break
+			}
+		}
+	}
+
+	return nil
+}
+
 // SetAccount of the user to the related item.
 // Sets o.R.Account to related.
 // Adds o to related.R.Users.
@@ -632,6 +788,151 @@ func (o *User) SetAccount(ctx context.Context, exec boil.ContextExecutor, insert
 	}
 
 	return nil
+}
+
+// AddMonitors adds the given related objects to the existing relationships
+// of the user, optionally inserting them as new records.
+// Appends related to o.R.Monitors.
+// Sets related.R.Users appropriately.
+func (o *User) AddMonitors(ctx context.Context, exec boil.ContextExecutor, insert bool, related ...*Monitor) error {
+	var err error
+	for _, rel := range related {
+		if insert {
+			if err = rel.Insert(ctx, exec, boil.Infer()); err != nil {
+				return errors.Wrap(err, "failed to insert into foreign table")
+			}
+		}
+	}
+
+	for _, rel := range related {
+		query := "insert into \"subscribers\" (\"user_id\", \"monitor_id\") values ($1, $2)"
+		values := []interface{}{o.ID, rel.ID}
+
+		if boil.IsDebug(ctx) {
+			writer := boil.DebugWriterFrom(ctx)
+			fmt.Fprintln(writer, query)
+			fmt.Fprintln(writer, values)
+		}
+		_, err = exec.ExecContext(ctx, query, values...)
+		if err != nil {
+			return errors.Wrap(err, "failed to insert into join table")
+		}
+	}
+	if o.R == nil {
+		o.R = &userR{
+			Monitors: related,
+		}
+	} else {
+		o.R.Monitors = append(o.R.Monitors, related...)
+	}
+
+	for _, rel := range related {
+		if rel.R == nil {
+			rel.R = &monitorR{
+				Users: UserSlice{o},
+			}
+		} else {
+			rel.R.Users = append(rel.R.Users, o)
+		}
+	}
+	return nil
+}
+
+// SetMonitors removes all previously related items of the
+// user replacing them completely with the passed
+// in related items, optionally inserting them as new records.
+// Sets o.R.Users's Monitors accordingly.
+// Replaces o.R.Monitors with related.
+// Sets related.R.Users's Monitors accordingly.
+func (o *User) SetMonitors(ctx context.Context, exec boil.ContextExecutor, insert bool, related ...*Monitor) error {
+	query := "delete from \"subscribers\" where \"user_id\" = $1"
+	values := []interface{}{o.ID}
+	if boil.IsDebug(ctx) {
+		writer := boil.DebugWriterFrom(ctx)
+		fmt.Fprintln(writer, query)
+		fmt.Fprintln(writer, values)
+	}
+	_, err := exec.ExecContext(ctx, query, values...)
+	if err != nil {
+		return errors.Wrap(err, "failed to remove relationships before set")
+	}
+
+	removeMonitorsFromUsersSlice(o, related)
+	if o.R != nil {
+		o.R.Monitors = nil
+	}
+
+	return o.AddMonitors(ctx, exec, insert, related...)
+}
+
+// RemoveMonitors relationships from objects passed in.
+// Removes related items from R.Monitors (uses pointer comparison, removal does not keep order)
+// Sets related.R.Users.
+func (o *User) RemoveMonitors(ctx context.Context, exec boil.ContextExecutor, related ...*Monitor) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+	query := fmt.Sprintf(
+		"delete from \"subscribers\" where \"user_id\" = $1 and \"monitor_id\" in (%s)",
+		strmangle.Placeholders(dialect.UseIndexPlaceholders, len(related), 2, 1),
+	)
+	values := []interface{}{o.ID}
+	for _, rel := range related {
+		values = append(values, rel.ID)
+	}
+
+	if boil.IsDebug(ctx) {
+		writer := boil.DebugWriterFrom(ctx)
+		fmt.Fprintln(writer, query)
+		fmt.Fprintln(writer, values)
+	}
+	_, err = exec.ExecContext(ctx, query, values...)
+	if err != nil {
+		return errors.Wrap(err, "failed to remove relationships before set")
+	}
+	removeMonitorsFromUsersSlice(o, related)
+	if o.R == nil {
+		return nil
+	}
+
+	for _, rel := range related {
+		for i, ri := range o.R.Monitors {
+			if rel != ri {
+				continue
+			}
+
+			ln := len(o.R.Monitors)
+			if ln > 1 && i < ln-1 {
+				o.R.Monitors[i] = o.R.Monitors[ln-1]
+			}
+			o.R.Monitors = o.R.Monitors[:ln-1]
+			break
+		}
+	}
+
+	return nil
+}
+
+func removeMonitorsFromUsersSlice(o *User, related []*Monitor) {
+	for _, rel := range related {
+		if rel.R == nil {
+			continue
+		}
+		for i, ri := range rel.R.Users {
+			if o.ID != ri.ID {
+				continue
+			}
+
+			ln := len(rel.R.Users)
+			if ln > 1 && i < ln-1 {
+				rel.R.Users[i] = rel.R.Users[ln-1]
+			}
+			rel.R.Users = rel.R.Users[:ln-1]
+			break
+		}
+	}
 }
 
 // Users retrieves all the records using an executor.

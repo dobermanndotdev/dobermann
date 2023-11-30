@@ -14,7 +14,7 @@ type EndpointCheckFailedHandler struct {
 }
 
 func (e EndpointCheckFailedHandler) HandlerName() string {
-	return "EndpointCheckFailedHandler"
+	return "EndpointCheckFailed_CreateIncident_Handler"
 }
 
 func (e EndpointCheckFailedHandler) EventName() string {
