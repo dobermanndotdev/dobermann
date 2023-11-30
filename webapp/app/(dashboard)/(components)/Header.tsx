@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { AccountMenu } from "./AccountMenu";
 
 export function Header() {
   return (
@@ -8,7 +9,9 @@ export function Header() {
           <Link href="/monitors">Dobermann</Link>
         </h1>
       </div>
-      <div></div>
+      <div>
+        <AccountMenu />
+      </div>
     </header>
   );
 }
