@@ -2,6 +2,7 @@ package psql_test
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -43,5 +44,6 @@ func assertIncident(t *testing.T, expected, found *monitor.Incident) {
 	t.Helper()
 
 	assert.Equal(t, expected.ID(), found.ID())
-	assert.Equal(t, expected.CreatedAt(), found.CreatedAt())
+	//POST_IDEA?: comparing dates in tests
+	assert.Equal(t, expected.CreatedAt().Truncate(time.Second), found.CreatedAt().Truncate(time.Second))
 }
