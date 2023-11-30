@@ -7,7 +7,13 @@ type MonitorCreatedEvent struct {
 	CreatedAt time.Time
 }
 
-type EndpointCheckFailed struct {
+type EndpointCheckFailedEvent struct {
 	MonitorID string
 	At        time.Time
+}
+
+type IncidentCreatedEvent struct {
+	MonitorID  string
+	IncidentID string
+	At         time.Time
 }

@@ -12,7 +12,7 @@ import (
 )
 
 func TestUserRepository_Lifecycle(t *testing.T) {
-	acc := tests.FixtureAndInsertAccount(t, db)
+	acc := tests.FixtureAndInsertAccount(t, db, false)
 	user, err := acc.FirstAccountOwner()
 	require.NoError(t, err)
 

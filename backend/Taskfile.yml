@@ -84,9 +84,13 @@ tasks:
     cmds:
       - gofmt -w -s ./
 
-  tail:
+  tail:all:
     cmds:
       - docker-compose logs -f --tail 10
+
+  tail:
+    cmds:
+      - docker logs -f --tail 10 backend-app-1
 
   docker:up:
     cmds:

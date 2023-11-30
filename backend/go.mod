@@ -16,6 +16,7 @@ require (
 	github.com/oapi-codegen/echo-middleware v1.0.1
 	github.com/oklog/ulid/v2 v2.1.0
 	github.com/pressly/goose v2.7.0+incompatible
+	github.com/resendlabs/resend-go/v2 v2.2.0
 	github.com/sirupsen/logrus v1.9.3
 	github.com/stretchr/testify v1.8.4
 	github.com/volatiletech/null/v8 v8.1.2

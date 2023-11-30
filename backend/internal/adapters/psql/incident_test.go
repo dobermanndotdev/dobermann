@@ -14,8 +14,8 @@ func TestIncidentRepository_Lifecycle(t *testing.T) {
 	monitorRepo := psql.NewMonitorRepository(db)
 	incidentRepo := psql.NewIncidentRepository(db)
 
-	acc := tests.FixtureAndInsertAccount(t, db)
-	monitor00 := tests.FixtureMonitor(t, acc.ID())
+	account00 := tests.FixtureAndInsertAccount(t, db, true)
+	monitor00 := tests.FixtureMonitor(t, account00)
 	incident00 := tests.FixtureIncident(t)
 
 	require.NoError(t, monitorRepo.Insert(ctx, monitor00))

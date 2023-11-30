@@ -5,6 +5,7 @@ import (
 
 	"github.com/volatiletech/sqlboiler/v4/boil"
 
+	"github.com/flowck/dobermann/backend/internal/adapters/models"
 	"github.com/flowck/dobermann/backend/internal/domain"
 	"github.com/flowck/dobermann/backend/internal/domain/monitor"
 )
@@ -15,6 +16,15 @@ func NewIncidentRepository(db boil.ContextExecutor) IncidentRepository {
 
 type IncidentRepository struct {
 	db boil.ContextExecutor
+}
+
+func (i IncidentRepository) FindByID(ctx context.Context, id domain.ID) (*monitor.Incident, error) {
+	model, err := models.FindIncident(ctx, i.db, id.String())
+	if err != nil {
+		return nil, err
+	}
+
+	return mapModelToIncident(model)
 }
 
 func (i IncidentRepository) Create(ctx context.Context, monitorID domain.ID, incident *monitor.Incident) error {

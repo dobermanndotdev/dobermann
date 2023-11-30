@@ -25,10 +25,10 @@ type MonitorRepository struct {
 	db boil.ContextExecutor
 }
 
-func (p MonitorRepository) FindByID(ctx context.Context, accountID, id domain.ID) (*monitor.Monitor, error) {
+func (p MonitorRepository) FindByID(ctx context.Context, id domain.ID) (*monitor.Monitor, error) {
 	model, err := models.Monitors(
-		models.MonitorWhere.AccountID.EQ(accountID.String()),
 		models.MonitorWhere.ID.EQ(id.String()),
+		qm.Load(models.MonitorRels.Users),
 	).One(ctx, p.db)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, monitor.ErrMonitorNotFound
@@ -48,6 +48,23 @@ func (p MonitorRepository) Insert(ctx context.Context, m *monitor.Monitor) error
 		return err
 	}
 
+	if len(m.Subscribers()) == 0 {
+		return nil
+	}
+
+	var userModel *models.User
+	for _, subscriber := range m.Subscribers() {
+		userModel, err = models.FindUser(ctx, p.db, subscriber.UserID().String())
+		if err != nil {
+			return err
+		}
+
+		err = model.AddUsers(ctx, p.db, false, userModel)
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
@@ -62,7 +79,7 @@ func (p MonitorRepository) Update(
 	}
 
 	if err != nil {
-		return fmt.Errorf("unable to query to find monitor with id %s: %v", id, err)
+		return err
 	}
 
 	m, err := mapModelToMonitor(model)
@@ -78,7 +95,7 @@ func (p MonitorRepository) Update(
 	model = mapMonitorToModel(m)
 	_, err = model.Update(ctx, p.db, boil.Infer())
 	if err != nil {
-		return fmt.Errorf("unable to update monitor with id %s: %v", id, err)
+		return err
 	}
 
 	return nil

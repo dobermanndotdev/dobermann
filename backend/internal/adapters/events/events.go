@@ -54,6 +54,17 @@ func (e EndpointCheckFailed) EventName() string {
 	return "EndpointCheckFailed_v1"
 }
 
+type IncidentCreatedEvent struct {
+	Header     Header    `json:"header"`
+	IncidentID string    `json:"incident_id"`
+	MonitorID  string    `json:"monitor_id"`
+	At         time.Time `json:"at"`
+}
+
+func (e IncidentCreatedEvent) EventName() string {
+	return "IncidentCreated_v1"
+}
+
 //
 // Utils
 //

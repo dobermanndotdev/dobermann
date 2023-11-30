@@ -23,6 +23,7 @@ func NewMonitor(
 	accountID domain.ID,
 	isEndpointUp bool,
 	incidents []*Incident,
+	subscribers []*Subscriber,
 	createdAt time.Time,
 	lastCheckedAt *time.Time,
 ) (*Monitor, error) {
@@ -32,6 +33,7 @@ func NewMonitor(
 		accountID:     accountID,
 		isEndpointUp:  isEndpointUp,
 		incidents:     incidents,
+		subscribers:   subscribers,
 		createdAt:     createdAt,
 		lastCheckedAt: lastCheckedAt,
 	}, nil

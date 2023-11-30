@@ -8,8 +8,7 @@ import (
 )
 
 type MonitorByID struct {
-	AccountID domain.ID
-	ID        domain.ID
+	ID domain.ID
 }
 
 type MonitorByIdHandler struct {
@@ -23,5 +22,5 @@ func NewMonitorByIdHandler(monitorRepository monitor.Repository) MonitorByIdHand
 }
 
 func (h MonitorByIdHandler) Execute(ctx context.Context, q MonitorByID) (*monitor.Monitor, error) {
-	return h.monitorRepository.FindByID(ctx, q.AccountID, q.ID)
+	return h.monitorRepository.FindByID(ctx, q.ID)
 }

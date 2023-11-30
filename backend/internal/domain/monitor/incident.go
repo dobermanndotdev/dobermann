@@ -44,5 +44,6 @@ func NewIncident(id domain.ID, createdAt time.Time, actions []IncidentAction) (*
 //
 
 type IncidentRepository interface {
+	FindByID(ctx context.Context, id domain.ID) (*Incident, error)
 	Create(ctx context.Context, monitorID domain.ID, incident *Incident) error
 }

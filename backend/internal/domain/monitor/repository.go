@@ -8,6 +8,6 @@ import (
 
 type Repository interface {
 	Insert(ctx context.Context, monitor *Monitor) error
-	FindByID(ctx context.Context, accountID, ID domain.ID) (*Monitor, error)
+	FindByID(ctx context.Context, ID domain.ID) (*Monitor, error)
 	Update(ctx context.Context, id domain.ID, fn func(monitor *Monitor) error) error
 }
