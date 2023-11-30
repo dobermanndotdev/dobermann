@@ -44,13 +44,7 @@ func TestMonitorRepository_Lifecycle(t *testing.T) {
 		found, err = repo.FindByID(ctx, expected.ID())
 		require.NoError(t, err)
 
-		assert.Equal(t, expected.ID(), found.ID())
-		assert.Equal(t, expected.AccountID(), found.AccountID())
-		assert.Equal(t, expected.EndpointUrl(), found.EndpointUrl())
-		assert.Equal(t, expected.LastCheckedAt(), found.LastCheckedAt())
-		assert.Equal(t, expected.CreatedAt(), found.CreatedAt())
-		assert.Equal(t, expected.IsEndpointUp(), found.IsEndpointUp())
-		assert.NotEmpty(t, found.Subscribers(), "has subscribers")
+		assertMonitor(t, expected, found)
 
 		owner, err := account00.FirstAccountOwner()
 		require.NoError(t, err)
@@ -62,4 +56,16 @@ func TestMonitorRepository_Lifecycle(t *testing.T) {
 		_, err = repo.FindByID(ctx, domain.NewID())
 		assert.ErrorIs(t, err, monitor.ErrMonitorNotFound)
 	})
+}
+
+func assertMonitor(t *testing.T, expected, found *monitor.Monitor) {
+	t.Helper()
+
+	assert.Equal(t, expected.ID(), found.ID())
+	assert.Equal(t, expected.AccountID(), found.AccountID())
+	assert.Equal(t, expected.EndpointUrl(), found.EndpointUrl())
+	assert.Equal(t, expected.LastCheckedAt(), found.LastCheckedAt())
+	assert.Equal(t, expected.CreatedAt(), found.CreatedAt())
+	assert.Equal(t, expected.IsEndpointUp(), found.IsEndpointUp())
+	assert.NotEmpty(t, found.Subscribers(), "has subscribers")
 }

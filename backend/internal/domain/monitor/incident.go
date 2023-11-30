@@ -35,7 +35,7 @@ func NewIncident(id domain.ID, createdAt time.Time, actions []IncidentAction) (*
 	return &Incident{
 		id:        id,
 		actions:   actions,
-		createdAt: createdAt,
+		createdAt: createdAt.UTC(),
 	}, nil
 }
 

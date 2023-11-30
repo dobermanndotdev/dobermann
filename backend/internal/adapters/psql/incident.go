@@ -2,6 +2,8 @@ package psql
 
 import (
 	"context"
+	"database/sql"
+	"errors"
 
 	"github.com/volatiletech/sqlboiler/v4/boil"
 
@@ -20,6 +22,10 @@ type IncidentRepository struct {
 
 func (i IncidentRepository) FindByID(ctx context.Context, id domain.ID) (*monitor.Incident, error) {
 	model, err := models.FindIncident(ctx, i.db, id.String())
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, monitor.ErrIncidentNotFound
+	}
+
 	if err != nil {
 		return nil, err
 	}

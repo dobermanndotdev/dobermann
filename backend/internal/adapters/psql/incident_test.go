@@ -7,6 +7,8 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/flowck/dobermann/backend/internal/adapters/psql"
+	"github.com/flowck/dobermann/backend/internal/domain"
+	"github.com/flowck/dobermann/backend/internal/domain/monitor"
 	"github.com/flowck/dobermann/backend/tests"
 )
 
@@ -20,4 +22,26 @@ func TestIncidentRepository_Lifecycle(t *testing.T) {
 
 	require.NoError(t, monitorRepo.Insert(ctx, monitor00))
 	assert.NoError(t, incidentRepo.Create(ctx, monitor00.ID(), incident00))
+
+	t.Run("find_incident_by_id", func(t *testing.T) {
+		t.Parallel()
+
+		found00, err := incidentRepo.FindByID(ctx, incident00.ID())
+		require.NoError(t, err)
+		assertIncident(t, incident00, found00)
+	})
+
+	t.Run("incident_not_found", func(t *testing.T) {
+		t.Parallel()
+
+		_, err := incidentRepo.FindByID(ctx, domain.NewID())
+		assert.ErrorIs(t, err, monitor.ErrIncidentNotFound)
+	})
+}
+
+func assertIncident(t *testing.T, expected, found *monitor.Incident) {
+	t.Helper()
+
+	assert.Equal(t, expected.ID(), found.ID())
+	assert.Equal(t, expected.CreatedAt(), found.CreatedAt())
 }
