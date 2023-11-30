@@ -2,9 +2,13 @@ import { Icon } from "./Icon";
 
 export function AccountMenu() {
   return (
-    <details className="dropdown dropdown-bottom dropdown-end">
-      <summary className="m-1 btn btn-xs">
+    <details className="dropdown dropdown-bottom dropdown-end h-full w-full">
+      <summary
+        role="button"
+        className="list-none h-full flex gap-1 items-center justify-center px-2 cursor-pointer"
+      >
         <Icon name="ri-user-fill" />
+        <Icon name="ri-arrow-down-s-fill" />
       </summary>
       <div className="p-2 shadow menu dropdown-content z-[1] bg-base-100 rounded-box w-52">
         <div className="border-b flex flex-col gap-1 pb-3 px-4">
