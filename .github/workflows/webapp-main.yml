@@ -10,11 +10,11 @@ jobs:
   webapp-ci:
     uses: ./.github/workflows/webapp-ci.yml
 
-  # tag:
-  #   uses: ./.github/workflows/webapp-tag.yml
-  #   needs: ci
-  #   secrets:
-  #     PAT: ${{ secrets.PAT }}
+  tag:
+    uses: ./.github/workflows/webapp-tag.yml
+    needs: ci
+    secrets:
+      PAT: ${{ secrets.PAT }}
 
   # deploy-staging:
   #   uses: ./.github/workflows/webapp-deploy-staging.yml

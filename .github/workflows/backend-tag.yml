@@ -48,7 +48,7 @@ jobs:
       - name: Create release
         env:
           GITHUB_TOKEN: ${{ secrets.PAT }}
-        run: gh release create $(svu current) --verify-tag --latest --target=main --notes ""
+        run: gh release create backend/$(svu current) --verify-tag --latest --target=main --notes ""
 
       - id: print_version
         shell: bash
