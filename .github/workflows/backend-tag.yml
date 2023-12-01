@@ -40,18 +40,18 @@ jobs:
           sudo apt install svu
 
       - name: Tag
-        run: git tag $(svu next --force-patch-increment --prefix backend/)
+        run: git tag $(svu next --force-patch-increment --prefix backend/v)
 
       - name: Publish tag
-        run: git push origin $(svu current --prefix backend/)
+        run: git push origin $(svu current --prefix backend/v)
 
       - name: Create release
         env:
           GITHUB_TOKEN: ${{ secrets.PAT }}
-        run: gh release create $(svu current --prefix backend/) --verify-tag --latest --target=main --notes ""
+        run: gh release create $(svu current --prefix backend/v) --verify-tag --latest --target=main --notes ""
 
       - id: print_version
         shell: bash
         run: |
-          version=$(svu current --prefix backend/)
+          version=$(svu current --prefix backend/v)
           echo "version=$version" >> $GITHUB_OUTPUT
