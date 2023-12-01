@@ -1,4 +1,4 @@
-name: backend-deploy-production
+name: deploy-production
 on:
   workflow_dispatch:
     inputs:
@@ -9,9 +9,6 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: backend
     steps:
       - name: Clone
         uses: actions/checkout@v3
