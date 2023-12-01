@@ -8,11 +8,11 @@ on:
       - ".github/workflows/backend-*.yml"
 
 jobs:
-  # ci:
-  #   uses: ./.github/workflows/backend-ci.yml
+  ci:
+    uses: ./.github/workflows/backend-ci.yml
 
   tag:
     uses: ./.github/workflows/backend-tag.yml
-    # needs: ci
+    needs: ci
     secrets:
       PAT: ${{ secrets.PAT }}

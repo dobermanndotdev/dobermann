@@ -5,6 +5,7 @@ on:
       - main
     paths:
       - "webapp/**"
+      - ".github/workflows/webapp-*.yml"
 
 jobs:
   ci:
