@@ -21,6 +21,9 @@ jobs:
     steps:
       - name: Clone
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.PAT }}
 
       - name: Setup Node
         uses: actions/setup-node@v3

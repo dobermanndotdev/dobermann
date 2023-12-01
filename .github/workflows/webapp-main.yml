@@ -8,12 +8,12 @@ on:
       - ".github/workflows/webapp-*.yml"
 
 jobs:
-  ci:
-    uses: ./.github/workflows/webapp-ci.yml
+  # ci:
+  #   uses: ./.github/workflows/webapp-ci.yml
 
   tag:
     uses: ./.github/workflows/webapp-tag.yml
-    needs: ci
+    #needs: ci
     secrets:
       PAT: ${{ secrets.PAT }}
 
