@@ -8,7 +8,7 @@ module.exports = {
     "@semantic-release/git",
     [
       "@semantic-release/github",
-      { releaseNameTemplate: "webapp/<%= nextverison.name %>" },
+      { releaseNameTemplate: "webapp/<%= nextRelease.gitTag %>" },
     ],
   ],
   repositoryUrl: "https://github.com/flowck/dobermann.git",
