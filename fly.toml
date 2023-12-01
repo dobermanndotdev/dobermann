@@ -6,10 +6,6 @@
 app = "prod-dobermann-backend"
 primary_region = "lhr"
 
-[build]
-  builder = "paketobuildpacks/builder:base"
-  buildpacks = ["gcr.io/paketo-buildpacks/go"]
-
 [env]
   HTTP_PORT = "8080"
   ALLOWED_CORS_ORIGIN='https://dobermann.dev'

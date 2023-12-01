@@ -96,6 +96,14 @@ tasks:
     cmds:
       - docker-compose up -d
 
+  docker:build:
+    cmds:
+      - docker build -t dobermann.dev/backend:latest .
+
+  docker:run:
+    cmds:
+      - docker run --env-file ./.env.local dobermann.dev/backend:latest
+
   wait-for:
     cmds:
       - |
