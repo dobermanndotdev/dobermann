@@ -40,10 +40,10 @@ jobs:
           sudo apt install svu
 
       - name: Tag
-        run: git tag $(svu next --force-patch-increment)
+        run: git tag backend/$(svu next --force-patch-increment)
 
       - name: Publish tag
-        run: git push origin $(svu current)
+        run: git push origin backend/$(svu current)
 
       - name: Create release
         env:
@@ -53,5 +53,5 @@ jobs:
       - id: print_version
         shell: bash
         run: |
-          version=$(svu current)
+          version=backend/$(svu current)
           echo "version=$version" >> $GITHUB_OUTPUT
