@@ -40,7 +40,7 @@ jobs:
           sudo apt install svu
 
       - name: Tag
-        run: git tag backend/$(svu next --force-patch-increment --prefix backend/)
+        run: git tag $(svu next --force-patch-increment --prefix backend/)
 
       - name: Publish tag
         run: git push origin $(svu current --prefix backend/)
