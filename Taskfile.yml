@@ -128,3 +128,7 @@ tasks:
           -package client \
           -generate client,types,spec \
           ./api/openapi.yml > ./tests/client/client.gen.go
+
+  deploy:prd:
+    cmds:
+      - flyctl deploy --build-arg VERSION={{.CLI_ARGS}} --config ./fly.toml --remote-only
