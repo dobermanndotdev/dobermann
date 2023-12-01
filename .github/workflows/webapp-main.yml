@@ -7,7 +7,7 @@ on:
       - "webapp/**"
 
 jobs:
-  webapp-ci:
+  ci:
     uses: ./.github/workflows/webapp-ci.yml
 
   tag:

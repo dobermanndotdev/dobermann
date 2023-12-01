@@ -12,7 +12,7 @@ jobs:
     uses: ./.github/workflows/backend-ci.yml
 
   tag:
-    uses: ./.github/workflows/tag.yml
+    uses: ./.github/workflows/backend-tag.yml
     needs: ci
     secrets:
       PAT: ${{ secrets.PAT }}
