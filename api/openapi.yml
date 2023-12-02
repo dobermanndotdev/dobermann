@@ -73,6 +73,7 @@ paths:
       parameters:
         - name: monitorID
           in: path
+          required: true
           schema:
             type: string
       security:
