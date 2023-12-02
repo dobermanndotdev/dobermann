@@ -56,4 +56,5 @@ type IncidentRepository interface {
 	FindByID(ctx context.Context, id domain.ID) (*Incident, error)
 	Create(ctx context.Context, monitorID domain.ID, incident *Incident) error
 	Update(ctx context.Context, id, monitorID domain.ID, fn func(incident *Incident) error) error
+	AppendIncidentAction(ctx context.Context, incidentID domain.ID, incidentAction *IncidentAction) error
 }

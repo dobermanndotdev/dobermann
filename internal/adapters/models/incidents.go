@@ -81,14 +81,17 @@ var IncidentWhere = struct {
 
 // IncidentRels is where relationship names are stored.
 var IncidentRels = struct {
-	Monitor string
+	Monitor         string
+	IncidentActions string
 }{
-	Monitor: "Monitor",
+	Monitor:         "Monitor",
+	IncidentActions: "IncidentActions",
 }
 
 // incidentR is where relationships are stored.
 type incidentR struct {
-	Monitor *Monitor `boil:"Monitor" json:"Monitor" toml:"Monitor" yaml:"Monitor"`
+	Monitor         *Monitor            `boil:"Monitor" json:"Monitor" toml:"Monitor" yaml:"Monitor"`
+	IncidentActions IncidentActionSlice `boil:"IncidentActions" json:"IncidentActions" toml:"IncidentActions" yaml:"IncidentActions"`
 }
 
 // NewStruct creates a new relationship struct
@@ -101,6 +104,13 @@ func (r *incidentR) GetMonitor() *Monitor {
 		return nil
 	}
 	return r.Monitor
+}
+
+func (r *incidentR) GetIncidentActions() IncidentActionSlice {
+	if r == nil {
+		return nil
+	}
+	return r.IncidentActions
 }
 
 // incidentL is where Load methods for each relationship are stored.
@@ -403,6 +413,20 @@ func (o *Incident) Monitor(mods ...qm.QueryMod) monitorQuery {
 	return Monitors(queryMods...)
 }
 
+// IncidentActions retrieves all the incident_action's IncidentActions with an executor.
+func (o *Incident) IncidentActions(mods ...qm.QueryMod) incidentActionQuery {
+	var queryMods []qm.QueryMod
+	if len(mods) != 0 {
+		queryMods = append(queryMods, mods...)
+	}
+
+	queryMods = append(queryMods,
+		qm.Where("\"incident_actions\".\"incident_id\"=?", o.ID),
+	)
+
+	return IncidentActions(queryMods...)
+}
+
 // LoadMonitor allows an eager lookup of values, cached into the
 // loaded structs of the objects. This is for an N-1 relationship.
 func (incidentL) LoadMonitor(ctx context.Context, e boil.ContextExecutor, singular bool, maybeIncident interface{}, mods queries.Applicator) error {
@@ -523,6 +547,120 @@ func (incidentL) LoadMonitor(ctx context.Context, e boil.ContextExecutor, singul
 	return nil
 }
 
+// LoadIncidentActions allows an eager lookup of values, cached into the
+// loaded structs of the objects. This is for a 1-M or N-M relationship.
+func (incidentL) LoadIncidentActions(ctx context.Context, e boil.ContextExecutor, singular bool, maybeIncident interface{}, mods queries.Applicator) error {
+	var slice []*Incident
+	var object *Incident
+
+	if singular {
+		var ok bool
+		object, ok = maybeIncident.(*Incident)
+		if !ok {
+			object = new(Incident)
+			ok = queries.SetFromEmbeddedStruct(&object, &maybeIncident)
+			if !ok {
+				return errors.New(fmt.Sprintf("failed to set %T from embedded struct %T", object, maybeIncident))
+			}
+		}
+	} else {
+		s, ok := maybeIncident.(*[]*Incident)
+		if ok {
+			slice = *s
+		} else {
+			ok = queries.SetFromEmbeddedStruct(&slice, maybeIncident)
+			if !ok {
+				return errors.New(fmt.Sprintf("failed to set %T from embedded struct %T", slice, maybeIncident))
+			}
+		}
+	}
+
+	args := make([]interface{}, 0, 1)
+	if singular {
+		if object.R == nil {
+			object.R = &incidentR{}
+		}
+		args = append(args, object.ID)
+	} else {
+	Outer:
+		for _, obj := range slice {
+			if obj.R == nil {
+				obj.R = &incidentR{}
+			}
+
+			for _, a := range args {
+				if a == obj.ID {
+					continue Outer
+				}
+			}
+
+			args = append(args, obj.ID)
+		}
+	}
+
+	if len(args) == 0 {
+		return nil
+	}
+
+	query := NewQuery(
+		qm.From(`incident_actions`),
+		qm.WhereIn(`incident_actions.incident_id in ?`, args...),
+	)
+	if mods != nil {
+		mods.Apply(query)
+	}
+
+	results, err := query.QueryContext(ctx, e)
+	if err != nil {
+		return errors.Wrap(err, "failed to eager load incident_actions")
+	}
+
+	var resultSlice []*IncidentAction
+	if err = queries.Bind(results, &resultSlice); err != nil {
+		return errors.Wrap(err, "failed to bind eager loaded slice incident_actions")
+	}
+
+	if err = results.Close(); err != nil {
+		return errors.Wrap(err, "failed to close results in eager load on incident_actions")
+	}
+	if err = results.Err(); err != nil {
+		return errors.Wrap(err, "error occurred during iteration of eager loaded relations for incident_actions")
+	}
+
+	if len(incidentActionAfterSelectHooks) != 0 {
+		for _, obj := range resultSlice {
+			if err := obj.doAfterSelectHooks(ctx, e); err != nil {
+				return err
+			}
+		}
+	}
+	if singular {
+		object.R.IncidentActions = resultSlice
+		for _, foreign := range resultSlice {
+			if foreign.R == nil {
+				foreign.R = &incidentActionR{}
+			}
+			foreign.R.Incident = object
+		}
+		return nil
+	}
+
+	for _, foreign := range resultSlice {
+		for _, local := range slice {
+			if local.ID == foreign.IncidentID {
+				local.R.IncidentActions = append(local.R.IncidentActions, foreign)
+				if foreign.R == nil {
+					foreign.R = &incidentActionR{}
+				}
+				foreign.R.Incident = local
+				break
+			}
+		}
+	}
+
+	return nil
+}
+
 // SetMonitor of the incident to the related item.
 // Sets o.R.Monitor to related.
 // Adds o to related.R.Incidents.
@@ -567,6 +705,59 @@ func (o *Incident) SetMonitor(ctx context.Context, exec boil.ContextExecutor, in
 		related.R.Incidents = append(related.R.Incidents, o)
 	}
 
+	return nil
+}
+
+// AddIncidentActions adds the given related objects to the existing relationships
+// of the incident, optionally inserting them as new records.
+// Appends related to o.R.IncidentActions.
+// Sets related.R.Incident appropriately.
+func (o *Incident) AddIncidentActions(ctx context.Context, exec boil.ContextExecutor, insert bool, related ...*IncidentAction) error {
+	var err error
+	for _, rel := range related {
+		if insert {
+			rel.IncidentID = o.ID
+			if err = rel.Insert(ctx, exec, boil.Infer()); err != nil {
+				return errors.Wrap(err, "failed to insert into foreign table")
+			}
+		} else {
+			updateQuery := fmt.Sprintf(
+				"UPDATE \"incident_actions\" SET %s WHERE %s",
+				strmangle.SetParamNames("\"", "\"", 1, []string{"incident_id"}),
+				strmangle.WhereClause("\"", "\"", 2, incidentActionPrimaryKeyColumns),
+			)
+			values := []interface{}{o.ID, rel.ID}
+
+			if boil.IsDebug(ctx) {
+				writer := boil.DebugWriterFrom(ctx)
+				fmt.Fprintln(writer, updateQuery)
+				fmt.Fprintln(writer, values)
+			}
+			if _, err = exec.ExecContext(ctx, updateQuery, values...); err != nil {
+				return errors.Wrap(err, "failed to update foreign table")
+			}
+
+			rel.IncidentID = o.ID
+		}
+	}
+
+	if o.R == nil {
+		o.R = &incidentR{
+			IncidentActions: related,
+		}
+	} else {
+		o.R.IncidentActions = append(o.R.IncidentActions, related...)
+	}
+
+	for _, rel := range related {
+		if rel.R == nil {
+			rel.R = &incidentActionR{
+				Incident: o,
+			}
+		} else {
+			rel.R.Incident = o
+		}
+	}
 	return nil
 }
 

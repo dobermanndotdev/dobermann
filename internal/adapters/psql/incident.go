@@ -43,7 +43,11 @@ func (i IncidentRepository) Create(ctx context.Context, monitorID domain.ID, inc
 	return nil
 }
 
-func (i IncidentRepository) Update(ctx context.Context, id, monitorID domain.ID, fn func(incident *monitor.Incident) error) error {
+func (i IncidentRepository) Update(
+	ctx context.Context,
+	id, monitorID domain.ID,
+	fn func(incident *monitor.Incident) error,
+) error {
 	incident, err := i.FindByID(ctx, id)
 	if err != nil {
 		return err
@@ -57,6 +61,20 @@ func (i IncidentRepository) Update(ctx context.Context, id, monitorID domain.ID,
 	model := mapIncidentToModel(incident, monitorID)
 
 	_, err = model.Update(ctx, i.db, boil.Infer())
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (i IncidentRepository) AppendIncidentAction(
+	ctx context.Context,
+	incidentID domain.ID,
+	action *monitor.IncidentAction,
+) error {
+	model := mapIncidentActionToModel(action, incidentID)
+	err := model.Insert(ctx, i.db, boil.Infer())
 	if err != nil {
 		return err
 	}

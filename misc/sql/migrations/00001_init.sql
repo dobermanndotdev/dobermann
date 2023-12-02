@@ -43,6 +43,20 @@ CREATE TABLE incidents (
     CONSTRAINT pk_incident_belongs_to_monitor FOREIGN KEY (monitor_id) REFERENCES monitors (id)
 );
 
+CREATE TYPE INCIDENT_ACTION_TYPE AS ENUM('resolved', 'acknowledged', 'created');
+
+CREATE TABLE incident_actions (
+    id VARCHAR(26) NOT NULL PRIMARY KEY,
+    description VARCHAR(512),
+    action_type INCIDENT_ACTION_TYPE DEFAULT 'created' NOT NULL,
+    incident_id VARCHAR(26) NOT NULL,
+    taken_by_user_with_id VARCHAR(26),
+    at TIMESTAMPTZ DEFAULT now() NOT NULL,
+
+    CONSTRAINT pk_incident_action_belongs_to_incidents FOREIGN KEY (incident_id) REFERENCES incidents (id),
+    CONSTRAINT pk_incident_action_can_be_taken_by_user FOREIGN KEY (taken_by_user_with_id) REFERENCES users (id)
+);
+
 CREATE TABLE subscribers (
     user_id VARCHAR(26) NOT NULL,
     monitor_id VARCHAR(26) NOT NULL,
@@ -57,9 +71,11 @@ CREATE TABLE subscribers (
 -- +goose Down
 -- +goose StatementBegin
 DROP TABLE subscribers;
+DROP TABLE incident_actions;
 DROP TABLE incidents;
 DROP TABLE monitors;
 DROP TABLE users;
 DROP TABLE accounts;
 DROP TYPE ROLE_TYPE;
+DROP TYPE INCIDENT_ACTION_TYPE;
 -- +goose StatementEnd

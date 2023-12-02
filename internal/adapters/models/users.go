@@ -79,50 +79,6 @@ var UserTableColumns = struct {
 
 // Generated where
 
-type whereHelpernull_String struct{ field string }
-
-func (w whereHelpernull_String) EQ(x null.String) qm.QueryMod {
-	return qmhelper.WhereNullEQ(w.field, false, x)
-}
-func (w whereHelpernull_String) NEQ(x null.String) qm.QueryMod {
-	return qmhelper.WhereNullEQ(w.field, true, x)
-}
-func (w whereHelpernull_String) LT(x null.String) qm.QueryMod {
-	return qmhelper.Where(w.field, qmhelper.LT, x)
-}
-func (w whereHelpernull_String) LTE(x null.String) qm.QueryMod {
-	return qmhelper.Where(w.field, qmhelper.LTE, x)
-}
-func (w whereHelpernull_String) GT(x null.String) qm.QueryMod {
-	return qmhelper.Where(w.field, qmhelper.GT, x)
-}
-func (w whereHelpernull_String) GTE(x null.String) qm.QueryMod {
-	return qmhelper.Where(w.field, qmhelper.GTE, x)
-}
-func (w whereHelpernull_String) LIKE(x null.String) qm.QueryMod {
-	return qm.Where(w.field+" LIKE ?", x)
-}
-func (w whereHelpernull_String) NLIKE(x null.String) qm.QueryMod {
-	return qm.Where(w.field+" NOT LIKE ?", x)
-}
-func (w whereHelpernull_String) IN(slice []string) qm.QueryMod {
-	values := make([]interface{}, 0, len(slice))
-	for _, value := range slice {
-		values = append(values, value)
-	}
-	return qm.WhereIn(fmt.Sprintf("%s IN ?", w.field), values...)
-}
-func (w whereHelpernull_String) NIN(slice []string) qm.QueryMod {
-	values := make([]interface{}, 0, len(slice))
-	for _, value := range slice {
-		values = append(values, value)
-	}
-	return qm.WhereNotIn(fmt.Sprintf("%s NOT IN ?", w.field), values...)
-}
-
-func (w whereHelpernull_String) IsNull() qm.QueryMod    { return qmhelper.WhereIsNull(w.field) }
-func (w whereHelpernull_String) IsNotNull() qm.QueryMod { return qmhelper.WhereIsNotNull(w.field) }
-
 var UserWhere = struct {
 	ID        whereHelperstring
 	FirstName whereHelpernull_String
@@ -145,17 +101,20 @@ var UserWhere = struct {
 
 // UserRels is where relationship names are stored.
 var UserRels = struct {
-	Account  string
-	Monitors string
+	Account                        string
+	TakenByUserWithIncidentActions string
+	Monitors                       string
 }{
-	Account:  "Account",
-	Monitors: "Monitors",
+	Account:                        "Account",
+	TakenByUserWithIncidentActions: "TakenByUserWithIncidentActions",
+	Monitors:                       "Monitors",
 }
 
 // userR is where relationships are stored.
 type userR struct {
-	Account  *Account     `boil:"Account" json:"Account" toml:"Account" yaml:"Account"`
-	Monitors MonitorSlice `boil:"Monitors" json:"Monitors" toml:"Monitors" yaml:"Monitors"`
+	Account                        *Account            `boil:"Account" json:"Account" toml:"Account" yaml:"Account"`
+	TakenByUserWithIncidentActions IncidentActionSlice `boil:"TakenByUserWithIncidentActions" json:"TakenByUserWithIncidentActions" toml:"TakenByUserWithIncidentActions" yaml:"TakenByUserWithIncidentActions"`
+	Monitors                       MonitorSlice        `boil:"Monitors" json:"Monitors" toml:"Monitors" yaml:"Monitors"`
 }
 
 // NewStruct creates a new relationship struct
@@ -168,6 +127,13 @@ func (r *userR) GetAccount() *Account {
 		return nil
 	}
 	return r.Account
+}
+
+func (r *userR) GetTakenByUserWithIncidentActions() IncidentActionSlice {
+	if r == nil {
+		return nil
+	}
+	return r.TakenByUserWithIncidentActions
 }
 
 func (r *userR) GetMonitors() MonitorSlice {
@@ -477,6 +443,20 @@ func (o *User) Account(mods ...qm.QueryMod) accountQuery {
 	return Accounts(queryMods...)
 }
 
+// TakenByUserWithIncidentActions retrieves all the incident_action's IncidentActions with an executor via taken_by_user_with_id column.
+func (o *User) TakenByUserWithIncidentActions(mods ...qm.QueryMod) incidentActionQuery {
+	var queryMods []qm.QueryMod
+	if len(mods) != 0 {
+		queryMods = append(queryMods, mods...)
+	}
+
+	queryMods = append(queryMods,
+		qm.Where("\"incident_actions\".\"taken_by_user_with_id\"=?", o.ID),
+	)
+
+	return IncidentActions(queryMods...)
+}
+
 // Monitors retrieves all the monitor's Monitors with an executor.
 func (o *User) Monitors(mods ...qm.QueryMod) monitorQuery {
 	var queryMods []qm.QueryMod
@@ -604,6 +584,120 @@ func (userL) LoadAccount(ctx context.Context, e boil.ContextExecutor, singular b
 					foreign.R = &accountR{}
 				}
 				foreign.R.Users = append(foreign.R.Users, local)
+				break
+			}
+		}
+	}
+
+	return nil
+}
+
+// LoadTakenByUserWithIncidentActions allows an eager lookup of values, cached into the
+// loaded structs of the objects. This is for a 1-M or N-M relationship.
+func (userL) LoadTakenByUserWithIncidentActions(ctx context.Context, e boil.ContextExecutor, singular bool, maybeUser interface{}, mods queries.Applicator) error {
+	var slice []*User
+	var object *User
+
+	if singular {
+		var ok bool
+		object, ok = maybeUser.(*User)
+		if !ok {
+			object = new(User)
+			ok = queries.SetFromEmbeddedStruct(&object, &maybeUser)
+			if !ok {
+				return errors.New(fmt.Sprintf("failed to set %T from embedded struct %T", object, maybeUser))
+			}
+		}
+	} else {
+		s, ok := maybeUser.(*[]*User)
+		if ok {
+			slice = *s
+		} else {
+			ok = queries.SetFromEmbeddedStruct(&slice, maybeUser)
+			if !ok {
+				return errors.New(fmt.Sprintf("failed to set %T from embedded struct %T", slice, maybeUser))
+			}
+		}
+	}
+
+	args := make([]interface{}, 0, 1)
+	if singular {
+		if object.R == nil {
+			object.R = &userR{}
+		}
+		args = append(args, object.ID)
+	} else {
+	Outer:
+		for _, obj := range slice {
+			if obj.R == nil {
+				obj.R = &userR{}
+			}
+
+			for _, a := range args {
+				if queries.Equal(a, obj.ID) {
+					continue Outer
+				}
+			}
+
+			args = append(args, obj.ID)
+		}
+	}
+
+	if len(args) == 0 {
+		return nil
+	}
+
+	query := NewQuery(
+		qm.From(`incident_actions`),
+		qm.WhereIn(`incident_actions.taken_by_user_with_id in ?`, args...),
+	)
+	if mods != nil {
+		mods.Apply(query)
+	}
+
+	results, err := query.QueryContext(ctx, e)
+	if err != nil {
+		return errors.Wrap(err, "failed to eager load incident_actions")
+	}
+
+	var resultSlice []*IncidentAction
+	if err = queries.Bind(results, &resultSlice); err != nil {
+		return errors.Wrap(err, "failed to bind eager loaded slice incident_actions")
+	}
+
+	if err = results.Close(); err != nil {
+		return errors.Wrap(err, "failed to close results in eager load on incident_actions")
+	}
+	if err = results.Err(); err != nil {
+		return errors.Wrap(err, "error occurred during iteration of eager loaded relations for incident_actions")
+	}
+
+	if len(incidentActionAfterSelectHooks) != 0 {
+		for _, obj := range resultSlice {
+			if err := obj.doAfterSelectHooks(ctx, e); err != nil {
+				return err
+			}
+		}
+	}
+	if singular {
+		object.R.TakenByUserWithIncidentActions = resultSlice
+		for _, foreign := range resultSlice {
+			if foreign.R == nil {
+				foreign.R = &incidentActionR{}
+			}
+			foreign.R.TakenByUserWith = object
+		}
+		return nil
+	}
+
+	for _, foreign := range resultSlice {
+		for _, local := range slice {
+			if queries.Equal(local.ID, foreign.TakenByUserWithID) {
+				local.R.TakenByUserWithIncidentActions = append(local.R.TakenByUserWithIncidentActions, foreign)
+				if foreign.R == nil {
+					foreign.R = &incidentActionR{}
+				}
+				foreign.R.TakenByUserWith = local
 				break
 			}
 		}
@@ -785,6 +879,133 @@ func (o *User) SetAccount(ctx context.Context, exec boil.ContextExecutor, insert
 		}
 	} else {
 		related.R.Users = append(related.R.Users, o)
+	}
+
+	return nil
+}
+
+// AddTakenByUserWithIncidentActions adds the given related objects to the existing relationships
+// of the user, optionally inserting them as new records.
+// Appends related to o.R.TakenByUserWithIncidentActions.
+// Sets related.R.TakenByUserWith appropriately.
+func (o *User) AddTakenByUserWithIncidentActions(ctx context.Context, exec boil.ContextExecutor, insert bool, related ...*IncidentAction) error {
+	var err error
+	for _, rel := range related {
+		if insert {
+			queries.Assign(&rel.TakenByUserWithID, o.ID)
+			if err = rel.Insert(ctx, exec, boil.Infer()); err != nil {
+				return errors.Wrap(err, "failed to insert into foreign table")
+			}
+		} else {
+			updateQuery := fmt.Sprintf(
+				"UPDATE \"incident_actions\" SET %s WHERE %s",
+				strmangle.SetParamNames("\"", "\"", 1, []string{"taken_by_user_with_id"}),
+				strmangle.WhereClause("\"", "\"", 2, incidentActionPrimaryKeyColumns),
+			)
+			values := []interface{}{o.ID, rel.ID}
+
+			if boil.IsDebug(ctx) {
+				writer := boil.DebugWriterFrom(ctx)
+				fmt.Fprintln(writer, updateQuery)
+				fmt.Fprintln(writer, values)
+			}
+			if _, err = exec.ExecContext(ctx, updateQuery, values...); err != nil {
+				return errors.Wrap(err, "failed to update foreign table")
+			}
+
+			queries.Assign(&rel.TakenByUserWithID, o.ID)
+		}
+	}
+
+	if o.R == nil {
+		o.R = &userR{
+			TakenByUserWithIncidentActions: related,
+		}
+	} else {
+		o.R.TakenByUserWithIncidentActions = append(o.R.TakenByUserWithIncidentActions, related...)
+	}
+
+	for _, rel := range related {
+		if rel.R == nil {
+			rel.R = &incidentActionR{
+				TakenByUserWith: o,
+			}
+		} else {
+			rel.R.TakenByUserWith = o
+		}
+	}
+	return nil
+}
+
+// SetTakenByUserWithIncidentActions removes all previously related items of the
+// user replacing them completely with the passed
+// in related items, optionally inserting them as new records.
+// Sets o.R.TakenByUserWith's TakenByUserWithIncidentActions accordingly.
+// Replaces o.R.TakenByUserWithIncidentActions with related.
+// Sets related.R.TakenByUserWith's TakenByUserWithIncidentActions accordingly.
+func (o *User) SetTakenByUserWithIncidentActions(ctx context.Context, exec boil.ContextExecutor, insert bool, related ...*IncidentAction) error {
+	query := "update \"incident_actions\" set \"taken_by_user_with_id\" = null where \"taken_by_user_with_id\" = $1"
+	values := []interface{}{o.ID}
+	if boil.IsDebug(ctx) {
+		writer := boil.DebugWriterFrom(ctx)
+		fmt.Fprintln(writer, query)
+		fmt.Fprintln(writer, values)
+	}
+	_, err := exec.ExecContext(ctx, query, values...)
+	if err != nil {
+		return errors.Wrap(err, "failed to remove relationships before set")
+	}
+
+	if o.R != nil {
+		for _, rel := range o.R.TakenByUserWithIncidentActions {
+			queries.SetScanner(&rel.TakenByUserWithID, nil)
+			if rel.R == nil {
+				continue
+			}
+
+			rel.R.TakenByUserWith = nil
+		}
+		o.R.TakenByUserWithIncidentActions = nil
+	}
+
+	return o.AddTakenByUserWithIncidentActions(ctx, exec, insert, related...)
+}
+
+// RemoveTakenByUserWithIncidentActions relationships from objects passed in.
+// Removes related items from R.TakenByUserWithIncidentActions (uses pointer comparison, removal does not keep order)
+// Sets related.R.TakenByUserWith.
+func (o *User) RemoveTakenByUserWithIncidentActions(ctx context.Context, exec boil.ContextExecutor, related ...*IncidentAction) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+	for _, rel := range related {
+		queries.SetScanner(&rel.TakenByUserWithID, nil)
+		if rel.R != nil {
+			rel.R.TakenByUserWith = nil
+		}
+		if _, err = rel.Update(ctx, exec, boil.Whitelist("taken_by_user_with_id")); err != nil {
+			return err
+		}
+	}
+	if o.R == nil {
+		return nil
+	}
+
+	for _, rel := range related {
+		for i, ri := range o.R.TakenByUserWithIncidentActions {
+			if rel != ri {
+				continue
+			}
+
+			ln := len(o.R.TakenByUserWithIncidentActions)
+			if ln > 1 && i < ln-1 {
+				o.R.TakenByUserWithIncidentActions[i] = o.R.TakenByUserWithIncidentActions[ln-1]
+			}
+			o.R.TakenByUserWithIncidentActions = o.R.TakenByUserWithIncidentActions[:ln-1]
+			break
+		}
 	}
 
 	return nil
