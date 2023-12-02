@@ -25,7 +25,7 @@ func NewCreateIncidentHandler(txProvider TransactionProvider) CreateIncidentHand
 
 func (h CreateIncidentHandler) Execute(ctx context.Context, cmd CreateIncident) error {
 	return h.txProvider.Transact(ctx, func(adapters TransactableAdapters) error {
-		incident, err := monitor.NewIncident(domain.NewID(), time.Now().UTC(), nil)
+		incident, err := monitor.NewIncident(domain.NewID(), false, time.Now().UTC(), nil)
 		if err != nil {
 			return err
 		}
