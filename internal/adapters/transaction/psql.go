@@ -24,7 +24,7 @@ func NewPsqlProvider(db boil.ContextBeginner, publisher message.Publisher) PsqlP
 	}
 }
 
-func (p PsqlProvider) Transact(ctx context.Context, f command.TransactFuncc) error {
+func (p PsqlProvider) Transact(ctx context.Context, f command.TransactFunc) error {
 	tx, err := p.db.BeginTx(ctx, nil)
 	if err != nil {
 		return fmt.Errorf("unable to begin transaction: %v", err)
