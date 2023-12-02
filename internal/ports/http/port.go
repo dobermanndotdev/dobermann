@@ -92,8 +92,9 @@ func registerMiddlewares(router *echo.Echo, spec *openapi3.T, config Config) {
 		},
 	}))
 
+	spec.Servers = nil
 	router.Use(oapimiddleware.OapiRequestValidatorWithOptions(spec, &oapimiddleware.Options{
-		SilenceServersWarning: true,
+		ErrorHandler: nil,
 		Options: openapi3filter.Options{
 			AuthenticationFunc: NewAuthenticator(config.JwtVerifier),
 		},
