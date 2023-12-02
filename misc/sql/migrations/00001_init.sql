@@ -20,7 +20,7 @@ CREATE TABLE users (
     created_at TIMESTAMPTZ DEFAULT now() NOT NULL,
 
     CONSTRAINT pk_user_belongs_to_account FOREIGN KEY (account_id) REFERENCES accounts(id),
-    CONSTRAINT un_email_is_unique_per_account UNIQUE (email, account_id)
+    CONSTRAINT un_email_is_unique UNIQUE (email)
 );
 
 CREATE TABLE monitors (
