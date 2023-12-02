@@ -90,3 +90,21 @@ func (p Publisher) PublishEndpointCheckSucceeded(ctx context.Context, event comm
 
 	return nil
 }
+
+func (p Publisher) PublishIncidentResolved(ctx context.Context, event command.IncidentResolvedEvent) error {
+	m, err := mapEventToMessage(IncidentResolvedEvent{
+		At:        event.At,
+		MonitorID: event.MonitorID,
+		Header:    NewHeader(IncidentResolvedEvent{}.EventName(), ""),
+	})
+	if err != nil {
+		return err
+	}
+
+	err = p.eventPublisher.Publish(IncidentResolvedEvent{}.EventName(), m)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

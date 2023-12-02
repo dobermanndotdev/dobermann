@@ -57,6 +57,14 @@ func (h ResolveIncidentsHandler) Execute(ctx context.Context, cmd ResolveInciden
 			}
 		}
 
+		err = adapters.EventPublisher.PublishIncidentResolved(ctx, IncidentResolvedEvent{
+			MonitorID: cmd.MonitorID.String(),
+			At:        time.Now().UTC(),
+		})
+		if err != nil {
+			return err
+		}
+
 		return nil
 	})
 }

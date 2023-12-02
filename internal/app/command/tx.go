@@ -23,12 +23,13 @@ type TransactableAdapters struct {
 type EventPublisher interface {
 	PublishMonitorCreated(ctx context.Context, event MonitorCreatedEvent) error
 	PublishIncidentCreated(ctx context.Context, event IncidentCreatedEvent) error
+	PublishIncidentResolved(ctx context.Context, event IncidentResolvedEvent) error
 	PublishEndpointCheckFailed(ctx context.Context, event EndpointCheckFailedEvent) error
 	PublishEndpointCheckSucceeded(ctx context.Context, event EndpointCheckSucceededEvent) error
 }
 
 type TransactionProvider interface {
-	Transact(ctx context.Context, f TransactFuncc) error
+	Transact(ctx context.Context, f TransactFunc) error
 }
 
-type TransactFuncc func(adapters TransactableAdapters) error
+type TransactFunc func(adapters TransactableAdapters) error
