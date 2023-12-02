@@ -17,5 +17,6 @@ func NewHandlers(application *app.App) []Handler {
 		IncidentCreatedHandler{application: application},
 		MonitorCreatedHandler{application: application},
 		EndpointCheckFailedHandler{application: application},
+		EndpointCheckSucceededHandler{application: application},
 	}
 }

@@ -125,6 +125,8 @@ func main() {
 		// Send failed events to a specific queue
 		poisonQueueMiddleware,
 
+		watermillLoggerMiddleware(logger),
+
 		// Retry failed events
 		retryMiddleware.Middleware,
 	)
@@ -203,5 +205,18 @@ func main() {
 	err = httpPort.Stop(terminationCtx)
 	if err != nil {
 		logger.Fatalf("unable to gracefully shutdown the http port: %v", err)
+	}
+}
+
+func watermillLoggerMiddleware(logger *logs.Logger) func(h message.HandlerFunc) message.HandlerFunc {
+	return func(h message.HandlerFunc) message.HandlerFunc {
+		return func(msg *message.Message) ([]*message.Message, error) {
+			msgs, err := h(msg)
+			if err != nil {
+				logger.WithField("payload", string(msg.Payload)).Error(err)
+			}
+
+			return msgs, err
+		}
 	}
 }

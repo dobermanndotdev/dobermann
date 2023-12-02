@@ -24,6 +24,7 @@ type EventPublisher interface {
 	PublishMonitorCreated(ctx context.Context, event MonitorCreatedEvent) error
 	PublishIncidentCreated(ctx context.Context, event IncidentCreatedEvent) error
 	PublishEndpointCheckFailed(ctx context.Context, event EndpointCheckFailedEvent) error
+	PublishEndpointCheckSucceeded(ctx context.Context, event EndpointCheckSucceededEvent) error
 }
 
 type TransactionProvider interface {

@@ -54,6 +54,10 @@ func (e EndpointCheckFailed) EventName() string {
 	return "EndpointCheckFailed_v1"
 }
 
+//
+// IncidentCreatedEvent
+//
+
 type IncidentCreatedEvent struct {
 	Header     Header    `json:"header"`
 	IncidentID string    `json:"incident_id"`
@@ -63,6 +67,20 @@ type IncidentCreatedEvent struct {
 
 func (e IncidentCreatedEvent) EventName() string {
 	return "IncidentCreated_v1"
+}
+
+//
+// EndpointCheckSucceededEvent
+//
+
+type EndpointCheckSucceededEvent struct {
+	Header    Header    `json:"header"`
+	MonitorID string    `json:"monitor_id"`
+	At        time.Time `json:"at"`
+}
+
+func (e EndpointCheckSucceededEvent) EventName() string {
+	return "EndpointCheckSucceeded_v1"
 }
 
 //
