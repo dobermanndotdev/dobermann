@@ -47,6 +47,7 @@ func TestMonitors(t *testing.T) {
 
 		//TODO: extend this test by refactoring the simulator to be more generic such that it can be used as a mock service
 		//TODO: for all external services such as Resend and then used to check whether a certain call has been made
+		//TODO: expected an incident action to have been created
 	})
 
 	t.Run("get_all_monitors", func(t *testing.T) {

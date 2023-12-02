@@ -204,3 +204,20 @@ func mapPaginationPerPageCount(total int64, limit int) int {
 	// round up
 	return int(math.Ceil(float64(total) / float64(limit)))
 }
+
+func mapIncidentActionToModel(action *monitor.IncidentAction, incidentID domain.ID) models.IncidentAction {
+	model := models.IncidentAction{
+		ID:          action.Id().String(),
+		Description: null.StringFrom(action.Description()),
+		ActionType:  action.ActionType().String(),
+		IncidentID:  incidentID.String(),
+		At:          action.TakenAt(),
+	}
+
+	if action.TakerUserID() != nil {
+		value := action.TakerUserID().String()
+		model.TakenByUserWithID = null.StringFrom(value)
+	}
+
+	return model
+}

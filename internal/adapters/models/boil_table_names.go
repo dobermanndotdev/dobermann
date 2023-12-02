@@ -4,15 +4,17 @@
 package models
 
 var TableNames = struct {
-	Accounts    string
-	Incidents   string
-	Monitors    string
-	Subscribers string
-	Users       string
+	Accounts        string
+	IncidentActions string
+	Incidents       string
+	Monitors        string
+	Subscribers     string
+	Users           string
 }{
-	Accounts:    "accounts",
-	Incidents:   "incidents",
-	Monitors:    "monitors",
-	Subscribers: "subscribers",
-	Users:       "users",
+	Accounts:        "accounts",
+	IncidentActions: "incident_actions",
+	Incidents:       "incidents",
+	Monitors:        "monitors",
+	Subscribers:     "subscribers",
+	Users:           "users",
 }

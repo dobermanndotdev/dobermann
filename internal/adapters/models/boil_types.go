@@ -51,6 +51,21 @@ func makeCacheKey(cols boil.Columns, nzDefaults []string) string {
 	return str
 }
 
+// Enum values for IncidentActionType
+const (
+	IncidentActionTypeResolved     string = "resolved"
+	IncidentActionTypeAcknowledged string = "acknowledged"
+	IncidentActionTypeCreated      string = "created"
+)
+
+func AllIncidentActionType() []string {
+	return []string{
+		IncidentActionTypeResolved,
+		IncidentActionTypeAcknowledged,
+		IncidentActionTypeCreated,
+	}
+}
+
 // Enum values for RoleType
 const (
 	RoleTypeOwner  string = "owner"
