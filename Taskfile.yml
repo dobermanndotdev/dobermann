@@ -90,7 +90,7 @@ tasks:
 
   tail:
     cmds:
-      - docker logs -f --tail 10 backend-app-1
+      - docker logs -f --tail 10 dobermann-app-1
 
   docker:up:
     cmds:
