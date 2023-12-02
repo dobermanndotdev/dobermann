@@ -23,44 +23,60 @@ import (
 
 // Incident is an object representing the database table.
 type Incident struct {
-	ID        string    `boil:"id" json:"id" toml:"id" yaml:"id"`
-	MonitorID string    `boil:"monitor_id" json:"monitor_id" toml:"monitor_id" yaml:"monitor_id"`
-	CreatedAt time.Time `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
+	ID         string    `boil:"id" json:"id" toml:"id" yaml:"id"`
+	MonitorID  string    `boil:"monitor_id" json:"monitor_id" toml:"monitor_id" yaml:"monitor_id"`
+	IsResolved bool      `boil:"is_resolved" json:"is_resolved" toml:"is_resolved" yaml:"is_resolved"`
+	CreatedAt  time.Time `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
 
 	R *incidentR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L incidentL  `boil:"-" json:"-" toml:"-" yaml:"-"`
 }
 
 var IncidentColumns = struct {
-	ID        string
-	MonitorID string
-	CreatedAt string
+	ID         string
+	MonitorID  string
+	IsResolved string
+	CreatedAt  string
 }{
-	ID:        "id",
-	MonitorID: "monitor_id",
-	CreatedAt: "created_at",
+	ID:         "id",
+	MonitorID:  "monitor_id",
+	IsResolved: "is_resolved",
+	CreatedAt:  "created_at",
 }
 
 var IncidentTableColumns = struct {
-	ID        string
-	MonitorID string
-	CreatedAt string
+	ID         string
+	MonitorID  string
+	IsResolved string
+	CreatedAt  string
 }{
-	ID:        "incidents.id",
-	MonitorID: "incidents.monitor_id",
-	CreatedAt: "incidents.created_at",
+	ID:         "incidents.id",
+	MonitorID:  "incidents.monitor_id",
+	IsResolved: "incidents.is_resolved",
+	CreatedAt:  "incidents.created_at",
 }
 
 // Generated where
 
+type whereHelperbool struct{ field string }
+
+func (w whereHelperbool) EQ(x bool) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.EQ, x) }
+func (w whereHelperbool) NEQ(x bool) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.NEQ, x) }
+func (w whereHelperbool) LT(x bool) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.LT, x) }
+func (w whereHelperbool) LTE(x bool) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.LTE, x) }
+func (w whereHelperbool) GT(x bool) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.GT, x) }
+func (w whereHelperbool) GTE(x bool) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.GTE, x) }
+
 var IncidentWhere = struct {
-	ID        whereHelperstring
-	MonitorID whereHelperstring
-	CreatedAt whereHelpertime_Time
+	ID         whereHelperstring
+	MonitorID  whereHelperstring
+	IsResolved whereHelperbool
+	CreatedAt  whereHelpertime_Time
 }{
-	ID:        whereHelperstring{field: "\"incidents\".\"id\""},
-	MonitorID: whereHelperstring{field: "\"incidents\".\"monitor_id\""},
-	CreatedAt: whereHelpertime_Time{field: "\"incidents\".\"created_at\""},
+	ID:         whereHelperstring{field: "\"incidents\".\"id\""},
+	MonitorID:  whereHelperstring{field: "\"incidents\".\"monitor_id\""},
+	IsResolved: whereHelperbool{field: "\"incidents\".\"is_resolved\""},
+	CreatedAt:  whereHelpertime_Time{field: "\"incidents\".\"created_at\""},
 }
 
 // IncidentRels is where relationship names are stored.
@@ -91,9 +107,9 @@ func (r *incidentR) GetMonitor() *Monitor {
 type incidentL struct{}
 
 var (
-	incidentAllColumns            = []string{"id", "monitor_id", "created_at"}
+	incidentAllColumns            = []string{"id", "monitor_id", "is_resolved", "created_at"}
 	incidentColumnsWithoutDefault = []string{"id", "monitor_id"}
-	incidentColumnsWithDefault    = []string{"created_at"}
+	incidentColumnsWithDefault    = []string{"is_resolved", "created_at"}
 	incidentPrimaryKeyColumns     = []string{"id"}
 	incidentGeneratedColumns      = []string{}
 )

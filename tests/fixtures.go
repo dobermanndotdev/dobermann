@@ -95,7 +95,7 @@ func FixtureMonitor(t *testing.T, acc *account.Account) *monitor.Monitor {
 }
 
 func FixtureIncident(t *testing.T) *monitor.Incident {
-	incident, err := monitor.NewIncident(domain.NewID(), time.Now().UTC(), nil)
+	incident, err := monitor.NewIncident(domain.NewID(), false, time.Now().UTC(), nil)
 	require.NoError(t, err)
 
 	return incident
