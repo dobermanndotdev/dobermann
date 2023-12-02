@@ -34,7 +34,7 @@ func (h CreateMonitorHandler) Execute(ctx context.Context, cmd CreateMonitor) er
 		CreatedAt: cmd.Monitor.CreatedAt(),
 	})
 	if err != nil {
-		return fmt.Errorf("unable to publish event: %v", err)
+		return fmt.Errorf("unable to publish event PublishMonitorCreated: %v", err)
 	}
 
 	return nil

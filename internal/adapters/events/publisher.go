@@ -72,3 +72,21 @@ func (p Publisher) PublishIncidentCreated(ctx context.Context, event command.Inc
 
 	return nil
 }
+
+func (p Publisher) PublishEndpointCheckSucceeded(ctx context.Context, event command.EndpointCheckSucceededEvent) error {
+	m, err := mapEventToMessage(EndpointCheckSucceededEvent{
+		At:        event.At,
+		MonitorID: event.MonitorID,
+		Header:    NewHeader(EndpointCheckSucceededEvent{}.EventName(), ""),
+	})
+	if err != nil {
+		return err
+	}
+
+	err = p.eventPublisher.Publish(EndpointCheckSucceededEvent{}.EventName(), m)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

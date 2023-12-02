@@ -12,6 +12,11 @@ type EndpointCheckFailedEvent struct {
 	At        time.Time
 }
 
+type EndpointCheckSucceededEvent struct {
+	MonitorID string
+	At        time.Time
+}
+
 type IncidentCreatedEvent struct {
 	MonitorID  string
 	IncidentID string

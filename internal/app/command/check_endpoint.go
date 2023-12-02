@@ -58,7 +58,17 @@ func (c CheckEndpointHandler) Execute(ctx context.Context, cmd CheckEndpoint) er
 		return fmt.Errorf("error updating monitor during check: %v", err)
 	}
 
-	if !checkSucceeded {
+	if checkSucceeded {
+		err = c.eventPublisher.PublishEndpointCheckSucceeded(ctx, EndpointCheckSucceededEvent{
+			At:        time.Now(),
+			MonitorID: cmd.MonitorID.String(),
+		})
+
+		if err != nil {
+			return fmt.Errorf("error publishing event EndpointCheckSucceededEvent: %v", err)
+		}
+
+	} else {
 		err = c.eventPublisher.PublishEndpointCheckFailed(ctx, EndpointCheckFailedEvent{
 			At:        time.Now(),
 			MonitorID: cmd.MonitorID.String(),
