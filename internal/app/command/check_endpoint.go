@@ -67,7 +67,6 @@ func (c CheckEndpointHandler) Execute(ctx context.Context, cmd CheckEndpoint) er
 		if err != nil {
 			return fmt.Errorf("error publishing event EndpointCheckSucceededEvent: %v", err)
 		}
-
 	} else {
 		err = c.eventPublisher.PublishEndpointCheckFailed(ctx, EndpointCheckFailedEvent{
 			At:        time.Now(),
