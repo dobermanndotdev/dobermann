@@ -88,9 +88,10 @@ func (e EndpointCheckSucceededEvent) EventName() string {
 //
 
 type IncidentResolvedEvent struct {
-	Header    Header    `json:"header"`
-	MonitorID string    `json:"monitor_id"`
-	At        time.Time `json:"at"`
+	Header     Header    `json:"header"`
+	MonitorID  string    `json:"monitor_id"`
+	IncidentID string    `json:"incident_id"`
+	At         time.Time `json:"at"`
 }
 
 func (e IncidentResolvedEvent) EventName() string {

@@ -26,6 +26,7 @@ type Commands struct {
 	CheckEndpoint                      CommandHandler[command.CheckEndpoint]
 	CreateIncident                     CommandHandler[command.CreateIncident]
 	ResolveIncident                    CommandHandler[command.ResolveIncident]
+	NotifyOnIncidentResolved           CommandHandler[command.NotifyOnIncidentResolved]
 	NotifyMonitorSubscribersOnIncident CommandHandler[command.NotifyMonitorSubscribersOnIncident]
 
 	// IAM
