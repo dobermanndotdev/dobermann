@@ -160,6 +160,7 @@ func main() {
 			ResolveIncidents:                   observability.NewCommandDecorator[command.ResolveIncidents](command.NewResolveIncidentsHandler(txProvider), logger),
 			CreateMonitor:                      observability.NewCommandDecorator[command.CreateMonitor](command.NewCreateMonitorHandler(monitorRepository, eventPublisher), logger),
 			CheckEndpoint:                      observability.NewCommandDecorator[command.CheckEndpoint](command.NewCheckEndpointHandler(httpChecker, monitorRepository, eventPublisher), logger),
+			NotifyOnIncidentResolved:           observability.NewCommandDecorator[command.NotifyOnIncidentResolved](command.NewNotifyOnIncidentResolvedHandler(monitorRepository, userRepository, resendService), logger),
 			NotifyMonitorSubscribersOnIncident: observability.NewCommandDecorator[command.NotifyMonitorSubscribersOnIncident](command.NewNotifyMonitorSubscribersOnIncidentHandler(txProvider, resendService), logger),
 		},
 		Queries: app.Queries{

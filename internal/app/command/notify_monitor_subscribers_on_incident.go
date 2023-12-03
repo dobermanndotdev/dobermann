@@ -3,7 +3,6 @@ package command
 import (
 	"context"
 	"fmt"
-	"log"
 
 	"github.com/flowck/dobermann/backend/internal/domain"
 	"github.com/flowck/dobermann/backend/internal/domain/account"
@@ -21,12 +20,7 @@ type NotifyMonitorSubscribersOnIncidentHandler struct {
 }
 
 type subscriberNotifier interface {
-	SendEmailAboutIncident(
-		ctx context.Context,
-		user *account.User,
-		m *monitor.Monitor,
-		incident *monitor.Incident,
-	) error
+	SendEmailAboutIncident(context.Context, *account.User, *monitor.Monitor, *monitor.Incident) error
 }
 
 func NewNotifyMonitorSubscribersOnIncidentHandler(
@@ -56,7 +50,6 @@ func (h NotifyMonitorSubscribersOnIncidentHandler) Execute(
 
 		var user *account.User
 		for _, subscriber := range m.Subscribers() {
-			log.Println("Subscriber", subscriber.UserID())
 			user, err = adapters.UserRepository.FindByID(ctx, subscriber.UserID())
 			if err != nil {
 				return fmt.Errorf("error while trying to find user via id %s :%v", subscriber.UserID(), err)
@@ -67,7 +60,6 @@ func (h NotifyMonitorSubscribersOnIncidentHandler) Execute(
 			if err != nil {
 				return fmt.Errorf("error while trying to notify user with id %s :%v", subscriber.UserID(), err)
 			}
-			log.Println("Notification has been sent", subscriber.UserID())
 		}
 
 		return nil
