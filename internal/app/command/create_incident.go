@@ -23,8 +23,18 @@ func NewCreateIncidentHandler(txProvider TransactionProvider) CreateIncidentHand
 	}
 }
 
+// TODO: Test this command's logic ;)
 func (h CreateIncidentHandler) Execute(ctx context.Context, cmd CreateIncident) error {
 	return h.txProvider.Transact(ctx, func(adapters TransactableAdapters) error {
+		foundMonitor, err := adapters.MonitorRepository.FindByID(ctx, cmd.MonitorID)
+		if err != nil {
+			return err
+		}
+
+		if foundMonitor.HasIncidentUnresolved() {
+			return nil
+		}
+
 		incident, err := monitor.NewIncident(domain.NewID(), false, time.Now().UTC(), nil)
 		if err != nil {
 			return err

@@ -76,3 +76,23 @@ func (m *Monitor) SetEndpointCheckResult(isUp bool) {
 func (m *Monitor) Subscribers() []*Subscriber {
 	return m.subscribers
 }
+
+func (m *Monitor) HasIncidentUnresolved() bool {
+	for _, incident := range m.incidents {
+		if !incident.IsResolved() {
+			return true
+		}
+	}
+
+	return false
+}
+
+func (m *Monitor) IncidentUnresolved() *Incident {
+	for _, incident := range m.incidents {
+		if !incident.IsResolved() {
+			return incident
+		}
+	}
+
+	return nil
+}
