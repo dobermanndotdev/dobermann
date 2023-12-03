@@ -32,7 +32,7 @@ func (e EndpointCheckSucceededHandler) Handle(m *message.Message) error {
 		return err
 	}
 
-	err = e.application.Commands.ResolveIncidents.Execute(m.Context(), command.ResolveIncidents{
+	err = e.application.Commands.ResolveIncident.Execute(m.Context(), command.ResolveIncident{
 		MonitorID: monitorID,
 	})
 	if err != nil {

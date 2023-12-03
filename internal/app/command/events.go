@@ -18,8 +18,9 @@ type EndpointCheckSucceededEvent struct {
 }
 
 type IncidentResolvedEvent struct {
-	MonitorID string
-	At        time.Time
+	MonitorID  string
+	IncidentID string
+	At         time.Time
 }
 
 type IncidentCreatedEvent struct {

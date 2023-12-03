@@ -93,9 +93,10 @@ func (p Publisher) PublishEndpointCheckSucceeded(ctx context.Context, event comm
 
 func (p Publisher) PublishIncidentResolved(ctx context.Context, event command.IncidentResolvedEvent) error {
 	m, err := mapEventToMessage(IncidentResolvedEvent{
-		At:        event.At,
-		MonitorID: event.MonitorID,
-		Header:    NewHeader(IncidentResolvedEvent{}.EventName(), ""),
+		At:         event.At,
+		MonitorID:  event.MonitorID,
+		IncidentID: event.IncidentID,
+		Header:     NewHeader(IncidentResolvedEvent{}.EventName(), ""),
 	})
 	if err != nil {
 		return err
