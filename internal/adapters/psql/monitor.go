@@ -29,6 +29,7 @@ func (p MonitorRepository) FindByID(ctx context.Context, id domain.ID) (*monitor
 	model, err := models.Monitors(
 		models.MonitorWhere.ID.EQ(id.String()),
 		qm.Load(models.MonitorRels.Users),
+		qm.Load(models.MonitorRels.Incidents),
 	).One(ctx, p.db)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, monitor.ErrMonitorNotFound
