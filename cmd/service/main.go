@@ -27,6 +27,7 @@ import (
 	"github.com/flowck/dobermann/backend/internal/app/query"
 	"github.com/flowck/dobermann/backend/internal/common/auth"
 	"github.com/flowck/dobermann/backend/internal/common/logs"
+	"github.com/flowck/dobermann/backend/internal/common/messaging"
 	"github.com/flowck/dobermann/backend/internal/common/observability"
 	"github.com/flowck/dobermann/backend/internal/common/postgres"
 	"github.com/flowck/dobermann/backend/internal/common/watermill_logger"
@@ -84,7 +85,7 @@ func main() {
 		logger.Fatal(err)
 	}
 
-	publisher, err := amqp.NewPublisher(amqp.NewDurableQueueConfig(config.AmqpUrl), watermillLogger)
+	publisher, err := messaging.NewAmqpPublisher(config.AmqpUrl, logger)
 	if err != nil {
 		logger.Fatal(err)
 	}
@@ -119,13 +120,13 @@ func main() {
 		// Handle panics
 		middleware.Recoverer,
 
-		// Get the correlation id
-		middleware.CorrelationID,
+		// Sets the correlation id to the messages' context
+		messaging.CorrelationIdMiddleware,
 
 		// Send failed events to a specific queue
 		poisonQueueMiddleware,
 
-		watermillLoggerMiddleware(logger),
+		messaging.ErrorLoggerMiddleware(logger),
 
 		// Retry failed events
 		retryMiddleware.Middleware,
@@ -207,18 +208,5 @@ func main() {
 	err = httpPort.Stop(terminationCtx)
 	if err != nil {
 		logger.Fatalf("unable to gracefully shutdown the http port: %v", err)
-	}
-}
-
-func watermillLoggerMiddleware(logger *logs.Logger) func(h message.HandlerFunc) message.HandlerFunc {
-	return func(h message.HandlerFunc) message.HandlerFunc {
-		return func(msg *message.Message) ([]*message.Message, error) {
-			msgs, err := h(msg)
-			if err != nil {
-				logger.WithField("payload", string(msg.Payload)).Error(err)
-			}
-
-			return msgs, err
-		}
 	}
 }

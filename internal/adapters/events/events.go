@@ -1,11 +1,15 @@
 package events
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"time"
 
 	"github.com/ThreeDotsLabs/watermill/message"
+
+	"github.com/flowck/dobermann/backend/internal/common/observability"
+	"github.com/flowck/dobermann/backend/internal/domain"
 )
 
 type Event interface {
@@ -17,7 +21,9 @@ type Header struct {
 	CorrelationID string `json:"correlation_id"`
 }
 
-func NewHeader(name, correlationID string) Header {
+func NewHeader(ctx context.Context, name string) Header {
+	correlationID, _ := observability.CorrelationIdFromContext(ctx)
+
 	return Header{
 		Name:          name,
 		CorrelationID: correlationID,
@@ -102,15 +108,16 @@ func (e IncidentResolvedEvent) EventName() string {
 // Utils
 //
 
-func mapEventToMessage(event Event) (*message.Message, error) {
-	data, err := json.Marshal(event)
+func mapEventToMessage(ctx context.Context, event Event) (*message.Message, error) {
+	payload, err := json.Marshal(event)
 	if err != nil {
 		return nil, fmt.Errorf("unable to marshall event: %s due to: %v", event.EventName(), err)
 	}
 
-	return &message.Message{
-		Payload: data,
-	}, nil
+	msg := message.NewMessage(domain.NewID().String(), payload)
+	msg.SetContext(ctx)
+
+	return msg, nil
 }
 
 func NewEventFromMessage[T any](m *message.Message) (T, error) {
