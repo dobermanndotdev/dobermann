@@ -19,8 +19,8 @@ func NewPublisher(publisher message.Publisher) Publisher {
 }
 
 func (p Publisher) PublishMonitorCreated(ctx context.Context, event command.MonitorCreatedEvent) error {
-	m, err := mapEventToMessage(MonitorCreatedEvent{
-		Header:    NewHeader(MonitorCreatedEvent{}.EventName(), ""),
+	m, err := mapEventToMessage(ctx, MonitorCreatedEvent{
+		Header:    NewHeader(ctx, MonitorCreatedEvent{}.EventName()),
 		ID:        event.ID,
 		CreatedAt: event.CreatedAt,
 	})
@@ -37,10 +37,10 @@ func (p Publisher) PublishMonitorCreated(ctx context.Context, event command.Moni
 }
 
 func (p Publisher) PublishEndpointCheckFailed(ctx context.Context, event command.EndpointCheckFailedEvent) error {
-	m, err := mapEventToMessage(EndpointCheckFailed{
+	m, err := mapEventToMessage(ctx, EndpointCheckFailed{
 		At:        event.At,
 		MonitorID: event.MonitorID,
-		Header:    NewHeader(EndpointCheckFailed{}.EventName(), ""),
+		Header:    NewHeader(ctx, EndpointCheckFailed{}.EventName()),
 	})
 	if err != nil {
 		return err
@@ -55,11 +55,11 @@ func (p Publisher) PublishEndpointCheckFailed(ctx context.Context, event command
 }
 
 func (p Publisher) PublishIncidentCreated(ctx context.Context, event command.IncidentCreatedEvent) error {
-	m, err := mapEventToMessage(IncidentCreatedEvent{
+	m, err := mapEventToMessage(ctx, IncidentCreatedEvent{
 		At:         event.At,
 		IncidentID: event.IncidentID,
 		MonitorID:  event.MonitorID,
-		Header:     NewHeader(IncidentCreatedEvent{}.EventName(), ""),
+		Header:     NewHeader(ctx, IncidentCreatedEvent{}.EventName()),
 	})
 	if err != nil {
 		return err
@@ -74,11 +74,12 @@ func (p Publisher) PublishIncidentCreated(ctx context.Context, event command.Inc
 }
 
 func (p Publisher) PublishEndpointCheckSucceeded(ctx context.Context, event command.EndpointCheckSucceededEvent) error {
-	m, err := mapEventToMessage(EndpointCheckSucceededEvent{
+	m, err := mapEventToMessage(ctx, EndpointCheckSucceededEvent{
 		At:        event.At,
 		MonitorID: event.MonitorID,
-		Header:    NewHeader(EndpointCheckSucceededEvent{}.EventName(), ""),
+		Header:    NewHeader(ctx, EndpointCheckSucceededEvent{}.EventName()),
 	})
+
 	if err != nil {
 		return err
 	}
@@ -92,11 +93,11 @@ func (p Publisher) PublishEndpointCheckSucceeded(ctx context.Context, event comm
 }
 
 func (p Publisher) PublishIncidentResolved(ctx context.Context, event command.IncidentResolvedEvent) error {
-	m, err := mapEventToMessage(IncidentResolvedEvent{
+	m, err := mapEventToMessage(ctx, IncidentResolvedEvent{
 		At:         event.At,
 		MonitorID:  event.MonitorID,
 		IncidentID: event.IncidentID,
-		Header:     NewHeader(IncidentResolvedEvent{}.EventName(), ""),
+		Header:     NewHeader(ctx, IncidentResolvedEvent{}.EventName()),
 	})
 	if err != nil {
 		return err

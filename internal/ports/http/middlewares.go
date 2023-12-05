@@ -7,6 +7,7 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 
 	"github.com/flowck/dobermann/backend/internal/common/logs"
+	"github.com/flowck/dobermann/backend/internal/common/observability"
 )
 
 func loggerMiddleware(logger *logs.Logger) echo.MiddlewareFunc {
@@ -15,15 +16,18 @@ func loggerMiddleware(logger *logs.Logger) echo.MiddlewareFunc {
 	}
 
 	return middleware.RequestLoggerWithConfig(middleware.RequestLoggerConfig{
-		LogURI:    true,
-		LogStatus: true,
-		LogMethod: true,
-		LogError:  false,
+		LogURI:       true,
+		LogStatus:    true,
+		LogMethod:    true,
+		LogError:     false,
+		LogRequestID: true,
+		LogHeaders:   []string{echo.HeaderXCorrelationID},
 		LogValuesFunc: func(c echo.Context, v middleware.RequestLoggerValues) error {
 			fields := logs.Fields{
-				"method": v.Method,
-				"uri":    v.URI,
-				"status": v.Status,
+				"method":         v.Method,
+				"uri":            v.URI,
+				"status":         v.Status,
+				"correlation_id": v.RequestID,
 			}
 
 			if v.Error != nil || v.Status > http.StatusBadRequest {
@@ -35,6 +39,21 @@ func loggerMiddleware(logger *logs.Logger) echo.MiddlewareFunc {
 			return nil
 		},
 	})
+}
+
+func correlationIdMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		correlationID := c.Request().Header.Get(echo.HeaderXCorrelationID)
+
+		if correlationID == "" {
+			correlationID = observability.NewCorrelationID()
+		}
+
+		ctx := observability.ContextWithCorrelationID(c.Request().Context(), correlationID)
+		c.SetRequest(c.Request().WithContext(ctx))
+
+		return next(c)
+	}
 }
 
 func errorHandler(logger *logs.Logger) echo.HTTPErrorHandler {

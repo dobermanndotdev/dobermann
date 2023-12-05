@@ -79,8 +79,9 @@ func (p *Port) Stop(ctx context.Context) error {
 
 func registerMiddlewares(router *echo.Echo, spec *openapi3.T, config Config) {
 	router.HTTPErrorHandler = errorHandler(config.Logger)
-	router.Use(middleware.Recover())
 	router.Use(middleware.RequestID())
+	router.Use(correlationIdMiddleware)
+	router.Use(middleware.Recover())
 	router.Use(loggerMiddleware(config.Logger))
 	router.Use(middleware.CORSWithConfig(middleware.CORSConfig{
 		AllowOrigins: config.AllowedCorsOrigin,
