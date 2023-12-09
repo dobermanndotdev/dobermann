@@ -24,65 +24,95 @@ import (
 
 // Monitor is an object representing the database table.
 type Monitor struct {
-	ID            string    `boil:"id" json:"id" toml:"id" yaml:"id"`
-	AccountID     string    `boil:"account_id" json:"account_id" toml:"account_id" yaml:"account_id"`
-	EndpointURL   string    `boil:"endpoint_url" json:"endpoint_url" toml:"endpoint_url" yaml:"endpoint_url"`
-	IsEndpointUp  bool      `boil:"is_endpoint_up" json:"is_endpoint_up" toml:"is_endpoint_up" yaml:"is_endpoint_up"`
-	CreatedAt     time.Time `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
-	LastCheckedAt null.Time `boil:"last_checked_at" json:"last_checked_at,omitempty" toml:"last_checked_at" yaml:"last_checked_at,omitempty"`
+	ID                     string    `boil:"id" json:"id" toml:"id" yaml:"id"`
+	AccountID              string    `boil:"account_id" json:"account_id" toml:"account_id" yaml:"account_id"`
+	EndpointURL            string    `boil:"endpoint_url" json:"endpoint_url" toml:"endpoint_url" yaml:"endpoint_url"`
+	IsEndpointUp           bool      `boil:"is_endpoint_up" json:"is_endpoint_up" toml:"is_endpoint_up" yaml:"is_endpoint_up"`
+	CreatedAt              time.Time `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
+	LastCheckedAt          null.Time `boil:"last_checked_at" json:"last_checked_at,omitempty" toml:"last_checked_at" yaml:"last_checked_at,omitempty"`
+	CheckIntervalInSeconds int       `boil:"check_interval_in_seconds" json:"check_interval_in_seconds" toml:"check_interval_in_seconds" yaml:"check_interval_in_seconds"`
 
 	R *monitorR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L monitorL  `boil:"-" json:"-" toml:"-" yaml:"-"`
 }
 
 var MonitorColumns = struct {
-	ID            string
-	AccountID     string
-	EndpointURL   string
-	IsEndpointUp  string
-	CreatedAt     string
-	LastCheckedAt string
+	ID                     string
+	AccountID              string
+	EndpointURL            string
+	IsEndpointUp           string
+	CreatedAt              string
+	LastCheckedAt          string
+	CheckIntervalInSeconds string
 }{
-	ID:            "id",
-	AccountID:     "account_id",
-	EndpointURL:   "endpoint_url",
-	IsEndpointUp:  "is_endpoint_up",
-	CreatedAt:     "created_at",
-	LastCheckedAt: "last_checked_at",
+	ID:                     "id",
+	AccountID:              "account_id",
+	EndpointURL:            "endpoint_url",
+	IsEndpointUp:           "is_endpoint_up",
+	CreatedAt:              "created_at",
+	LastCheckedAt:          "last_checked_at",
+	CheckIntervalInSeconds: "check_interval_in_seconds",
 }
 
 var MonitorTableColumns = struct {
-	ID            string
-	AccountID     string
-	EndpointURL   string
-	IsEndpointUp  string
-	CreatedAt     string
-	LastCheckedAt string
+	ID                     string
+	AccountID              string
+	EndpointURL            string
+	IsEndpointUp           string
+	CreatedAt              string
+	LastCheckedAt          string
+	CheckIntervalInSeconds string
 }{
-	ID:            "monitors.id",
-	AccountID:     "monitors.account_id",
-	EndpointURL:   "monitors.endpoint_url",
-	IsEndpointUp:  "monitors.is_endpoint_up",
-	CreatedAt:     "monitors.created_at",
-	LastCheckedAt: "monitors.last_checked_at",
+	ID:                     "monitors.id",
+	AccountID:              "monitors.account_id",
+	EndpointURL:            "monitors.endpoint_url",
+	IsEndpointUp:           "monitors.is_endpoint_up",
+	CreatedAt:              "monitors.created_at",
+	LastCheckedAt:          "monitors.last_checked_at",
+	CheckIntervalInSeconds: "monitors.check_interval_in_seconds",
 }
 
 // Generated where
 
+type whereHelperint struct{ field string }
+
+func (w whereHelperint) EQ(x int) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.EQ, x) }
+func (w whereHelperint) NEQ(x int) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.NEQ, x) }
+func (w whereHelperint) LT(x int) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.LT, x) }
+func (w whereHelperint) LTE(x int) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.LTE, x) }
+func (w whereHelperint) GT(x int) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.GT, x) }
+func (w whereHelperint) GTE(x int) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.GTE, x) }
+func (w whereHelperint) IN(slice []int) qm.QueryMod {
+	values := make([]interface{}, 0, len(slice))
+	for _, value := range slice {
+		values = append(values, value)
+	}
+	return qm.WhereIn(fmt.Sprintf("%s IN ?", w.field), values...)
+}
+func (w whereHelperint) NIN(slice []int) qm.QueryMod {
+	values := make([]interface{}, 0, len(slice))
+	for _, value := range slice {
+		values = append(values, value)
+	}
+	return qm.WhereNotIn(fmt.Sprintf("%s NOT IN ?", w.field), values...)
+}
+
 var MonitorWhere = struct {
-	ID            whereHelperstring
-	AccountID     whereHelperstring
-	EndpointURL   whereHelperstring
-	IsEndpointUp  whereHelperbool
-	CreatedAt     whereHelpertime_Time
-	LastCheckedAt whereHelpernull_Time
+	ID                     whereHelperstring
+	AccountID              whereHelperstring
+	EndpointURL            whereHelperstring
+	IsEndpointUp           whereHelperbool
+	CreatedAt              whereHelpertime_Time
+	LastCheckedAt          whereHelpernull_Time
+	CheckIntervalInSeconds whereHelperint
 }{
-	ID:            whereHelperstring{field: "\"monitors\".\"id\""},
-	AccountID:     whereHelperstring{field: "\"monitors\".\"account_id\""},
-	EndpointURL:   whereHelperstring{field: "\"monitors\".\"endpoint_url\""},
-	IsEndpointUp:  whereHelperbool{field: "\"monitors\".\"is_endpoint_up\""},
-	CreatedAt:     whereHelpertime_Time{field: "\"monitors\".\"created_at\""},
-	LastCheckedAt: whereHelpernull_Time{field: "\"monitors\".\"last_checked_at\""},
+	ID:                     whereHelperstring{field: "\"monitors\".\"id\""},
+	AccountID:              whereHelperstring{field: "\"monitors\".\"account_id\""},
+	EndpointURL:            whereHelperstring{field: "\"monitors\".\"endpoint_url\""},
+	IsEndpointUp:           whereHelperbool{field: "\"monitors\".\"is_endpoint_up\""},
+	CreatedAt:              whereHelpertime_Time{field: "\"monitors\".\"created_at\""},
+	LastCheckedAt:          whereHelpernull_Time{field: "\"monitors\".\"last_checked_at\""},
+	CheckIntervalInSeconds: whereHelperint{field: "\"monitors\".\"check_interval_in_seconds\""},
 }
 
 // MonitorRels is where relationship names are stored.
@@ -133,9 +163,9 @@ func (r *monitorR) GetUsers() UserSlice {
 type monitorL struct{}
 
 var (
-	monitorAllColumns            = []string{"id", "account_id", "endpoint_url", "is_endpoint_up", "created_at", "last_checked_at"}
+	monitorAllColumns            = []string{"id", "account_id", "endpoint_url", "is_endpoint_up", "created_at", "last_checked_at", "check_interval_in_seconds"}
 	monitorColumnsWithoutDefault = []string{"id", "account_id", "endpoint_url"}
-	monitorColumnsWithDefault    = []string{"is_endpoint_up", "created_at", "last_checked_at"}
+	monitorColumnsWithDefault    = []string{"is_endpoint_up", "created_at", "last_checked_at", "check_interval_in_seconds"}
 	monitorPrimaryKeyColumns     = []string{"id"}
 	monitorGeneratedColumns      = []string{}
 )

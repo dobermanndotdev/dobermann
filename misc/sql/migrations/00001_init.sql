@@ -30,6 +30,7 @@ CREATE TABLE monitors (
     is_endpoint_up BOOLEAN DEFAULT false NOT NULL,
     created_at TIMESTAMPTZ DEFAULT now() NOT NULL,
     last_checked_at TIMESTAMPTZ,
+    check_interval_in_seconds INT NOT NULL DEFAULT 30,
 
     CONSTRAINT pk_monitor_belongs_to_account FOREIGN KEY (account_id) REFERENCES accounts(id)
 );

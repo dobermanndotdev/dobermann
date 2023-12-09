@@ -2,8 +2,10 @@ package cron
 
 import (
 	"context"
+
+	"github.com/flowck/dobermann/backend/internal/app/command"
 )
 
-func (s Handlers) BulkCheckEndpoints(ctx context.Context) error {
-	return nil
+func (s handlers) BulkCheckEndpoints(ctx context.Context) error {
+	return s.application.Commands.BulkCheckEndpoints.Execute(ctx, command.BulkCheckEndpoints{})
 }

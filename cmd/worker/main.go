@@ -8,9 +8,16 @@ import (
 	"syscall"
 
 	"github.com/kelseyhightower/envconfig"
+	_ "github.com/lib/pq"
 
+	"github.com/flowck/dobermann/backend/internal/adapters/endpoint_checkers"
+	"github.com/flowck/dobermann/backend/internal/adapters/transaction"
 	"github.com/flowck/dobermann/backend/internal/app"
+	"github.com/flowck/dobermann/backend/internal/app/command"
 	"github.com/flowck/dobermann/backend/internal/common/logs"
+	"github.com/flowck/dobermann/backend/internal/common/messaging"
+	"github.com/flowck/dobermann/backend/internal/common/observability"
+	"github.com/flowck/dobermann/backend/internal/common/postgres"
 	"github.com/flowck/dobermann/backend/internal/ports/cron"
 )
 
@@ -42,11 +49,26 @@ func main() {
 	done := make(chan os.Signal, 1)
 	signal.Notify(done, syscall.SIGINT, syscall.SIGTERM)
 
-	application := &app.App{
-		Commands: app.Commands{},
+	publisher, err := messaging.NewAmqpPublisher(config.AmqpUrl, logger)
+	if err != nil {
+		logger.Fatal(err)
 	}
 
-	cronService := cron.NewService(application)
+	db, err := postgres.Connect(config.DatabaseURL)
+	if err != nil {
+		logger.Fatal(err)
+	}
+
+	httpChecker := endpoint_checkers.NewHttpChecker()
+	txProvider := transaction.NewPsqlProvider(db, publisher)
+
+	application := &app.App{
+		Commands: app.Commands{
+			BulkCheckEndpoints: observability.NewCommandDecorator[command.BulkCheckEndpoints](command.NewBulkCheckEndpointsHandler(httpChecker, txProvider), logger),
+		},
+	}
+
+	cronService := cron.NewService(application, config.Region)
 
 	go func() {
 		err = cronService.Start(ctx)

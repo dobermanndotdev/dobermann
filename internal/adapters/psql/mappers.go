@@ -57,13 +57,24 @@ func mapModelToUser(model *models.User) (*account.User, error) {
 
 func mapMonitorToModel(m *monitor.Monitor) *models.Monitor {
 	return &models.Monitor{
-		ID:            m.ID().String(),
-		AccountID:     m.AccountID().String(),
-		EndpointURL:   m.EndpointUrl(),
-		IsEndpointUp:  m.IsEndpointUp(),
-		CreatedAt:     m.CreatedAt(),
-		LastCheckedAt: null.TimeFromPtr(m.LastCheckedAt()),
+		ID:                     m.ID().String(),
+		AccountID:              m.AccountID().String(),
+		EndpointURL:            m.EndpointUrl(),
+		IsEndpointUp:           m.IsEndpointUp(),
+		CreatedAt:              m.CreatedAt(),
+		CheckIntervalInSeconds: int(math.Floor(m.CheckInterval().Seconds())),
+		LastCheckedAt:          null.TimeFromPtr(m.LastCheckedAt()),
 	}
+}
+
+func mapMonitorsToModels(monitorList []*monitor.Monitor) []*models.Monitor {
+	result := make([]*models.Monitor, len(monitorList))
+
+	for i, m := range monitorList {
+		result[i] = mapMonitorToModel(m)
+	}
+
+	return result
 }
 
 func mapModelsToMonitors(modelList []*models.Monitor) ([]*monitor.Monitor, error) {
