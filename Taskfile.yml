@@ -92,6 +92,10 @@ tasks:
     cmds:
       - docker logs -f --tail 10 dobermann-app-1
 
+  tail:worker:
+    cmds:
+      - docker logs -f --tail 10 dobermann-worker-1
+
   docker:up:
     cmds:
       - docker-compose up -d
