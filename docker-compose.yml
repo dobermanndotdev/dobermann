@@ -35,6 +35,22 @@ services:
     volumes:
       - .:/usr/app
 
+  worker:
+    build: ./misc/tools/reflex
+    links:
+      - postgres
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      SERVICE: worker
+    env_file:
+      - ./.env
+    ports:
+      - "6060:6060"
+    volumes:
+      - .:/usr/app
+
   endpoint_simulator:
     build: ./misc/tools/reflex
     environment:
