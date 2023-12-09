@@ -7,15 +7,19 @@ import (
 	"github.com/flowck/dobermann/backend/internal/common/kron"
 )
 
-type Handlers struct {
+type handlers struct {
+	region      string
 	application *app.App
 }
 
-func NewService(application *app.App) *kron.Service {
+func NewService(application *app.App, region string) *kron.Service {
 	c := kron.NewService()
-	handlers := Handlers{application: application}
+	allHandlers := handlers{
+		region:      region,
+		application: application,
+	}
 
-	c.AddJob(kron.NewJob(time.Second*5, handlers.BulkCheckEndpoints))
+	c.AddJob(kron.NewJob(time.Second*5, allHandlers.BulkCheckEndpoints))
 
 	return c
 }
