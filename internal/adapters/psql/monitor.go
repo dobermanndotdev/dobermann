@@ -25,6 +25,40 @@ type MonitorRepository struct {
 	db boil.ContextExecutor
 }
 
+func (p MonitorRepository) UpdateForCheck(ctx context.Context, fn func(foundMonitors []*monitor.Monitor) error) error {
+	mods := []qm.QueryMod{
+		qm.Where("DATE_PART('seconds', now()::timestamp - last_checked_at::timestamp) >= check_interval_in_seconds"),
+		qm.For("UPDATE SKIP LOCKED"),
+		qm.Limit(100),
+	}
+
+	modelsFound, err := models.Monitors(mods...).All(ctx, p.db)
+	if err != nil {
+		return err
+	}
+
+	monitorsFound, err := mapModelsToMonitors(modelsFound)
+	if err != nil {
+		return err
+	}
+
+	err = fn(monitorsFound)
+	if err != nil {
+		return err
+	}
+
+	modelsFound = mapMonitorsToModels(monitorsFound)
+
+	for _, model := range modelsFound {
+		_, err = model.Update(ctx, p.db, boil.Infer())
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 func (p MonitorRepository) FindByID(ctx context.Context, id domain.ID) (*monitor.Monitor, error) {
 	model, err := models.Monitors(
 		models.MonitorWhere.ID.EQ(id.String()),

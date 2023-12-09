@@ -14,6 +14,7 @@ type Monitor struct {
 	subscribers   []*Subscriber
 	incidents     []*Incident
 	createdAt     time.Time
+	checkInterval time.Duration
 	lastCheckedAt *time.Time
 }
 
@@ -35,6 +36,7 @@ func NewMonitor(
 		incidents:     incidents,
 		subscribers:   subscribers,
 		createdAt:     createdAt,
+		checkInterval: time.Second * 30,
 		lastCheckedAt: lastCheckedAt,
 	}, nil
 }
@@ -65,6 +67,10 @@ func (m *Monitor) LastCheckedAt() *time.Time {
 
 func (m *Monitor) CreatedAt() time.Time {
 	return m.createdAt
+}
+
+func (m *Monitor) CheckInterval() time.Duration {
+	return m.checkInterval
 }
 
 func (m *Monitor) SetEndpointCheckResult(isUp bool) {

@@ -58,7 +58,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	
+
 	logger := logs.New(config.IsDebugMode())
 	watermillLogger := watermill_logger.NewWatermillLogger(logger)
 
