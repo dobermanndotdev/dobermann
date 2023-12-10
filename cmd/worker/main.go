@@ -21,12 +21,15 @@ import (
 	"github.com/flowck/dobermann/backend/internal/ports/cron"
 )
 
+var Version = "development"
+
 type Config struct {
-	AmqpUrl     string `envconfig:"AMQP_URL"`
-	Port        int    `envconfig:"HTTP_PORT"`
-	DebugMode   string `envconfig:"DEBUG_MODE"`
-	DatabaseURL string `envconfig:"DATABASE_URL"`
-	Region      string `envconfig:"FLY_REGION" required:"true"`
+	AmqpUrl          string `envconfig:"AMQP_URL"`
+	Port             int    `envconfig:"HTTP_PORT"`
+	DebugMode        string `envconfig:"DEBUG_MODE"`
+	DatabaseURL      string `envconfig:"DATABASE_URL"`
+	Region           string `envconfig:"FLY_REGION" required:"true"`
+	IsProductionMode bool   `envconfig:"PRODUCTION_MODE"`
 }
 
 func (c Config) IsDebugMode() bool {
@@ -68,7 +71,7 @@ func main() {
 		},
 	}
 
-	cronService := cron.NewService(application, config.Region)
+	cronService := cron.NewService(application, config.Region, config.IsProductionMode)
 
 	go func() {
 		err = cronService.Start(ctx)
@@ -76,6 +79,11 @@ func main() {
 			logger.Errorf("cron service stopped: %v", err)
 		}
 	}()
+
+	logger.WithFields(logs.Fields{
+		"version": Version,
+		"region":  config.Region,
+	}).Info("The service is running")
 
 	<-done
 	err = cronService.Stop()
