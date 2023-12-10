@@ -27,6 +27,7 @@ type MonitorRepository struct {
 
 func (p MonitorRepository) UpdateForCheck(ctx context.Context, fn func(foundMonitors []*monitor.Monitor) error) error {
 	mods := []qm.QueryMod{
+		models.MonitorWhere.IsPaused.EQ(false),
 		qm.Where("DATE_PART('seconds', now()::timestamp - last_checked_at::timestamp) >= check_interval_in_seconds"),
 		qm.For("UPDATE SKIP LOCKED"),
 		qm.Limit(100),

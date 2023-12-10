@@ -26,6 +26,10 @@ func (c BulkCheckEndpointsHandler) Execute(ctx context.Context, cmd BulkCheckEnd
 	return c.txProvider.Transact(ctx, func(adapters TransactableAdapters) error {
 		err := adapters.MonitorRepository.UpdateForCheck(ctx, func(foundMonitors []*monitor.Monitor) error {
 			for _, foundMonitor := range foundMonitors {
+				if foundMonitor.IsPaused() {
+					continue
+				}
+
 				err := c.httpChecker.Check(ctx, foundMonitor.EndpointUrl())
 				if err != nil {
 					foundMonitor.SetEndpointCheckResult(false)

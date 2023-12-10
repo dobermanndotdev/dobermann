@@ -113,3 +113,11 @@ func (m *Monitor) IncidentUnresolved() *Incident {
 func (m *Monitor) IsValid() bool {
 	return !m.ID().IsEmpty()
 }
+
+func (m *Monitor) Pause() {
+	m.isPaused = true
+}
+
+func (m *Monitor) UnPause() {
+	m.isPaused = false
+}
