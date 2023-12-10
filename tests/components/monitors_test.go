@@ -89,6 +89,7 @@ func TestMonitors(t *testing.T) {
 
 		assert.Equal(t, monitor00.ID, resp01.JSON200.Data.Id)
 		assert.Equal(t, monitor00.EndpointURL, resp01.JSON200.Data.EndpointUrl)
+		assert.False(t, monitor00.IsPaused)
 	})
 
 	t.Run("pause_and_unpause_monitor", func(t *testing.T) {

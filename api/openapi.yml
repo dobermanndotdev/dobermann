@@ -178,13 +178,15 @@ components:
         data:
           $ref: '#/components/schemas/Monitor'
     Monitor:
-      required: [id, endpoint_url, is_endpoint_up, incidents, created_at]
+      required: [id, endpoint_url, is_endpoint_up, is_paused, incidents, created_at]
       properties:
         id:
           type: string
         endpoint_url:
           type: string
         is_endpoint_up:
+          type: boolean
+        is_paused:
           type: boolean
         incidents:
           type: array
