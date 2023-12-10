@@ -44,7 +44,7 @@ An incident has been created for the monitor %s. </br>
 For more details please follow the link %s. </br>
 
 Dobermann - Endpoint monitoring
-`, user.FirstName(), m.EndpointUrl(), getIncidentLink(s.hostname, m.ID(), incident.ID()))
+`, getGreetings(user), m.EndpointUrl(), getIncidentLink(s.hostname, m.ID(), incident.ID()))
 
 	_, err := s.client.Emails.SendWithContext(ctx, &resendsdk.SendEmailRequest{
 		From:    s.from,
@@ -66,7 +66,7 @@ The last incident reported on the monitor %s has been resolved. </br>
 For more details please follow the link %s. </br>
 
 Dobermann - Endpoint monitoring
-`, user.FirstName(), m.EndpointUrl(), getIncidentLink(s.hostname, m.ID(), incidentID))
+`, getGreetings(user), m.EndpointUrl(), getIncidentLink(s.hostname, m.ID(), incidentID))
 
 	_, err := s.client.Emails.SendWithContext(ctx, &resendsdk.SendEmailRequest{
 		From:    s.from,
@@ -84,4 +84,12 @@ Dobermann - Endpoint monitoring
 func getIncidentLink(host string, monitorID, incidentID domain.ID) string {
 	link := fmt.Sprintf("%s/dashboard/monitors/%s/incidents/%s", host, monitorID, incidentID)
 	return fmt.Sprintf(`<a href="%s">%s</a>`, link, link)
+}
+
+func getGreetings(user *account.User) string {
+	if user.FirstName() == "" {
+		return "Hi,"
+	}
+
+	return fmt.Sprintf("Hi %s", user.FirstName())
 }
