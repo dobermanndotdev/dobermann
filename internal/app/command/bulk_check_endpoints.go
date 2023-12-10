@@ -41,6 +41,11 @@ func (c BulkCheckEndpointsHandler) Execute(ctx context.Context, cmd BulkCheckEnd
 				}
 
 				foundMonitor.SetEndpointCheckResult(true)
+
+				if !foundMonitor.HasIncidentUnresolved() {
+					return nil
+				}
+
 				err = adapters.EventPublisher.PublishEndpointCheckSucceeded(ctx, EndpointCheckSucceededEvent{
 					MonitorID: foundMonitor.ID().String(),
 					At:        *foundMonitor.LastCheckedAt(),
