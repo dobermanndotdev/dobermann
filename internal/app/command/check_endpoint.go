@@ -40,6 +40,10 @@ func (c CheckEndpointHandler) Execute(ctx context.Context, cmd CheckEndpoint) er
 	checkSucceeded := false
 
 	err := c.monitorRepository.Update(ctx, cmd.MonitorID, func(m *monitor.Monitor) error {
+		if m.IsPaused() {
+			return nil
+		}
+
 		err := c.httpChecker.Check(ctx, m.EndpointUrl())
 		if errors.Is(err, monitor.ErrEndpointIsDown) {
 			m.SetEndpointCheckResult(false)

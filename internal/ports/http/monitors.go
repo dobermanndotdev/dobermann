@@ -33,6 +33,7 @@ func (h handlers) CreateMonitor(c echo.Context) error {
 		body.EndpointUrl,
 		user.AccountID,
 		false,
+		false,
 		nil,
 		[]*monitor.Subscriber{subscriber},
 		time.Now().UTC(),
@@ -96,4 +97,31 @@ func (h handlers) GetMonitorByID(c echo.Context, monitorID string) error {
 	return c.JSON(http.StatusOK, GetAllMonitorByIdPayload{
 		Data: mapMonitorToResponseItem(foundMonitor),
 	})
+}
+
+func (h handlers) ToggleMonitorPause(c echo.Context, monitorID string) error {
+	_, err := retrieveUserFromCtx(c)
+	if err != nil {
+		return NewUnableToRetrieveUserFromCtx(err)
+	}
+
+	var body ToggleMonitorPauseRequest
+	if err = c.Bind(&body); err != nil {
+		return NewHandlerError(err, "error-loading-the-payload")
+	}
+
+	mID, err := domain.NewIdFromString(monitorID)
+	if err != nil {
+		return NewHandlerErrorWithStatus(err, "invalid-monitor-id", http.StatusBadRequest)
+	}
+
+	err = h.application.Commands.ToggleMonitorPause.Execute(c.Request().Context(), command.ToggleMonitorPause{
+		MonitorID: mID,
+		Pause:     body.Pause,
+	})
+	if err != nil {
+		return NewHandlerError(err, "unable-to-get-monitor")
+	}
+
+	return c.NoContent(http.StatusNoContent)
 }

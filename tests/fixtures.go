@@ -84,6 +84,7 @@ func FixtureMonitor(t *testing.T, acc *account.Account) *monitor.Monitor {
 		SimulatorEndpointUrl,
 		acc.ID(),
 		false,
+		false,
 		nil,
 		subscribers,
 		time.Now().UTC(),

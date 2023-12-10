@@ -762,7 +762,7 @@ func (userL) LoadMonitors(ctx context.Context, e boil.ContextExecutor, singular 
 	}
 
 	query := NewQuery(
-		qm.Select("\"monitors\".\"id\", \"monitors\".\"account_id\", \"monitors\".\"endpoint_url\", \"monitors\".\"is_endpoint_up\", \"monitors\".\"created_at\", \"monitors\".\"last_checked_at\", \"monitors\".\"check_interval_in_seconds\", \"a\".\"user_id\""),
+		qm.Select("\"monitors\".\"id\", \"monitors\".\"account_id\", \"monitors\".\"endpoint_url\", \"monitors\".\"is_endpoint_up\", \"monitors\".\"created_at\", \"monitors\".\"last_checked_at\", \"monitors\".\"check_interval_in_seconds\", \"monitors\".\"is_paused\", \"a\".\"user_id\""),
 		qm.From("\"monitors\""),
 		qm.InnerJoin("\"subscribers\" as \"a\" on \"monitors\".\"id\" = \"a\".\"monitor_id\""),
 		qm.WhereIn("\"a\".\"user_id\" in ?", args...),
@@ -783,7 +783,7 @@ func (userL) LoadMonitors(ctx context.Context, e boil.ContextExecutor, singular 
 		one := new(Monitor)
 		var localJoinCol string
 
-		err = results.Scan(&one.ID, &one.AccountID, &one.EndpointURL, &one.IsEndpointUp, &one.CreatedAt, &one.LastCheckedAt, &one.CheckIntervalInSeconds, &localJoinCol)
+		err = results.Scan(&one.ID, &one.AccountID, &one.EndpointURL, &one.IsEndpointUp, &one.CreatedAt, &one.LastCheckedAt, &one.CheckIntervalInSeconds, &one.IsPaused, &localJoinCol)
 		if err != nil {
 			return errors.Wrap(err, "failed to scan eager loaded results for monitors")
 		}

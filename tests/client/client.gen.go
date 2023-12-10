@@ -84,7 +84,13 @@ type Monitor struct {
 	Id            string     `json:"id"`
 	Incidents     []Incident `json:"incidents"`
 	IsEndpointUp  bool       `json:"is_endpoint_up"`
+	IsPaused      bool       `json:"is_paused"`
 	LastCheckedAt *time.Time `json:"last_checked_at,omitempty"`
+}
+
+// ToggleMonitorPauseRequest defines model for ToggleMonitorPauseRequest.
+type ToggleMonitorPauseRequest struct {
+	Pause bool `json:"pause"`
 }
 
 // DefaultError defines model for DefaultError.
@@ -104,6 +110,9 @@ type LoginJSONRequestBody = LogInRequest
 
 // CreateMonitorJSONRequestBody defines body for CreateMonitor for application/json ContentType.
 type CreateMonitorJSONRequestBody = CreateMonitorRequest
+
+// ToggleMonitorPauseJSONRequestBody defines body for ToggleMonitorPause for application/json ContentType.
+type ToggleMonitorPauseJSONRequestBody = ToggleMonitorPauseRequest
 
 // RequestEditorFn  is the function signature for the RequestEditor callback function
 type RequestEditorFn func(ctx context.Context, req *http.Request) error
@@ -198,6 +207,11 @@ type ClientInterface interface {
 
 	// GetMonitorByID request
 	GetMonitorByID(ctx context.Context, monitorID string, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ToggleMonitorPause request with any body
+	ToggleMonitorPauseWithBody(ctx context.Context, monitorID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	ToggleMonitorPause(ctx context.Context, monitorID string, body ToggleMonitorPauseJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 }
 
 func (c *Client) CreateAccountWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
@@ -286,6 +300,30 @@ func (c *Client) CreateMonitor(ctx context.Context, body CreateMonitorJSONReques
 
 func (c *Client) GetMonitorByID(ctx context.Context, monitorID string, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetMonitorByIDRequest(c.Server, monitorID)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) ToggleMonitorPauseWithBody(ctx context.Context, monitorID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewToggleMonitorPauseRequestWithBody(c.Server, monitorID, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) ToggleMonitorPause(ctx context.Context, monitorID string, body ToggleMonitorPauseJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewToggleMonitorPauseRequest(c.Server, monitorID, body)
 	if err != nil {
 		return nil, err
 	}
@@ -513,6 +551,53 @@ func NewGetMonitorByIDRequest(server string, monitorID string) (*http.Request, e
 	return req, nil
 }
 
+// NewToggleMonitorPauseRequest calls the generic ToggleMonitorPause builder with application/json body
+func NewToggleMonitorPauseRequest(server string, monitorID string, body ToggleMonitorPauseJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewToggleMonitorPauseRequestWithBody(server, monitorID, "application/json", bodyReader)
+}
+
+// NewToggleMonitorPauseRequestWithBody generates requests for ToggleMonitorPause with any type of body
+func NewToggleMonitorPauseRequestWithBody(server string, monitorID string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "monitorID", runtime.ParamLocationPath, monitorID)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/monitors/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
 func (c *Client) applyEditors(ctx context.Context, req *http.Request, additionalEditors []RequestEditorFn) error {
 	for _, r := range c.RequestEditors {
 		if err := r(ctx, req); err != nil {
@@ -576,6 +661,11 @@ type ClientWithResponsesInterface interface {
 
 	// GetMonitorByID request
 	GetMonitorByIDWithResponse(ctx context.Context, monitorID string, reqEditors ...RequestEditorFn) (*GetMonitorByIDResponse, error)
+
+	// ToggleMonitorPause request with any body
+	ToggleMonitorPauseWithBodyWithResponse(ctx context.Context, monitorID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*ToggleMonitorPauseResponse, error)
+
+	ToggleMonitorPauseWithResponse(ctx context.Context, monitorID string, body ToggleMonitorPauseJSONRequestBody, reqEditors ...RequestEditorFn) (*ToggleMonitorPauseResponse, error)
 }
 
 type CreateAccountResponse struct {
@@ -691,6 +781,28 @@ func (r GetMonitorByIDResponse) StatusCode() int {
 	return 0
 }
 
+type ToggleMonitorPauseResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSONDefault  *ErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r ToggleMonitorPauseResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ToggleMonitorPauseResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 // CreateAccountWithBodyWithResponse request with arbitrary body returning *CreateAccountResponse
 func (c *ClientWithResponses) CreateAccountWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateAccountResponse, error) {
 	rsp, err := c.CreateAccountWithBody(ctx, contentType, body, reqEditors...)
@@ -758,6 +870,23 @@ func (c *ClientWithResponses) GetMonitorByIDWithResponse(ctx context.Context, mo
 		return nil, err
 	}
 	return ParseGetMonitorByIDResponse(rsp)
+}
+
+// ToggleMonitorPauseWithBodyWithResponse request with arbitrary body returning *ToggleMonitorPauseResponse
+func (c *ClientWithResponses) ToggleMonitorPauseWithBodyWithResponse(ctx context.Context, monitorID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*ToggleMonitorPauseResponse, error) {
+	rsp, err := c.ToggleMonitorPauseWithBody(ctx, monitorID, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseToggleMonitorPauseResponse(rsp)
+}
+
+func (c *ClientWithResponses) ToggleMonitorPauseWithResponse(ctx context.Context, monitorID string, body ToggleMonitorPauseJSONRequestBody, reqEditors ...RequestEditorFn) (*ToggleMonitorPauseResponse, error) {
+	rsp, err := c.ToggleMonitorPause(ctx, monitorID, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseToggleMonitorPauseResponse(rsp)
 }
 
 // ParseCreateAccountResponse parses an HTTP response from a CreateAccountWithResponse call
@@ -911,28 +1040,55 @@ func ParseGetMonitorByIDResponse(rsp *http.Response) (*GetMonitorByIDResponse, e
 	return response, nil
 }
 
+// ParseToggleMonitorPauseResponse parses an HTTP response from a ToggleMonitorPauseWithResponse call
+func ParseToggleMonitorPauseResponse(rsp *http.Response) (*ToggleMonitorPauseResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ToggleMonitorPauseResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"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",
+	"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",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

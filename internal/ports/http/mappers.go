@@ -11,6 +11,7 @@ func mapMonitorToResponseItem(m *monitor.Monitor) Monitor {
 		Id:            m.ID().String(),
 		Incidents:     mapIncidentsToResponse(m.Incidents()),
 		IsEndpointUp:  m.IsEndpointUp(),
+		IsPaused:      m.IsPaused(),
 		LastCheckedAt: m.LastCheckedAt(),
 	}
 }

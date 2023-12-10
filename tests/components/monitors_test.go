@@ -89,6 +89,27 @@ func TestMonitors(t *testing.T) {
 
 		assert.Equal(t, monitor00.ID, resp01.JSON200.Data.Id)
 		assert.Equal(t, monitor00.EndpointURL, resp01.JSON200.Data.EndpointUrl)
+		assert.False(t, monitor00.IsPaused)
+	})
+
+	t.Run("pause_and_unpause_monitor", func(t *testing.T) {
+		endpointUrl := fixtureMonitors(t, cli, 1)[0]
+		monitor00 := getMonitorByEndpointUrl(t, endpointUrl)
+		require.False(t, monitor00.IsPaused)
+
+		resp01, err := cli.ToggleMonitorPause(ctx, monitor00.ID, client.ToggleMonitorPauseRequest{Pause: true})
+		require.NoError(t, err)
+		require.Equal(t, http.StatusNoContent, resp01.StatusCode)
+
+		monitor00 = getMonitorByEndpointUrl(t, endpointUrl)
+		assert.True(t, monitor00.IsPaused)
+
+		resp02, err := cli.ToggleMonitorPause(ctx, monitor00.ID, client.ToggleMonitorPauseRequest{Pause: false})
+		require.NoError(t, err)
+		require.Equal(t, http.StatusNoContent, resp02.StatusCode)
+
+		monitor00 = getMonitorByEndpointUrl(t, endpointUrl)
+		assert.False(t, monitor00.IsPaused)
 	})
 }
 

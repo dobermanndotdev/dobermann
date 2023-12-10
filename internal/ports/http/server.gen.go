@@ -82,7 +82,13 @@ type Monitor struct {
 	Id            string     `json:"id"`
 	Incidents     []Incident `json:"incidents"`
 	IsEndpointUp  bool       `json:"is_endpoint_up"`
+	IsPaused      bool       `json:"is_paused"`
 	LastCheckedAt *time.Time `json:"last_checked_at,omitempty"`
+}
+
+// ToggleMonitorPauseRequest defines model for ToggleMonitorPauseRequest.
+type ToggleMonitorPauseRequest struct {
+	Pause bool `json:"pause"`
 }
 
 // DefaultError defines model for DefaultError.
@@ -103,6 +109,9 @@ type LoginJSONRequestBody = LogInRequest
 // CreateMonitorJSONRequestBody defines body for CreateMonitor for application/json ContentType.
 type CreateMonitorJSONRequestBody = CreateMonitorRequest
 
+// ToggleMonitorPauseJSONRequestBody defines body for ToggleMonitorPause for application/json ContentType.
+type ToggleMonitorPauseJSONRequestBody = ToggleMonitorPauseRequest
+
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
 	// Creates a new account
@@ -120,6 +129,9 @@ type ServerInterface interface {
 	// Get all monitors in a with pagination
 	// (GET /monitors/{monitorID})
 	GetMonitorByID(ctx echo.Context, monitorID string) error
+	// Pause or unpause the monitor
+	// (POST /monitors/{monitorID})
+	ToggleMonitorPause(ctx echo.Context, monitorID string) error
 }
 
 // ServerInterfaceWrapper converts echo contexts to parameters.
@@ -201,6 +213,24 @@ func (w *ServerInterfaceWrapper) GetMonitorByID(ctx echo.Context) error {
 	return err
 }
 
+// ToggleMonitorPause converts echo context to params.
+func (w *ServerInterfaceWrapper) ToggleMonitorPause(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "monitorID" -------------
+	var monitorID string
+
+	err = runtime.BindStyledParameterWithLocation("simple", false, "monitorID", runtime.ParamLocationPath, ctx.Param("monitorID"), &monitorID)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter monitorID: %s", err))
+	}
+
+	ctx.Set(BearerAuthScopes, []string{""})
+
+	// Invoke the callback with all the unmarshalled arguments
+	err = w.Handler.ToggleMonitorPause(ctx, monitorID)
+	return err
+}
+
 // This is a simple interface which specifies echo.Route addition functions which
 // are present on both echo.Echo and echo.Group, since we want to allow using
 // either of them for path registration
@@ -234,31 +264,33 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 	router.GET(baseURL+"/monitors", wrapper.GetAllMonitors)
 	router.POST(baseURL+"/monitors", wrapper.CreateMonitor)
 	router.GET(baseURL+"/monitors/:monitorID", wrapper.GetMonitorByID)
+	router.POST(baseURL+"/monitors/:monitorID", wrapper.ToggleMonitorPause)
 
 }
 
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"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",
+	"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",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

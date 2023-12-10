@@ -87,6 +87,30 @@ paths:
                 $ref: '#/components/schemas/GetAllMonitorByIdPayload'
         default:
           $ref: '#/components/responses/DefaultError'
+    post:
+      tags:
+        - Monitors
+      operationId: toggleMonitorPause
+      summary: Pause or unpause the monitor
+      parameters:
+        - name: monitorID
+          in: path
+          required: true
+          schema:
+            type: string
+      security:
+        - BearerAuth: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ToggleMonitorPauseRequest'
+      responses:
+        '204':
+          description: OK
+        default:
+          $ref: '#/components/responses/DefaultError'
   /auth/accounts:
     post:
       tags:
@@ -127,6 +151,11 @@ paths:
           $ref: '#/components/responses/DefaultError'
 components:
   schemas:
+    ToggleMonitorPauseRequest:
+      required: [pause]
+      properties:
+        pause:
+          type: boolean
     GetAllMonitorsPayload:
       required: [page, per_page, page_count, total_count, data]
       properties:
@@ -149,13 +178,15 @@ components:
         data:
           $ref: '#/components/schemas/Monitor'
     Monitor:
-      required: [id, endpoint_url, is_endpoint_up, incidents, created_at]
+      required: [id, endpoint_url, is_endpoint_up, is_paused, incidents, created_at]
       properties:
         id:
           type: string
         endpoint_url:
           type: string
         is_endpoint_up:
+          type: boolean
+        is_paused:
           type: boolean
         incidents:
           type: array
