@@ -2,6 +2,7 @@ package command
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/flowck/dobermann/backend/internal/domain/monitor"
@@ -24,6 +25,10 @@ func NewCreateMonitorHandler(monitorRepository monitor.Repository, eventPublishe
 }
 
 func (h CreateMonitorHandler) Execute(ctx context.Context, cmd CreateMonitor) error {
+	if cmd.Monitor == nil || !cmd.Monitor.IsValid() {
+		return errors.New("monitor cannot be invalid")
+	}
+
 	err := h.monitorRepository.Insert(ctx, cmd.Monitor)
 	if err != nil {
 		return err

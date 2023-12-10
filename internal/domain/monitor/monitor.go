@@ -102,3 +102,7 @@ func (m *Monitor) IncidentUnresolved() *Incident {
 
 	return nil
 }
+
+func (m *Monitor) IsValid() bool {
+	return !m.ID().IsEmpty()
+}
