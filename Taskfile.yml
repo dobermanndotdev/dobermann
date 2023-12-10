@@ -133,6 +133,15 @@ tasks:
           -generate client,types,spec \
           ./api/openapi.yml > ./tests/client/client.gen.go
 
+  deploy:service:
+    cmds:
+      - flyctl deploy --build-arg VERSION={{.CLI_ARGS}} --config ./misc/deploy/service.fly.toml --remote-only
+
+  deploy:worker:
+    cmds:
+      - flyctl deploy --build-arg VERSION={{.CLI_ARGS}} --config ./misc/deploy/worker.fly.toml --remote-only
+
   deploy:prd:
     cmds:
-      - flyctl deploy --build-arg VERSION={{.CLI_ARGS}} --config ./fly.toml --remote-only
+      - task deploy:service -- {{.CLI_ARGS}}
+      - task deploy:worker -- {{.CLI_ARGS}}

@@ -6,10 +6,13 @@
 app = "prod-dobermann-backend"
 primary_region = "lhr"
 
+[build]
+  dockerfile = "../../service.Dockerfile"
+
 [env]
   HTTP_PORT = "8080"
   ALLOWED_CORS_ORIGIN='https://dobermann.dev'
-  RESEND_MOCK_ENABLED=false
+  PRODUCTION_MODE=true
   HOSTNAME_NOTIFICATION='https://dobermann.dev'
   SENT_FROM_EMAIL_ADDRESS='noreply@transactional.dobermann.dev'
 

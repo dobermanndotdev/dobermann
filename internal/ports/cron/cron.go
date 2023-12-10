@@ -12,14 +12,19 @@ type handlers struct {
 	application *app.App
 }
 
-func NewService(application *app.App, region string) *kron.Service {
+func NewService(application *app.App, region string, isProduction bool) *kron.Service {
 	c := kron.NewService()
 	allHandlers := handlers{
 		region:      region,
 		application: application,
 	}
 
-	c.AddJob(kron.NewJob(time.Second*5, allHandlers.BulkCheckEndpoints))
+	interval := time.Second * 5
+	if isProduction {
+		interval = time.Second * 25
+	}
+
+	c.AddJob(kron.NewJob(interval, allHandlers.BulkCheckEndpoints))
 
 	return c
 }

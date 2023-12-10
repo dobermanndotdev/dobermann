@@ -36,6 +36,8 @@ import (
 	httpport "github.com/flowck/dobermann/backend/internal/ports/http"
 )
 
+var Version = "development"
+
 type Config struct {
 	AmqpUrl                  string `envconfig:"AMQP_URL"`
 	Port                     int    `envconfig:"HTTP_PORT"`
@@ -43,9 +45,10 @@ type Config struct {
 	DebugMode                string `envconfig:"DEBUG_MODE"`
 	DatabaseURL              string `envconfig:"DATABASE_URL"`
 	ResendApiKey             string `envconfig:"RESEND_API_KEY"`
-	ResendMockEnabled        bool   `envconfig:"RESEND_MOCK_ENABLED"`
 	HostnameForNotifications string `envconfig:"HOSTNAME_NOTIFICATION"`
 	SentFromEmailAddress     string `envconfig:"SENT_FROM_EMAIL_ADDRESS"`
+	IsProductionMode         bool   `envconfig:"PRODUCTION_MODE"`
+	Region                   string `envconfig:"FLY_REGION"`
 }
 
 func (c Config) IsDebugMode() bool {
@@ -142,12 +145,12 @@ func main() {
 
 	//POST_IDEA: Mocking services and its dynamic initialisation
 	var resendService resend.Service
-	if config.ResendMockEnabled {
-		resendService = resend.NewServiceMock(logger)
-		logger.Warn("Resend service mock has been initialised")
-	} else {
+	if config.IsProductionMode {
 		resendService = resend.NewService(config.ResendApiKey, config.SentFromEmailAddress, config.HostnameForNotifications)
 		logger.Info("Resend service has been initialised")
+	} else {
+		resendService = resend.NewServiceMock(logger)
+		logger.Warn("Resend service mock has been initialised")
 	}
 
 	application := &app.App{
@@ -200,6 +203,11 @@ func main() {
 			logger.Errorf("watermill router stopped with the following error: %v", err)
 		}
 	}()
+
+	logger.WithFields(logs.Fields{
+		"version": Version,
+		"region":  config.Region,
+	}).Info("The service is running")
 
 	<-done
 	terminationCtx, terminationCancel := context.WithTimeout(context.Background(), time.Second*2)

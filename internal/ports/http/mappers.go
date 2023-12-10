@@ -27,7 +27,7 @@ func mapMonitorsToResponseItems(monitors []*monitor.Monitor) []Monitor {
 
 func mapIncidentsToResponse(incidents []*monitor.Incident) []Incident {
 	if incidents == nil {
-		return nil
+		return make([]Incident, 0)
 	}
 
 	result := make([]Incident, len(incidents))
