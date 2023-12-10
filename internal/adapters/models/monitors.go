@@ -31,6 +31,7 @@ type Monitor struct {
 	CreatedAt              time.Time `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
 	LastCheckedAt          null.Time `boil:"last_checked_at" json:"last_checked_at,omitempty" toml:"last_checked_at" yaml:"last_checked_at,omitempty"`
 	CheckIntervalInSeconds int       `boil:"check_interval_in_seconds" json:"check_interval_in_seconds" toml:"check_interval_in_seconds" yaml:"check_interval_in_seconds"`
+	IsPaused               bool      `boil:"is_paused" json:"is_paused" toml:"is_paused" yaml:"is_paused"`
 
 	R *monitorR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L monitorL  `boil:"-" json:"-" toml:"-" yaml:"-"`
@@ -44,6 +45,7 @@ var MonitorColumns = struct {
 	CreatedAt              string
 	LastCheckedAt          string
 	CheckIntervalInSeconds string
+	IsPaused               string
 }{
 	ID:                     "id",
 	AccountID:              "account_id",
@@ -52,6 +54,7 @@ var MonitorColumns = struct {
 	CreatedAt:              "created_at",
 	LastCheckedAt:          "last_checked_at",
 	CheckIntervalInSeconds: "check_interval_in_seconds",
+	IsPaused:               "is_paused",
 }
 
 var MonitorTableColumns = struct {
@@ -62,6 +65,7 @@ var MonitorTableColumns = struct {
 	CreatedAt              string
 	LastCheckedAt          string
 	CheckIntervalInSeconds string
+	IsPaused               string
 }{
 	ID:                     "monitors.id",
 	AccountID:              "monitors.account_id",
@@ -70,6 +74,7 @@ var MonitorTableColumns = struct {
 	CreatedAt:              "monitors.created_at",
 	LastCheckedAt:          "monitors.last_checked_at",
 	CheckIntervalInSeconds: "monitors.check_interval_in_seconds",
+	IsPaused:               "monitors.is_paused",
 }
 
 // Generated where
@@ -105,6 +110,7 @@ var MonitorWhere = struct {
 	CreatedAt              whereHelpertime_Time
 	LastCheckedAt          whereHelpernull_Time
 	CheckIntervalInSeconds whereHelperint
+	IsPaused               whereHelperbool
 }{
 	ID:                     whereHelperstring{field: "\"monitors\".\"id\""},
 	AccountID:              whereHelperstring{field: "\"monitors\".\"account_id\""},
@@ -113,6 +119,7 @@ var MonitorWhere = struct {
 	CreatedAt:              whereHelpertime_Time{field: "\"monitors\".\"created_at\""},
 	LastCheckedAt:          whereHelpernull_Time{field: "\"monitors\".\"last_checked_at\""},
 	CheckIntervalInSeconds: whereHelperint{field: "\"monitors\".\"check_interval_in_seconds\""},
+	IsPaused:               whereHelperbool{field: "\"monitors\".\"is_paused\""},
 }
 
 // MonitorRels is where relationship names are stored.
@@ -163,9 +170,9 @@ func (r *monitorR) GetUsers() UserSlice {
 type monitorL struct{}
 
 var (
-	monitorAllColumns            = []string{"id", "account_id", "endpoint_url", "is_endpoint_up", "created_at", "last_checked_at", "check_interval_in_seconds"}
+	monitorAllColumns            = []string{"id", "account_id", "endpoint_url", "is_endpoint_up", "created_at", "last_checked_at", "check_interval_in_seconds", "is_paused"}
 	monitorColumnsWithoutDefault = []string{"id", "account_id", "endpoint_url"}
-	monitorColumnsWithDefault    = []string{"is_endpoint_up", "created_at", "last_checked_at", "check_interval_in_seconds"}
+	monitorColumnsWithDefault    = []string{"is_endpoint_up", "created_at", "last_checked_at", "check_interval_in_seconds", "is_paused"}
 	monitorPrimaryKeyColumns     = []string{"id"}
 	monitorGeneratedColumns      = []string{}
 )

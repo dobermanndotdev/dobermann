@@ -33,6 +33,7 @@ func (h handlers) CreateMonitor(c echo.Context) error {
 		body.EndpointUrl,
 		user.AccountID,
 		false,
+		false,
 		nil,
 		[]*monitor.Subscriber{subscriber},
 		time.Now().UTC(),
