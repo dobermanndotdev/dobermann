@@ -62,6 +62,11 @@ func main() {
 		logger.Fatal(err)
 	}
 
+	err = postgres.ApplyMigrations(db, "misc/sql/migrations")
+	if err != nil {
+		logger.Fatal(err)
+	}
+
 	httpChecker := endpoint_checkers.NewHttpChecker()
 	txProvider := transaction.NewPsqlProvider(db, publisher)
 
