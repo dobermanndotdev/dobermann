@@ -25,18 +25,27 @@ func TestMonitors(t *testing.T) {
 		t.Parallel()
 		endpointUrl := endpointUrlGenerator(false)
 		resp01, err := cli.CreateMonitor(ctx, client.CreateMonitorRequest{
-			EndpointUrl: endpointUrl,
+			EndpointUrl:            endpointUrl,
+			CheckIntervalInSeconds: 30,
 		})
 		require.NoError(t, err)
 		assert.Equal(t, http.StatusCreated, resp01.StatusCode)
 		assert.Eventually(t, assertMonitorHasBeenChecked(t, endpointUrl), time.Second*5, time.Millisecond*250)
+
+		resp02, err := cli.CreateMonitor(ctx, client.CreateMonitorRequest{
+			EndpointUrl:            endpointUrl,
+			CheckIntervalInSeconds: 29,
+		})
+		require.NoError(t, err)
+		assert.Equal(t, http.StatusBadRequest, resp02.StatusCode)
 	})
 
 	t.Run("create_monitor_with_and_endpoint_down", func(t *testing.T) {
 		t.Parallel()
 		endpointUrl := endpointUrlGenerator(false)
 		resp01, err := cli.CreateMonitor(ctx, client.CreateMonitorRequest{
-			EndpointUrl: endpointUrl,
+			EndpointUrl:            endpointUrl,
+			CheckIntervalInSeconds: 30,
 		})
 		require.NoError(t, err)
 		assert.Equal(t, http.StatusCreated, resp01.StatusCode)
@@ -90,6 +99,7 @@ func TestMonitors(t *testing.T) {
 		assert.Equal(t, monitor00.ID, resp01.JSON200.Data.Id)
 		assert.Equal(t, monitor00.EndpointURL, resp01.JSON200.Data.EndpointUrl)
 		assert.False(t, monitor00.IsPaused)
+		assert.Equal(t, 30, monitor00.CheckIntervalInSeconds)
 	})
 
 	t.Run("pause_and_unpause_monitor", func(t *testing.T) {
@@ -132,7 +142,8 @@ func fixtureMonitors(t *testing.T, cli *client.ClientWithResponses, maxEndpoints
 		endpointUrls[i] = endpointUrl
 
 		resp01, err := cli.CreateMonitor(ctx, client.CreateMonitorRequest{
-			EndpointUrl: endpointUrl,
+			EndpointUrl:            endpointUrl,
+			CheckIntervalInSeconds: 30,
 		})
 		require.NoError(t, err)
 		require.Equal(t, http.StatusCreated, resp01.StatusCode)

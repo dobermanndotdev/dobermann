@@ -6,15 +6,15 @@ import (
 	"time"
 )
 
-type jobHandler func(ctx context.Context) error
+type JobHandler func(ctx context.Context) error
 
 type Job struct {
 	MaxErrors int
-	Handler   jobHandler
+	Handler   JobHandler
 	Interval  time.Duration
 }
 
-func NewJob(interval time.Duration, handler jobHandler) *Job {
+func NewJob(interval time.Duration, handler JobHandler) *Job {
 	return &Job{
 		Interval:  interval,
 		Handler:   handler,

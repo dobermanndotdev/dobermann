@@ -178,7 +178,7 @@ components:
         data:
           $ref: '#/components/schemas/Monitor'
     Monitor:
-      required: [id, endpoint_url, is_endpoint_up, is_paused, incidents, created_at]
+      required: [id, endpoint_url, is_endpoint_up, is_paused, incidents, check_interval_in_seconds, created_at]
       properties:
         id:
           type: string
@@ -198,6 +198,8 @@ components:
         last_checked_at:
           type: string
           format: date-time
+        check_interval_in_seconds:
+          type: integer
     Incident:
       required: [id, created_at]
       properties:
@@ -228,10 +230,13 @@ components:
         password:
           type: string
     CreateMonitorRequest:
-      required: [endpoint_url]
+      required: [endpoint_url, check_interval_in_seconds]
       properties:
         endpoint_url:
           type: string
+        check_interval_in_seconds:
+          type: integer
+          minimum: 30
     GenericResponse:
       type: object
       required:

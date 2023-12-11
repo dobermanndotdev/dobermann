@@ -88,6 +88,7 @@ func FixtureMonitor(t *testing.T, acc *account.Account) *monitor.Monitor {
 		nil,
 		subscribers,
 		time.Now().UTC(),
+		time.Second*30,
 		nil,
 	)
 	require.NoError(t, err)
