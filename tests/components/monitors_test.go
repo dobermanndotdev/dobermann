@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/brianvoe/gofakeit"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
@@ -26,7 +27,7 @@ func TestMonitors(t *testing.T) {
 		endpointUrl := endpointUrlGenerator(false)
 		resp01, err := cli.CreateMonitor(ctx, client.CreateMonitorRequest{
 			EndpointUrl:            endpointUrl,
-			CheckIntervalInSeconds: 30,
+			CheckIntervalInSeconds: 180,
 		})
 		require.NoError(t, err)
 		assert.Equal(t, http.StatusCreated, resp01.StatusCode)
@@ -89,8 +90,8 @@ func TestMonitors(t *testing.T) {
 	})
 
 	t.Run("get_monitor_by_id", func(t *testing.T) {
-		endpointUrl := fixtureMonitors(t, cli, 1)[0]
-		monitor00 := getMonitorByEndpointUrl(t, endpointUrl)
+		monitorPayload := fixtureMonitors(t, cli, 1)[0]
+		monitor00 := getMonitorByEndpointUrl(t, monitorPayload.EndpointUrl)
 
 		resp01, err := cli.GetMonitorByIDWithResponse(ctx, monitor00.ID)
 		require.NoError(t, err)
@@ -99,26 +100,26 @@ func TestMonitors(t *testing.T) {
 		assert.Equal(t, monitor00.ID, resp01.JSON200.Data.Id)
 		assert.Equal(t, monitor00.EndpointURL, resp01.JSON200.Data.EndpointUrl)
 		assert.False(t, monitor00.IsPaused)
-		assert.Equal(t, 30, monitor00.CheckIntervalInSeconds)
+		assert.Equal(t, monitorPayload.CheckIntervalInSeconds, monitor00.CheckIntervalInSeconds)
 	})
 
 	t.Run("pause_and_unpause_monitor", func(t *testing.T) {
-		endpointUrl := fixtureMonitors(t, cli, 1)[0]
-		monitor00 := getMonitorByEndpointUrl(t, endpointUrl)
+		monitorPayload := fixtureMonitors(t, cli, 1)[0]
+		monitor00 := getMonitorByEndpointUrl(t, monitorPayload.EndpointUrl)
 		require.False(t, monitor00.IsPaused)
 
 		resp01, err := cli.ToggleMonitorPause(ctx, monitor00.ID, client.ToggleMonitorPauseRequest{Pause: true})
 		require.NoError(t, err)
 		require.Equal(t, http.StatusNoContent, resp01.StatusCode)
 
-		monitor00 = getMonitorByEndpointUrl(t, endpointUrl)
+		monitor00 = getMonitorByEndpointUrl(t, monitorPayload.EndpointUrl)
 		assert.True(t, monitor00.IsPaused)
 
 		resp02, err := cli.ToggleMonitorPause(ctx, monitor00.ID, client.ToggleMonitorPauseRequest{Pause: false})
 		require.NoError(t, err)
 		require.Equal(t, http.StatusNoContent, resp02.StatusCode)
 
-		monitor00 = getMonitorByEndpointUrl(t, endpointUrl)
+		monitor00 = getMonitorByEndpointUrl(t, monitorPayload.EndpointUrl)
 		assert.False(t, monitor00.IsPaused)
 	})
 }
@@ -133,23 +134,24 @@ func endpointUrlGenerator(isUp bool) string {
 	return fmt.Sprintf("%s?id=%s&is_up=%s", tests.SimulatorEndpointUrl, domain.NewID().String(), isUpParam)
 }
 
-func fixtureMonitors(t *testing.T, cli *client.ClientWithResponses, maxEndpoints int) []string {
-	endpointUrls := make([]string, maxEndpoints)
+func fixtureMonitors(t *testing.T, cli *client.ClientWithResponses, maxEndpoints int) []client.CreateMonitorRequest {
+	endpoints := make([]client.CreateMonitorRequest, maxEndpoints)
+	checkIntervalInSeconds := []int{30, 60, 180, 300, 900, 1800, 3600}
 
 	var endpointUrl string
 	for i := 0; i < maxEndpoints; i++ {
 		endpointUrl = fmt.Sprintf("%s?id=%s", tests.SimulatorEndpointUrl, domain.NewID().String())
-		endpointUrls[i] = endpointUrl
-
-		resp01, err := cli.CreateMonitor(ctx, client.CreateMonitorRequest{
+		endpoints[i] = client.CreateMonitorRequest{
 			EndpointUrl:            endpointUrl,
-			CheckIntervalInSeconds: 30,
-		})
+			CheckIntervalInSeconds: checkIntervalInSeconds[gofakeit.Number(0, len(checkIntervalInSeconds)-1)],
+		}
+
+		resp01, err := cli.CreateMonitor(ctx, endpoints[i])
 		require.NoError(t, err)
 		require.Equal(t, http.StatusCreated, resp01.StatusCode)
 	}
 
-	return endpointUrls
+	return endpoints
 }
 
 func assertMonitorHasBeenChecked(t *testing.T, endpointUrl string) func() bool {
