@@ -62,7 +62,7 @@ func mapRequestToMonitor(body CreateMonitorRequest, user *authenticatedUser) (*m
 		nil,
 		[]*monitor.Subscriber{subscriber},
 		time.Now().UTC(),
-		time.Duration(body.CheckIntervalInSeconds),
+		time.Second*time.Duration(body.CheckIntervalInSeconds),
 		nil,
 	)
 }
