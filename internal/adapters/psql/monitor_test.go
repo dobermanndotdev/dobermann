@@ -67,5 +67,6 @@ func assertMonitor(t *testing.T, expected, found *monitor.Monitor) {
 	assert.Equal(t, expected.LastCheckedAt(), found.LastCheckedAt())
 	assert.Equal(t, expected.CreatedAt(), found.CreatedAt())
 	assert.Equal(t, expected.IsEndpointUp(), found.IsEndpointUp())
+	assert.Equal(t, expected.CheckInterval(), found.CheckInterval())
 	assert.NotEmpty(t, found.Subscribers(), "has subscribers")
 }

@@ -1,10 +1,14 @@
 package monitor
 
 import (
+	"errors"
+	"net/url"
 	"time"
 
 	"github.com/flowck/dobermann/backend/internal/domain"
 )
+
+const minIntervalInSeconds = 30
 
 type Monitor struct {
 	id            domain.ID
@@ -28,8 +32,25 @@ func NewMonitor(
 	incidents []*Incident,
 	subscribers []*Subscriber,
 	createdAt time.Time,
+	checkInterval time.Duration,
 	lastCheckedAt *time.Time,
 ) (*Monitor, error) {
+	if id.IsEmpty() {
+		return nil, errors.New("id cannot be invalid")
+	}
+
+	if _, err := url.Parse(endpointUrl); err != nil {
+		return nil, errors.New("endpointUrl cannot be invalid")
+	}
+
+	if accountID.IsEmpty() {
+		return nil, errors.New("accountID cannot be invalid")
+	}
+
+	if checkInterval.Seconds() < minIntervalInSeconds {
+		checkInterval = time.Second * 30
+	}
+
 	return &Monitor{
 		id:            id,
 		endpointUrl:   endpointUrl,
@@ -39,7 +60,7 @@ func NewMonitor(
 		incidents:     incidents,
 		subscribers:   subscribers,
 		createdAt:     createdAt,
-		checkInterval: time.Second * 30,
+		checkInterval: checkInterval,
 		lastCheckedAt: lastCheckedAt,
 	}, nil
 }

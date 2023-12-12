@@ -15,7 +15,8 @@ import (
 
 func TestAccessToProtectedEndpoints(t *testing.T) {
 	resp01, err := getClient("").CreateMonitor(ctx, client.CreateMonitorRequest{
-		EndpointUrl: tests.SimulatorEndpointUrl,
+		EndpointUrl:            tests.SimulatorEndpointUrl,
+		CheckIntervalInSeconds: 30,
 	})
 	require.NoError(t, err)
 	assert.Equal(t, http.StatusForbidden, resp01.StatusCode)
@@ -24,7 +25,8 @@ func TestAccessToProtectedEndpoints(t *testing.T) {
 	token := login(t, acc.Email, acc.Password)
 
 	resp02, err := getClient(token).CreateMonitor(ctx, client.CreateMonitorRequest{
-		EndpointUrl: fmt.Sprintf("%s#testAcccessToProtectedEndpoints", tests.SimulatorEndpointUrl),
+		EndpointUrl:            fmt.Sprintf("%s#testAcccessToProtectedEndpoints", tests.SimulatorEndpointUrl),
+		CheckIntervalInSeconds: 30,
 	})
 	require.NoError(t, err)
 	assert.NotEqual(t, http.StatusForbidden, resp02.StatusCode)

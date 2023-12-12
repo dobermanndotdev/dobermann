@@ -132,6 +132,7 @@ func mapModelToMonitor(model *models.Monitor) (*monitor.Monitor, error) {
 		incidents,
 		subscribers,
 		model.CreatedAt,
+		time.Duration(model.CheckIntervalInSeconds),
 		model.LastCheckedAt.Ptr(),
 	)
 }

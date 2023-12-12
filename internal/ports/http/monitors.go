@@ -2,14 +2,12 @@ package http
 
 import (
 	"net/http"
-	"time"
 
 	"github.com/labstack/echo/v4"
 
 	"github.com/flowck/dobermann/backend/internal/app/command"
 	"github.com/flowck/dobermann/backend/internal/app/query"
 	"github.com/flowck/dobermann/backend/internal/domain"
-	"github.com/flowck/dobermann/backend/internal/domain/monitor"
 )
 
 func (h handlers) CreateMonitor(c echo.Context) error {
@@ -23,22 +21,7 @@ func (h handlers) CreateMonitor(c echo.Context) error {
 		return NewHandlerError(err, "error-loading-the-payload")
 	}
 
-	subscriber, err := monitor.NewSubscriber(user.ID)
-	if err != nil {
-		return NewHandlerError(err, "unable-to-create-monitor-subscriber")
-	}
-
-	newMonitor, err := monitor.NewMonitor(
-		domain.NewID(),
-		body.EndpointUrl,
-		user.AccountID,
-		false,
-		false,
-		nil,
-		[]*monitor.Subscriber{subscriber},
-		time.Now().UTC(),
-		nil,
-	)
+	newMonitor, err := mapRequestToMonitor(body, user)
 	if err != nil {
 		return NewHandlerErrorWithStatus(err, "validation-error", http.StatusBadRequest)
 	}
