@@ -46,7 +46,7 @@ func NewMonitor(
 	if accountID.IsEmpty() {
 		return nil, errors.New("accountID cannot be invalid")
 	}
-	
+
 	if checkInterval < time.Second*minIntervalInSeconds {
 		return nil, errors.New("checkInterval cannot be less than 30 seconds")
 	}
