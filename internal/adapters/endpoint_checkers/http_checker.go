@@ -11,31 +11,41 @@ import (
 
 type HttpChecker struct {
 	client *http.Client
+	region monitor.Region
 }
 
-func NewHttpChecker() HttpChecker {
+func NewHttpChecker(region string) (HttpChecker, error) {
+	reg, err := monitor.NewRegion(region)
+	if err != nil {
+		return HttpChecker{}, err
+	}
+
 	return HttpChecker{
 		client: &http.Client{
 			Timeout: time.Second * 5,
 		},
-	}
+		region: reg,
+	}, nil
 }
 
-func (h HttpChecker) Check(ctx context.Context, endpointUrl string) error {
+func (h HttpChecker) Check(ctx context.Context, endpointUrl string) (*monitor.CheckResult, error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, endpointUrl, nil)
 	if err != nil {
-		return fmt.Errorf("unable to create request: %v", err)
+		return nil, fmt.Errorf("unable to create request: %v", err)
 	}
 
+	startedAt := time.Now()
 	resp, err := h.client.Do(req)
 	if err != nil {
-		return fmt.Errorf("unable to check endpoint %s: %v", endpointUrl, err)
+		return nil, fmt.Errorf("unable to check endpoint %s: %v", endpointUrl, err)
 	}
 	defer func() { _ = resp.Body.Close() }()
 
-	if resp.StatusCode >= http.StatusBadRequest {
-		return monitor.ErrEndpointIsDown
+	checkDuration := time.Since(startedAt)
+	checkResult, err := monitor.NewCheckResult(int16(resp.StatusCode), h.region, time.Now(), int16(checkDuration.Milliseconds()))
+	if err != nil {
+		return nil, fmt.Errorf("unable to create CheckResult: %v", err)
 	}
 
-	return nil
+	return checkResult, nil
 }

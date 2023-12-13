@@ -235,3 +235,13 @@ func mapIncidentActionToModel(action *monitor.IncidentAction, incidentID domain.
 
 	return model
 }
+
+func mapCheckResultToModel(monitorID domain.ID, checkResult *monitor.CheckResult) models.MonitorCheckResult {
+	return models.MonitorCheckResult{
+		MonitorID:        monitorID.String(),
+		StatusCode:       checkResult.StatusCode(),
+		Region:           checkResult.Region().String(),
+		CheckedAt:        checkResult.CheckedAt(),
+		ResponseTimeInMS: checkResult.ResponseTimeInMs(),
+	}
+}

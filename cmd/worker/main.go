@@ -11,6 +11,7 @@ import (
 	_ "github.com/lib/pq"
 
 	"github.com/flowck/dobermann/backend/internal/adapters/endpoint_checkers"
+	"github.com/flowck/dobermann/backend/internal/adapters/psql"
 	"github.com/flowck/dobermann/backend/internal/adapters/transaction"
 	"github.com/flowck/dobermann/backend/internal/app"
 	"github.com/flowck/dobermann/backend/internal/app/command"
@@ -28,7 +29,7 @@ type Config struct {
 	Port             int    `envconfig:"HTTP_PORT"`
 	DebugMode        string `envconfig:"DEBUG_MODE"`
 	DatabaseURL      string `envconfig:"DATABASE_URL"`
-	Region           string `envconfig:"FLY_REGION" required:"true"`
+	Region           string `envconfig:"WORKER_REGION" required:"true"`
 	IsProductionMode bool   `envconfig:"PRODUCTION_MODE"`
 }
 
@@ -67,12 +68,17 @@ func main() {
 		logger.Fatal(err)
 	}
 
-	httpChecker := endpoint_checkers.NewHttpChecker()
+	httpChecker, err := endpoint_checkers.NewHttpChecker(config.Region)
+	if err != nil {
+		logger.Fatal(err)
+	}
+
+	monitorRepository := psql.NewMonitorRepository(db)
 	txProvider := transaction.NewPsqlProvider(db, publisher)
 
 	application := &app.App{
 		Commands: app.Commands{
-			BulkCheckEndpoints: observability.NewCommandDecorator[command.BulkCheckEndpoints](command.NewBulkCheckEndpointsHandler(httpChecker, txProvider), logger),
+			BulkCheckEndpoints: observability.NewCommandDecorator[command.BulkCheckEndpoints](command.NewBulkCheckEndpointsHandler(httpChecker, txProvider, monitorRepository), logger),
 		},
 	}
 

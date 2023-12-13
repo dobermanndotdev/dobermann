@@ -20,6 +20,10 @@ func NewMonitorRepositoryMock() *MonitorRepositoryMock {
 	}
 }
 
+func (m MonitorRepositoryMock) SaveCheckResult(ctx context.Context, monitorID domain.ID, checkResult *monitor.CheckResult) error {
+	return nil
+}
+
 func (m MonitorRepositoryMock) Insert(ctx context.Context, monitor *monitor.Monitor) error {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()

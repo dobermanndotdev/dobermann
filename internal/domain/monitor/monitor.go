@@ -112,6 +112,18 @@ func (m *Monitor) SetEndpointCheckResult(isUp bool) {
 	m.lastCheckedAt = &lastChecked
 }
 
+func (m *Monitor) MarkEndpointAsUp() {
+	m.isEndpointUp = true
+	lastChecked := time.Now().UTC()
+	m.lastCheckedAt = &lastChecked
+}
+
+func (m *Monitor) MarkEndpointAsDown() {
+	m.isEndpointUp = false
+	lastChecked := time.Now().UTC()
+	m.lastCheckedAt = &lastChecked
+}
+
 func (m *Monitor) Subscribers() []*Subscriber {
 	return m.subscribers
 }
