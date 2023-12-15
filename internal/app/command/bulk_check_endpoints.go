@@ -30,9 +30,38 @@ func NewBulkCheckEndpointsHandler(
 }
 
 func (c BulkCheckEndpointsHandler) Execute(ctx context.Context, cmd BulkCheckEndpoints) error {
-	checkResults := make(map[domain.ID]*monitor.CheckResult)
+	checkResults := new(map[domain.ID]*monitor.CheckResult)
 
-	err := c.txProvider.Transact(ctx, func(adapters TransactableAdapters) error {
+	err := c.txProvider.Transact(ctx, c.checkMatchedEndpoints(ctx, checkResults))
+	if err != nil {
+		return err
+	}
+
+	err = c.saveCheckResults(ctx, checkResults)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (c BulkCheckEndpointsHandler) saveCheckResults(ctx context.Context, results *map[domain.ID]*monitor.CheckResult) error {
+	var err error
+	for checkedMonitorID, checkResult := range *results {
+		err = c.monitorRepository.SaveCheckResult(ctx, checkedMonitorID, checkResult)
+		if err != nil {
+			return fmt.Errorf("unable to save the check result of monitor with id %s: %v", checkedMonitorID, err)
+		}
+	}
+
+	return nil
+}
+
+func (c BulkCheckEndpointsHandler) checkMatchedEndpoints(
+	ctx context.Context,
+	results *map[domain.ID]*monitor.CheckResult,
+) func(adapters TransactableAdapters) error {
+	return func(adapters TransactableAdapters) error {
 		return adapters.MonitorRepository.UpdateForCheck(ctx, func(foundMonitors []*monitor.Monitor) error {
 			for _, foundMonitor := range foundMonitors {
 				if foundMonitor.IsPaused() {
@@ -44,48 +73,49 @@ func (c BulkCheckEndpointsHandler) Execute(ctx context.Context, cmd BulkCheckEnd
 					return fmt.Errorf("error checking endpoint %s due to: %v", foundMonitor.EndpointUrl(), err)
 				}
 
-				checkResults[foundMonitor.ID()] = checkResult
+				(*results)[foundMonitor.ID()] = checkResult
+
 				if checkResult.IsEndpointDown() {
-					foundMonitor.MarkEndpointAsUp()
-					err = adapters.EventPublisher.PublishEndpointCheckFailed(ctx, EndpointCheckFailedEvent{
-						MonitorID: foundMonitor.ID().String(),
-						At:        *foundMonitor.LastCheckedAt(),
-					})
-					if err != nil {
+					if err = c.handleEndpointDown(ctx, adapters, foundMonitor); err != nil {
 						return err
 					}
 
 					continue
 				}
 
-				foundMonitor.MarkEndpointAsUp()
-				if foundMonitor.HasIncidentUnresolved() {
-					err = adapters.EventPublisher.PublishEndpointCheckSucceeded(ctx, EndpointCheckSucceededEvent{
-						MonitorID: foundMonitor.ID().String(),
-						At:        *foundMonitor.LastCheckedAt(),
-					})
-					if err != nil {
-						return err
-					}
-				}
-
-				return nil
+				return c.handleEndpointIsUp(ctx, adapters, foundMonitor)
 			}
 
 			return nil
 		})
+	}
+}
+
+func (c BulkCheckEndpointsHandler) handleEndpointDown(
+	ctx context.Context,
+	adapters TransactableAdapters,
+	m *monitor.Monitor,
+) error {
+	m.MarkEndpointAsUp()
+
+	return adapters.EventPublisher.PublishEndpointCheckFailed(ctx, EndpointCheckFailedEvent{
+		MonitorID: m.ID().String(),
+		At:        *m.LastCheckedAt(),
 	})
+}
 
-	if err != nil {
-		return err
+func (c BulkCheckEndpointsHandler) handleEndpointIsUp(
+	ctx context.Context,
+	adapters TransactableAdapters,
+	m *monitor.Monitor,
+) error {
+	m.MarkEndpointAsUp()
+	if !m.HasIncidentUnresolved() {
+		return nil
 	}
 
-	for checkedMonitorID, checkResult := range checkResults {
-		err = c.monitorRepository.SaveCheckResult(ctx, checkedMonitorID, checkResult)
-		if err != nil {
-			return fmt.Errorf("unable to save the check result of monitor with id %s: %v", checkedMonitorID, err)
-		}
-	}
-
-	return nil
+	return adapters.EventPublisher.PublishEndpointCheckSucceeded(ctx, EndpointCheckSucceededEvent{
+		MonitorID: m.ID().String(),
+		At:        *m.LastCheckedAt(),
+	})
 }
