@@ -48,7 +48,7 @@ type Config struct {
 	HostnameForNotifications string `envconfig:"HOSTNAME_NOTIFICATION"`
 	SentFromEmailAddress     string `envconfig:"SENT_FROM_EMAIL_ADDRESS"`
 	IsProductionMode         bool   `envconfig:"PRODUCTION_MODE"`
-	Region                   string `envconfig:"FLY_REGION"`
+	Region                   string `envconfig:"WORKER_REGION"`
 }
 
 func (c Config) IsDebugMode() bool {
@@ -137,7 +137,11 @@ func main() {
 
 	logger.Info("Connected successfully to RabbitMQ")
 
-	httpChecker := endpoint_checkers.NewHttpChecker()
+	httpChecker, err := endpoint_checkers.NewHttpChecker(config.Region)
+	if err != nil {
+		logger.Fatal(err)
+	}
+
 	userRepository := psql.NewUserRepository(db)
 	eventPublisher := events.NewPublisher(publisher)
 	monitorRepository := psql.NewMonitorRepository(db)

@@ -21,6 +21,7 @@ type Monitor struct {
 	createdAt     time.Time
 	checkInterval time.Duration
 	lastCheckedAt *time.Time
+	checkResults  []CheckResult
 }
 
 func NewMonitor(
@@ -101,8 +102,24 @@ func (m *Monitor) CheckInterval() time.Duration {
 	return m.checkInterval
 }
 
+func (m *Monitor) CheckResults() []CheckResult {
+	return m.checkResults
+}
+
 func (m *Monitor) SetEndpointCheckResult(isUp bool) {
 	m.isEndpointUp = isUp
+	lastChecked := time.Now().UTC()
+	m.lastCheckedAt = &lastChecked
+}
+
+func (m *Monitor) MarkEndpointAsUp() {
+	m.isEndpointUp = true
+	lastChecked := time.Now().UTC()
+	m.lastCheckedAt = &lastChecked
+}
+
+func (m *Monitor) MarkEndpointAsDown() {
+	m.isEndpointUp = false
 	lastChecked := time.Now().UTC()
 	m.lastCheckedAt = &lastChecked
 }

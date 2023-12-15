@@ -173,3 +173,23 @@ func (p MonitorRepository) FindAll(
 		PageCount:  mapPaginationPerPageCount(count, params.Limit),
 	}, nil
 }
+
+func (p MonitorRepository) SaveCheckResult(ctx context.Context, monitorID domain.ID, checkResult *monitor.CheckResult) error {
+	exists, err := models.Monitors(models.MonitorWhere.ID.EQ(monitorID.String())).Exists(ctx, p.db)
+	if err != nil {
+		return fmt.Errorf("unable to check if monitor with id %s exists: %v", monitorID, err)
+	}
+
+	// monitor could have been deleted, therefore don't do anything
+	if !exists {
+		return nil
+	}
+
+	model := mapCheckResultToModel(monitorID, checkResult)
+	err = model.Insert(ctx, p.db, boil.Infer())
+	if err != nil {
+		return fmt.Errorf("unable to save check result of monitor with id %s: %v", monitorID, err)
+	}
+
+	return nil
+}

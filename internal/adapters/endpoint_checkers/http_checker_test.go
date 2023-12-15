@@ -7,9 +7,9 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/flowck/dobermann/backend/internal/adapters/endpoint_checkers"
-	"github.com/flowck/dobermann/backend/internal/domain/monitor"
 )
 
 func TestHttpChecker(t *testing.T) {
@@ -18,10 +18,12 @@ func TestHttpChecker(t *testing.T) {
 
 	simulatorEndpointUrl := os.Getenv("SIMULATOR_ENDPOINT_URL")
 
-	httpChecker := endpoint_checkers.NewHttpChecker()
-	err := httpChecker.Check(ctx, fmt.Sprintf("%s?is_up=true", simulatorEndpointUrl))
+	httpChecker, err := endpoint_checkers.NewHttpChecker("europe")
+	require.NoError(t, err)
+	_, err = httpChecker.Check(ctx, fmt.Sprintf("%s?is_up=true", simulatorEndpointUrl))
 	assert.NoError(t, err)
 
-	err = httpChecker.Check(ctx, fmt.Sprintf("%s?is_up=false", simulatorEndpointUrl))
-	assert.ErrorIs(t, err, monitor.ErrEndpointIsDown)
+	checkResult, err := httpChecker.Check(ctx, fmt.Sprintf("%s?is_up=false", simulatorEndpointUrl))
+	require.NoError(t, err)
+	assert.True(t, checkResult.IsEndpointDown())
 }
