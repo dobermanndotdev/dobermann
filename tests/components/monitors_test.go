@@ -130,6 +130,24 @@ func TestMonitors(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, http.StatusNoContent, resp.StatusCode)
 	})
+
+	t.Run("edit_monitor", func(t *testing.T) {
+		monitorPayload := fixtureMonitors(t, cli, 1)[0]
+		monitor00 := getMonitorByEndpointUrl(t, monitorPayload.EndpointUrl)
+
+		newDetails := client.EditMonitorRequest{
+			CheckIntervalInSeconds: 300,
+			EndpointUrl:            endpointUrlGenerator(true),
+		}
+
+		resp, err := cli.EditMonitor(ctx, monitor00.ID, newDetails)
+		require.NoError(t, err)
+		assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+		monitor00 = getMonitorByEndpointUrl(t, newDetails.EndpointUrl)
+		assert.Equal(t, newDetails.EndpointUrl, monitor00.EndpointURL)
+		assert.Equal(t, newDetails.CheckIntervalInSeconds, monitor00.CheckIntervalInSeconds)
+	})
 }
 
 func endpointUrlGenerator(isUp bool) string {

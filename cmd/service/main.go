@@ -166,6 +166,7 @@ func main() {
 			// Monitor
 			DeleteMonitor:                      observability.NewCommandDecorator[command.DeleteMonitor](command.NewDeleteMonitorHandler(txProvider), logger),
 			CreateIncident:                     observability.NewCommandDecorator[command.CreateIncident](command.NewCreateIncidentHandler(txProvider), logger),
+			EditMonitor:                        observability.NewCommandDecorator[command.EditMonitor](command.NewEditMonitorHandler(monitorRepository), logger),
 			ResolveIncident:                    observability.NewCommandDecorator[command.ResolveIncident](command.NewResolveIncidentHandler(txProvider), logger),
 			ToggleMonitorPause:                 observability.NewCommandDecorator[command.ToggleMonitorPause](command.NewToggleMonitorPauseHandler(monitorRepository), logger),
 			CreateMonitor:                      observability.NewCommandDecorator[command.CreateMonitor](command.NewCreateMonitorHandler(monitorRepository, eventPublisher), logger),

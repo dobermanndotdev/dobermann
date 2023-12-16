@@ -38,6 +38,12 @@ type CreateMonitorRequest struct {
 	EndpointUrl            string `json:"endpoint_url"`
 }
 
+// EditMonitorRequest defines model for EditMonitorRequest.
+type EditMonitorRequest struct {
+	CheckIntervalInSeconds int    `json:"check_interval_in_seconds"`
+	EndpointUrl            string `json:"endpoint_url"`
+}
+
 // ErrorResponse defines model for ErrorResponse.
 type ErrorResponse struct {
 	// Error Error custom error code such as 'email_in_use'
@@ -115,6 +121,9 @@ type CreateMonitorJSONRequestBody = CreateMonitorRequest
 
 // ToggleMonitorPauseJSONRequestBody defines body for ToggleMonitorPause for application/json ContentType.
 type ToggleMonitorPauseJSONRequestBody = ToggleMonitorPauseRequest
+
+// EditMonitorJSONRequestBody defines body for EditMonitor for application/json ContentType.
+type EditMonitorJSONRequestBody = EditMonitorRequest
 
 // RequestEditorFn  is the function signature for the RequestEditor callback function
 type RequestEditorFn func(ctx context.Context, req *http.Request) error
@@ -217,6 +226,11 @@ type ClientInterface interface {
 	ToggleMonitorPauseWithBody(ctx context.Context, monitorID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	ToggleMonitorPause(ctx context.Context, monitorID string, body ToggleMonitorPauseJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// EditMonitor request with any body
+	EditMonitorWithBody(ctx context.Context, monitorID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	EditMonitor(ctx context.Context, monitorID string, body EditMonitorJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 }
 
 func (c *Client) CreateAccountWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
@@ -341,6 +355,30 @@ func (c *Client) ToggleMonitorPauseWithBody(ctx context.Context, monitorID strin
 
 func (c *Client) ToggleMonitorPause(ctx context.Context, monitorID string, body ToggleMonitorPauseJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewToggleMonitorPauseRequest(c.Server, monitorID, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) EditMonitorWithBody(ctx context.Context, monitorID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewEditMonitorRequestWithBody(c.Server, monitorID, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) EditMonitor(ctx context.Context, monitorID string, body EditMonitorJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewEditMonitorRequest(c.Server, monitorID, body)
 	if err != nil {
 		return nil, err
 	}
@@ -649,6 +687,53 @@ func NewToggleMonitorPauseRequestWithBody(server string, monitorID string, conte
 	return req, nil
 }
 
+// NewEditMonitorRequest calls the generic EditMonitor builder with application/json body
+func NewEditMonitorRequest(server string, monitorID string, body EditMonitorJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewEditMonitorRequestWithBody(server, monitorID, "application/json", bodyReader)
+}
+
+// NewEditMonitorRequestWithBody generates requests for EditMonitor with any type of body
+func NewEditMonitorRequestWithBody(server string, monitorID string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "monitorID", runtime.ParamLocationPath, monitorID)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/monitors/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("PUT", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
 func (c *Client) applyEditors(ctx context.Context, req *http.Request, additionalEditors []RequestEditorFn) error {
 	for _, r := range c.RequestEditors {
 		if err := r(ctx, req); err != nil {
@@ -720,6 +805,11 @@ type ClientWithResponsesInterface interface {
 	ToggleMonitorPauseWithBodyWithResponse(ctx context.Context, monitorID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*ToggleMonitorPauseResponse, error)
 
 	ToggleMonitorPauseWithResponse(ctx context.Context, monitorID string, body ToggleMonitorPauseJSONRequestBody, reqEditors ...RequestEditorFn) (*ToggleMonitorPauseResponse, error)
+
+	// EditMonitor request with any body
+	EditMonitorWithBodyWithResponse(ctx context.Context, monitorID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*EditMonitorResponse, error)
+
+	EditMonitorWithResponse(ctx context.Context, monitorID string, body EditMonitorJSONRequestBody, reqEditors ...RequestEditorFn) (*EditMonitorResponse, error)
 }
 
 type CreateAccountResponse struct {
@@ -879,6 +969,28 @@ func (r ToggleMonitorPauseResponse) StatusCode() int {
 	return 0
 }
 
+type EditMonitorResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSONDefault  *ErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r EditMonitorResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r EditMonitorResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 // CreateAccountWithBodyWithResponse request with arbitrary body returning *CreateAccountResponse
 func (c *ClientWithResponses) CreateAccountWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateAccountResponse, error) {
 	rsp, err := c.CreateAccountWithBody(ctx, contentType, body, reqEditors...)
@@ -972,6 +1084,23 @@ func (c *ClientWithResponses) ToggleMonitorPauseWithResponse(ctx context.Context
 		return nil, err
 	}
 	return ParseToggleMonitorPauseResponse(rsp)
+}
+
+// EditMonitorWithBodyWithResponse request with arbitrary body returning *EditMonitorResponse
+func (c *ClientWithResponses) EditMonitorWithBodyWithResponse(ctx context.Context, monitorID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*EditMonitorResponse, error) {
+	rsp, err := c.EditMonitorWithBody(ctx, monitorID, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseEditMonitorResponse(rsp)
+}
+
+func (c *ClientWithResponses) EditMonitorWithResponse(ctx context.Context, monitorID string, body EditMonitorJSONRequestBody, reqEditors ...RequestEditorFn) (*EditMonitorResponse, error) {
+	rsp, err := c.EditMonitor(ctx, monitorID, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseEditMonitorResponse(rsp)
 }
 
 // ParseCreateAccountResponse parses an HTTP response from a CreateAccountWithResponse call
@@ -1177,30 +1306,57 @@ func ParseToggleMonitorPauseResponse(rsp *http.Response) (*ToggleMonitorPauseRes
 	return response, nil
 }
 
+// ParseEditMonitorResponse parses an HTTP response from a EditMonitorWithResponse call
+func ParseEditMonitorResponse(rsp *http.Response) (*EditMonitorResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &EditMonitorResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"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",
+	"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",
+	"NWcy0RZHH4YfhnQz3/wdAAD//5e70RT4FwAA",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

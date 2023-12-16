@@ -2,6 +2,7 @@ package monitor
 
 import (
 	"errors"
+	"fmt"
 	"net/url"
 	"time"
 
@@ -158,4 +159,16 @@ func (m *Monitor) Pause() {
 
 func (m *Monitor) UnPause() {
 	m.isPaused = false
+}
+
+func (m *Monitor) Edit(endpointUrl string, checkIntervalInSeconds time.Duration) error {
+	_, err := url.Parse(endpointUrl)
+	if err != nil {
+		return fmt.Errorf("endpointUrl cannot be invalid")
+	}
+
+	m.endpointUrl = endpointUrl
+	m.checkInterval = checkIntervalInSeconds
+
+	return nil
 }
