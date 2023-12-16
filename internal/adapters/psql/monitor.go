@@ -229,6 +229,11 @@ func (p MonitorRepository) Delete(ctx context.Context, ID domain.ID) error {
 		return fmt.Errorf("error deleting subscribers of monitor with id '%s': %v", ID, err)
 	}
 
+	_, err = queries.Raw("DELETE FROM monitor_check_results WHERE monitor_id = $1", ID.String()).ExecContext(ctx, p.db)
+	if err != nil {
+		return fmt.Errorf("error deleting check results of monitor with id '%s': %v", ID, err)
+	}
+
 	_, err = model.Delete(ctx, p.db)
 	if err != nil {
 		return fmt.Errorf("error deleting monitor with id '%s': %v", ID, err)
