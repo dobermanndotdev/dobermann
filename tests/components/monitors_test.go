@@ -122,6 +122,14 @@ func TestMonitors(t *testing.T) {
 		monitor00 = getMonitorByEndpointUrl(t, monitorPayload.EndpointUrl)
 		assert.False(t, monitor00.IsPaused)
 	})
+
+	t.Run("delete_monitor_by_id", func(t *testing.T) {
+		monitorPayload := fixtureMonitors(t, cli, 1)[0]
+		monitor00 := getMonitorByEndpointUrl(t, monitorPayload.EndpointUrl)
+		resp, err := cli.DeleteMonitor(ctx, monitor00.ID)
+		require.NoError(t, err)
+		assert.Equal(t, http.StatusNoContent, resp.StatusCode)
+	})
 }
 
 func endpointUrlGenerator(isUp bool) string {

@@ -7,6 +7,7 @@ import (
 	"fmt"
 
 	"github.com/volatiletech/sqlboiler/v4/boil"
+	"github.com/volatiletech/sqlboiler/v4/queries"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
 
 	"github.com/flowck/dobermann/backend/internal/adapters/models"
@@ -189,6 +190,48 @@ func (p MonitorRepository) SaveCheckResult(ctx context.Context, monitorID domain
 	err = model.Insert(ctx, p.db, boil.Infer())
 	if err != nil {
 		return fmt.Errorf("unable to save check result of monitor with id %s: %v", monitorID, err)
+	}
+
+	return nil
+}
+
+func (p MonitorRepository) Delete(ctx context.Context, ID domain.ID) error {
+	model, err := models.Monitors(
+		models.MonitorWhere.ID.EQ(ID.String()),
+	).One(ctx, p.db)
+	if errors.Is(err, sql.ErrNoRows) {
+		return monitor.ErrMonitorNotFound
+	}
+
+	if err != nil {
+		return fmt.Errorf("error querying the monitor by id %s: %v", ID, err)
+	}
+
+	incidents, err := models.Incidents(models.IncidentWhere.MonitorID.EQ(ID.String())).All(ctx, p.db)
+	if err != nil {
+		return fmt.Errorf("error querying incidents of monitor with id '%s': %v", ID, err)
+	}
+
+	for _, incident := range incidents {
+		_, err = models.IncidentActions(models.IncidentActionWhere.IncidentID.EQ(incident.ID)).DeleteAll(ctx, p.db)
+		if err != nil {
+			return fmt.Errorf("error deleting monitor incident actions of monitor with id '%s': %v", ID, err)
+		}
+	}
+
+	_, err = models.Incidents(models.IncidentWhere.MonitorID.EQ(ID.String())).All(ctx, p.db)
+	if err != nil {
+		return fmt.Errorf("error deleting monitor incident of monitor with id '%s': %v", ID, err)
+	}
+
+	_, err = queries.Raw("DELETE FROM subscribers WHERE monitor_id = $1", ID.String()).ExecContext(ctx, p.db)
+	if err != nil {
+		return fmt.Errorf("error deleting subscribers of monitor with id '%s': %v", ID, err)
+	}
+
+	_, err = model.Delete(ctx, p.db)
+	if err != nil {
+		return fmt.Errorf("error deleting monitor with id '%s': %v", ID, err)
 	}
 
 	return nil

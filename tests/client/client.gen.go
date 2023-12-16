@@ -207,6 +207,9 @@ type ClientInterface interface {
 
 	CreateMonitor(ctx context.Context, body CreateMonitorJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// DeleteMonitor request
+	DeleteMonitor(ctx context.Context, monitorID string, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// GetMonitorByID request
 	GetMonitorByID(ctx context.Context, monitorID string, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -290,6 +293,18 @@ func (c *Client) CreateMonitorWithBody(ctx context.Context, contentType string, 
 
 func (c *Client) CreateMonitor(ctx context.Context, body CreateMonitorJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewCreateMonitorRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) DeleteMonitor(ctx context.Context, monitorID string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeleteMonitorRequest(c.Server, monitorID)
 	if err != nil {
 		return nil, err
 	}
@@ -519,6 +534,40 @@ func NewCreateMonitorRequestWithBody(server string, contentType string, body io.
 	return req, nil
 }
 
+// NewDeleteMonitorRequest generates requests for DeleteMonitor
+func NewDeleteMonitorRequest(server string, monitorID string) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "monitorID", runtime.ParamLocationPath, monitorID)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/monitors/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("DELETE", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 // NewGetMonitorByIDRequest generates requests for GetMonitorByID
 func NewGetMonitorByIDRequest(server string, monitorID string) (*http.Request, error) {
 	var err error
@@ -661,6 +710,9 @@ type ClientWithResponsesInterface interface {
 
 	CreateMonitorWithResponse(ctx context.Context, body CreateMonitorJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateMonitorResponse, error)
 
+	// DeleteMonitor request
+	DeleteMonitorWithResponse(ctx context.Context, monitorID string, reqEditors ...RequestEditorFn) (*DeleteMonitorResponse, error)
+
 	// GetMonitorByID request
 	GetMonitorByIDWithResponse(ctx context.Context, monitorID string, reqEditors ...RequestEditorFn) (*GetMonitorByIDResponse, error)
 
@@ -754,6 +806,28 @@ func (r CreateMonitorResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r CreateMonitorResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type DeleteMonitorResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSONDefault  *ErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r DeleteMonitorResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r DeleteMonitorResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -863,6 +937,15 @@ func (c *ClientWithResponses) CreateMonitorWithResponse(ctx context.Context, bod
 		return nil, err
 	}
 	return ParseCreateMonitorResponse(rsp)
+}
+
+// DeleteMonitorWithResponse request returning *DeleteMonitorResponse
+func (c *ClientWithResponses) DeleteMonitorWithResponse(ctx context.Context, monitorID string, reqEditors ...RequestEditorFn) (*DeleteMonitorResponse, error) {
+	rsp, err := c.DeleteMonitor(ctx, monitorID, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDeleteMonitorResponse(rsp)
 }
 
 // GetMonitorByIDWithResponse request returning *GetMonitorByIDResponse
@@ -1009,6 +1092,32 @@ func ParseCreateMonitorResponse(rsp *http.Response) (*CreateMonitorResponse, err
 	return response, nil
 }
 
+// ParseDeleteMonitorResponse parses an HTTP response from a DeleteMonitorWithResponse call
+func ParseDeleteMonitorResponse(rsp *http.Response) (*DeleteMonitorResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &DeleteMonitorResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
 // ParseGetMonitorByIDResponse parses an HTTP response from a GetMonitorByIDWithResponse call
 func ParseGetMonitorByIDResponse(rsp *http.Response) (*GetMonitorByIDResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -1071,27 +1180,27 @@ func ParseToggleMonitorPauseResponse(rsp *http.Response) (*ToggleMonitorPauseRes
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"H4sIAAAAAAAC/9xYXW/bNhT9KwQ3oC+a5a7FUPhpTuwF3pI2SDLsITAMmrqW2IikQl4lNQL/94GUZEmW",
-	"7Dhb0gF7M0Py3M9zeZQnyrXMtAKFlo6eqAGbaWXBLyawYnmKU2O0cWuuFYJC95NlWSo4Q6FV+NVq5f5m",
-	"eQKSuV8/GljREf0hrMHDYteGHu2qNEM3m01AI7DciMyB0REdkxgUGMEJuKPE1GeD0ob37tQAQxhzrnOF",
-	"V3Cfg/WuZUZnYFAUMbBif6GYBLfGdQZ0RC0aoWK6CShIJtLenYxZ+6hN1LO5CaiB+1wYiOjotm2kgmwA",
-	"zDdB6e6FVgJd/Hvc5Qnwu4VQCOaBpQuhFha4VpHflEIJmUs6+jAMKo/c0RiMj0RFmRYKF7lJn/e5dTo4",
-	"YNg53y5ax2uoOqRdSX+L8NyilmUxuY6A2JwnhFnyzifK2cotvKNBtwQSrGUxdKHHpLEmbKlzJJhAYaWL",
-	"tBt7eaqCn28v6OVX4OhMnwGO07Ss18l6Fl2ydapZ1I0+Yvhs15c4HU/83fmuOfusLYEg7dFGt+ExY9i6",
-	"6O24SYdGF7mdhW/nPftgFvtvo0aW1tdX2kiGxZFfPtJu1+6kwwM3bLTcaaMHde5miouoHEw7dPKkixas",
-	"7U3EEH5C4cna6TlxBOFF5ChTgzsvznU8U3sLh/oO1PPAxbEt3N458RpTq3dMVT3zssnUbYR/kvlnBtie",
-	"0gRUlPW3RzNj2zE91BB2UTuSNQwutU6BqfJMxnILUf92yiwufMJelIG+JtsZ0zvONT1p5uHQPO807o2O",
-	"47R6mS4d2N6286b6Yu7w2J2b+xcbeG4Erq9d6guUE2AGzDjHxK2WfvVblZ/f/7qh5TvvLfjdOlcJYlao",
-	"BviGYBRLJ5rb7gPhztlRGMYCk3w54FqGq1Q/8rsw0kswkikVXk3Hk4vpQLrc+ZY75lbRcCtdCSLGsUFI",
-	"uhJGCqUHPGEqZkr8GrsNh0Q7SmdSYb6zZMn4HSjnSSo4lK9sIVroxezmJR6G57PT6edrH5jrbzDSflld",
-	"g3kQHI4MMqAoMHWna9jaxQcwtghhOBgO3jsrOgPFMkFH9MNgOPjgxwomvjAhyzEJS41UtJEumsu1lteQ",
-	"s4iO2oKOFg0FFk90tH419dkrGjft9kWTg/9DQwr/PHzf7bHTq+n4ZjopCuul8j7zW6ywpak9P3IpmVlv",
-	"47eEEQWPhG3zgCy2jlSeMJ5TRUZTHQu1P53nfvtt0th6nI5K3/B1bVfvbM/3w/Xs7PN0Qv68fK26nOuY",
-	"+Ez2FEKWgs0ZiKGnCm1d52lhmAQEd+f2iboK0vsczJoGFd9L6VOnYyv83/cpqH6QVEiBbRT2rUQZDoPD",
-	"mPM3rF+/0u0p5Jc//mUFy5fH57n55tzOXYB1gc8ACUtTUhWTCEUYeRSYkIzFQvkoG/XfVtO9nodmWSWm",
-	"3nKW7XxR/rez7NiMF66Xk05us9ST4CbJwqfy12yyOUS4+qNtsodw7m2qqbJFpbupa9JnV6x9N440Pz7/",
-	"ZzTpSs+3Ltjr03C/fD6Kix+7XPxuFfXeEm1Irrxi9/9COUxHD28equLUonQUhqnmLE20xdGn4ach3cw3",
-	"fwcAAP//McZR3F8UAAA=",
+	"H4sIAAAAAAAC/9xYUW/bNhD+KwQ3oC+a5a7FUPhpbuwF3pI2SDLsITAMmjpLbChSIU9JjcD/fSAlWZIl",
+	"O86WZMDeLJH87u777o4nP1Ku00wrUGjp6JEasJlWFvzDBFYslzg1Rhv3zLVCUOh+siyTgjMUWoXfrFbu",
+	"neUJpMz9+tHAio7oD2ENHharNvRol6UZutlsAhqB5UZkDoyO6JjEoMAITsBtJabeG5Q2vHcnBhjCmHOd",
+	"K7yEuxysdy0zOgODooiBFesLxVJwz7jOgI6oRSNUTDcBhZQJ2buSMWsftIl6FjcBNXCXCwMRHd20jVSQ",
+	"DYD5JijdPddKoIt/j7s8AX67EArB3DO5EGphgWsV+cVUKJHmKR19GAaVR25rDMZHoqJMC4WL3MinfW7t",
+	"Dg4Yds63Ret4DVWGtJX0pwjPLeq0FJPrCIjNeUKYJe88Uc5WbuEdDboSpGAti6ELPSaNZ8KWOkeCCRRW",
+	"uki7sZe7Kvj59oBefgOOzvQp4FjKUq/P61l0wdZSs6gbfcTwyawvcTqe+LPzXXP2SVsCIbVHG92Gx4xh",
+	"6yK342Y5NLLIrSx8Ou9ZB7PYfxo1MlkfX2mTMiy2/PKRdrN2hw4P3LDRcqeNHtTczRQXUdmYdsrJF120",
+	"YG1vIobwEwpfrJ2cE0cUvIhcydTgzoszHc/UXuFQ34J6GrjYtoXb2ydeomv1tqkqZ57XmbqJ8E+Yf6KB",
+	"7ZEmoKLU3x5dGduM6SkNYRe1I1nD4FJrCUyVezKWW4j6lyWzuPCEPYuBviTbadM7zjU9afJwqJ93Evda",
+	"x7GsbqYLB7Y37bypvpg7dez2zf2NDTw3AtdXjvoC5TMwA2acY+Kelv7pt4qf3/+6puU97y341ZqrBDEr",
+	"pgb4jmAUkxPNbfeCcPvsKAxjgUm+HHCdhiupH/htGOklmJQpFV5Ox5Pz6SB13PmUO+ZUkXArXQ1EjGOj",
+	"IOlKmFQoPeAJUzFT4tfYLTgk2pl0JhXmO0uWjN+Ccp5IwaG8ZYuhhZ7Prp/jYXg2O5l+ufKBufwGk9qv",
+	"qysw94LDkUEGFAVKt7uGrV28B2OLEIaD4eC9s6IzUCwTdEQ/DIaDD76tYOKFCVmOSVjOSEUa6SK5XGr5",
+	"GXIW0VF7oKNFQoHFzzpav9j02Ts0btrpiyYH/6IxCv88fN/NsZPL6fh6OimE9aPyPvNbrLA1U/v6yNOU",
+	"mfU2fksYUfBA2JYHZLF1ReULxtdUwajUsVD76Tzzy69DY+tyOoq+4cvaru7Znu+Hq9npl+mE/HnxUrqc",
+	"6Zh4JnuESMuBzRmIoUeF9lzny8KwFBDcmZtH6hSkdzmYNQ2qei9Hn5qO7eD/vm+C6geRIhXYRmHfS5Th",
+	"MDiMOX9F/fon3R4hv/7xLxUsbx7Pc/POuZm7AGuBTwEJk5JUYhKhCCMPAhOSsVgoH2VD/62a7vY81Muq",
+	"Yeo1e9nOF+V/28uOZbxwvex06ZalHoKbRRY+lr9mk00RgQSELvkT/74mv6/k3O1UF8sWl+6S1yyg3XGt",
+	"WyUfu8ROpmfTtyO2CP0wpcHeTlV/7U7elLZXai7Nr/b/WX/pzuyvLdjL96/93x1HNbGeWnszRb23RBuS",
+	"K/+p4/97OtzHPLy5r8Spp/lRGErNmUy0xdGn4ach3cw3fwcAAP//zWOyyZgVAAA=",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file
