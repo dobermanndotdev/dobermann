@@ -36,6 +36,12 @@ type CreateMonitorRequest struct {
 	EndpointUrl            string `json:"endpoint_url"`
 }
 
+// EditMonitorRequest defines model for EditMonitorRequest.
+type EditMonitorRequest struct {
+	CheckIntervalInSeconds int    `json:"check_interval_in_seconds"`
+	EndpointUrl            string `json:"endpoint_url"`
+}
+
 // ErrorResponse defines model for ErrorResponse.
 type ErrorResponse struct {
 	// Error Error custom error code such as 'email_in_use'
@@ -114,6 +120,9 @@ type CreateMonitorJSONRequestBody = CreateMonitorRequest
 // ToggleMonitorPauseJSONRequestBody defines body for ToggleMonitorPause for application/json ContentType.
 type ToggleMonitorPauseJSONRequestBody = ToggleMonitorPauseRequest
 
+// EditMonitorJSONRequestBody defines body for EditMonitor for application/json ContentType.
+type EditMonitorJSONRequestBody = EditMonitorRequest
+
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
 	// Creates a new account
@@ -137,6 +146,9 @@ type ServerInterface interface {
 	// Pause or unpause the monitor
 	// (POST /monitors/{monitorID})
 	ToggleMonitorPause(ctx echo.Context, monitorID string) error
+	// Edit a monitor by id
+	// (PUT /monitors/{monitorID})
+	EditMonitor(ctx echo.Context, monitorID string) error
 }
 
 // ServerInterfaceWrapper converts echo contexts to parameters.
@@ -254,6 +266,24 @@ func (w *ServerInterfaceWrapper) ToggleMonitorPause(ctx echo.Context) error {
 	return err
 }
 
+// EditMonitor converts echo context to params.
+func (w *ServerInterfaceWrapper) EditMonitor(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "monitorID" -------------
+	var monitorID string
+
+	err = runtime.BindStyledParameterWithLocation("simple", false, "monitorID", runtime.ParamLocationPath, ctx.Param("monitorID"), &monitorID)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter monitorID: %s", err))
+	}
+
+	ctx.Set(BearerAuthScopes, []string{""})
+
+	// Invoke the callback with all the unmarshalled arguments
+	err = w.Handler.EditMonitor(ctx, monitorID)
+	return err
+}
+
 // This is a simple interface which specifies echo.Route addition functions which
 // are present on both echo.Echo and echo.Group, since we want to allow using
 // either of them for path registration
@@ -289,33 +319,35 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 	router.DELETE(baseURL+"/monitors/:monitorID", wrapper.DeleteMonitor)
 	router.GET(baseURL+"/monitors/:monitorID", wrapper.GetMonitorByID)
 	router.POST(baseURL+"/monitors/:monitorID", wrapper.ToggleMonitorPause)
+	router.PUT(baseURL+"/monitors/:monitorID", wrapper.EditMonitor)
 
 }
 
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"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",
+	"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",
+	"RFscfRh+GNLNfPNnAAAA//+cKMUn+BcAAA==",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

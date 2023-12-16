@@ -23,6 +23,7 @@ type CommandHandlerWithResult[C, R any] interface {
 type Commands struct {
 	// Monitor
 	CreateMonitor                      CommandHandler[command.CreateMonitor]
+	EditMonitor                        CommandHandler[command.EditMonitor]
 	CheckEndpoint                      CommandHandler[command.CheckEndpoint]
 	DeleteMonitor                      CommandHandler[command.DeleteMonitor]
 	CreateIncident                     CommandHandler[command.CreateIncident]

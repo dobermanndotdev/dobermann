@@ -111,6 +111,30 @@ paths:
           description: OK
         default:
           $ref: '#/components/responses/DefaultError'
+    put:
+      tags:
+        - Monitors
+      operationId: editMonitor
+      summary: Edit a monitor by id
+      parameters:
+        - name: monitorID
+          in: path
+          required: true
+          schema:
+            type: string
+      security:
+        - BearerAuth: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EditMonitorRequest'
+      responses:
+        '204':
+          description: OK
+        default:
+          $ref: '#/components/responses/DefaultError'
     delete:
       tags:
         - Monitors
@@ -169,6 +193,13 @@ paths:
           $ref: '#/components/responses/DefaultError'
 components:
   schemas:
+    EditMonitorRequest:
+      required: [endpoint_url, check_interval_in_seconds]
+      properties:
+        endpoint_url:
+          type: string
+        check_interval_in_seconds:
+          type: integer
     ToggleMonitorPauseRequest:
       required: [pause]
       properties:
