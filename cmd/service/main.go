@@ -164,13 +164,14 @@ func main() {
 			LogIn:         observability.NewCommandWithResultDecorator[command.LogIn, string](command.NewLoginHandler(userRepository, tokenSigner), logger),
 
 			// Monitor
+			DeleteMonitor:                      observability.NewCommandDecorator[command.DeleteMonitor](command.NewDeleteMonitorHandler(txProvider), logger),
 			CreateIncident:                     observability.NewCommandDecorator[command.CreateIncident](command.NewCreateIncidentHandler(txProvider), logger),
 			ResolveIncident:                    observability.NewCommandDecorator[command.ResolveIncident](command.NewResolveIncidentHandler(txProvider), logger),
 			ToggleMonitorPause:                 observability.NewCommandDecorator[command.ToggleMonitorPause](command.NewToggleMonitorPauseHandler(monitorRepository), logger),
 			CreateMonitor:                      observability.NewCommandDecorator[command.CreateMonitor](command.NewCreateMonitorHandler(monitorRepository, eventPublisher), logger),
 			CheckEndpoint:                      observability.NewCommandDecorator[command.CheckEndpoint](command.NewCheckEndpointHandler(httpChecker, monitorRepository, eventPublisher), logger),
-			NotifyOnIncidentResolved:           observability.NewCommandDecorator[command.NotifyOnIncidentResolved](command.NewNotifyOnIncidentResolvedHandler(monitorRepository, userRepository, resendService), logger),
 			NotifyMonitorSubscribersOnIncident: observability.NewCommandDecorator[command.NotifyMonitorSubscribersOnIncident](command.NewNotifyMonitorSubscribersOnIncidentHandler(txProvider, resendService), logger),
+			NotifyOnIncidentResolved:           observability.NewCommandDecorator[command.NotifyOnIncidentResolved](command.NewNotifyOnIncidentResolvedHandler(monitorRepository, userRepository, resendService), logger),
 		},
 		Queries: app.Queries{
 			AllMonitors: observability.NewQueryDecorator[query.AllMonitors, query.PaginatedResult[*monitor.Monitor]](query.NewAllMonitorsHandler(monitorRepository), logger),

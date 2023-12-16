@@ -58,6 +58,17 @@ func TestMonitorRepository_Lifecycle(t *testing.T) {
 	})
 }
 
+func TestMonitorRepository_Delete(t *testing.T) {
+	repo := psql.NewMonitorRepository(db)
+	account00 := tests.FixtureAndInsertAccount(t, db, true)
+	monitor00 := tests.FixtureMonitor(t, account00)
+	require.NoError(t, repo.Insert(ctx, monitor00))
+	assert.NoError(t, repo.Delete(ctx, monitor00.ID()))
+
+	_, err := repo.FindByID(ctx, monitor00.ID())
+	assert.ErrorIs(t, err, monitor.ErrMonitorNotFound)
+}
+
 func assertMonitor(t *testing.T, expected, found *monitor.Monitor) {
 	t.Helper()
 

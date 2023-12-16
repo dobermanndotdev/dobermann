@@ -175,3 +175,8 @@ func (m MonitorRepositoryMock) UpdateForCheck(ctx context.Context, fn func(found
 
 	return nil
 }
+
+func (m MonitorRepositoryMock) Delete(ctx context.Context, ID domain.ID) error {
+	delete(m.monitors, ID)
+	return nil
+}

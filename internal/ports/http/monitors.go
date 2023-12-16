@@ -1,6 +1,7 @@
 package http
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
@@ -8,6 +9,7 @@ import (
 	"github.com/flowck/dobermann/backend/internal/app/command"
 	"github.com/flowck/dobermann/backend/internal/app/query"
 	"github.com/flowck/dobermann/backend/internal/domain"
+	"github.com/flowck/dobermann/backend/internal/domain/monitor"
 )
 
 func (h handlers) CreateMonitor(c echo.Context) error {
@@ -102,6 +104,31 @@ func (h handlers) ToggleMonitorPause(c echo.Context, monitorID string) error {
 		MonitorID: mID,
 		Pause:     body.Pause,
 	})
+	if err != nil {
+		return NewHandlerError(err, "unable-to-get-monitor")
+	}
+
+	return c.NoContent(http.StatusNoContent)
+}
+
+func (h handlers) DeleteMonitor(c echo.Context, monitorID string) error {
+	_, err := retrieveUserFromCtx(c)
+	if err != nil {
+		return NewUnableToRetrieveUserFromCtx(err)
+	}
+
+	mID, err := domain.NewIdFromString(monitorID)
+	if err != nil {
+		return NewHandlerErrorWithStatus(err, "invalid-monitor-id", http.StatusBadRequest)
+	}
+
+	err = h.application.Commands.DeleteMonitor.Execute(c.Request().Context(), command.DeleteMonitor{
+		ID: mID,
+	})
+	if errors.Is(err, monitor.ErrMonitorNotFound) {
+		return NewHandlerErrorWithStatus(err, "monitor-not-found", http.StatusNotFound)
+	}
+
 	if err != nil {
 		return NewHandlerError(err, "unable-to-get-monitor")
 	}

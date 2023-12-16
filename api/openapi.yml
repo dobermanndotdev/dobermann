@@ -111,6 +111,24 @@ paths:
           description: OK
         default:
           $ref: '#/components/responses/DefaultError'
+    delete:
+      tags:
+        - Monitors
+      operationId: deleteMonitor
+      summary: Delete monitor
+      parameters:
+        - name: monitorID
+          in: path
+          required: true
+          schema:
+            type: string
+      security:
+        - BearerAuth: [ ]
+      responses:
+        '204':
+          description: DELETED
+        default:
+          $ref: '#/components/responses/DefaultError'
   /auth/accounts:
     post:
       tags:

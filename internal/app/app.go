@@ -24,6 +24,7 @@ type Commands struct {
 	// Monitor
 	CreateMonitor                      CommandHandler[command.CreateMonitor]
 	CheckEndpoint                      CommandHandler[command.CheckEndpoint]
+	DeleteMonitor                      CommandHandler[command.DeleteMonitor]
 	CreateIncident                     CommandHandler[command.CreateIncident]
 	ResolveIncident                    CommandHandler[command.ResolveIncident]
 	ToggleMonitorPause                 CommandHandler[command.ToggleMonitorPause]
