@@ -2,7 +2,6 @@ package http
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 	"time"
 
@@ -102,7 +101,8 @@ func (h handlers) ToggleMonitorPause(c echo.Context, monitorID string) error {
 		return NewHandlerErrorWithStatus(err, "invalid-monitor-id", http.StatusBadRequest)
 	}
 
-	err = h.application.Commands.ToggleMonitorPause.Execute(c.Request().Context(), command.ToggleMonitorPause{
+	ctx := c.Request().Context()
+	err = h.application.Commands.ToggleMonitorPause.Execute(ctx, command.ToggleMonitorPause{
 		MonitorID: mID,
 		Pause:     body.Pause,
 	})
@@ -124,7 +124,8 @@ func (h handlers) DeleteMonitor(c echo.Context, monitorID string) error {
 		return NewHandlerErrorWithStatus(err, "invalid-monitor-id", http.StatusBadRequest)
 	}
 
-	err = h.application.Commands.DeleteMonitor.Execute(c.Request().Context(), command.DeleteMonitor{
+	ctx := c.Request().Context()
+	err = h.application.Commands.DeleteMonitor.Execute(ctx, command.DeleteMonitor{
 		ID: mID,
 	})
 	if errors.Is(err, monitor.ErrMonitorNotFound) {
@@ -170,7 +171,11 @@ func (h handlers) EditMonitor(c echo.Context, monitorID string) error {
 	return c.NoContent(http.StatusOK)
 }
 
-func (h handlers) GetMonitorResponseTimeStats(c echo.Context, monitorID string) error {
+func (h handlers) GetMonitorResponseTimeStats(
+	c echo.Context,
+	monitorID string,
+	params GetMonitorResponseTimeStatsParams,
+) error {
 	_, err := retrieveUserFromCtx(c)
 	if err != nil {
 		return NewUnableToRetrieveUserFromCtx(err)
@@ -181,7 +186,16 @@ func (h handlers) GetMonitorResponseTimeStats(c echo.Context, monitorID string) 
 		return NewHandlerErrorWithStatus(err, "invalid-monitor-id", http.StatusBadRequest)
 	}
 
-	fmt.Println(mID)
+	rangeInDays := 1
+	if params.RangeInDays != nil {
+		rangeInDays = *params.RangeInDays
+	}
 
-	return c.JSON(http.StatusOK, nil)
+	ctx := c.Request().Context()
+	result, err := h.application.Queries.MonitorResponseTimeStats.Execute(ctx, query.MonitorResponseTimeStats{
+		ID:          mID,
+		RangeInDays: rangeInDays,
+	})
+
+	return c.JSON(http.StatusOK, mapMonitorResponseTimeStatsToResponse(result))
 }

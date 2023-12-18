@@ -67,6 +67,11 @@ type GetAllMonitorsPayload struct {
 	TotalCount int64     `json:"total_count"`
 }
 
+// GetMonitorResponseTimeStatsPayload defines model for GetMonitorResponseTimeStatsPayload.
+type GetMonitorResponseTimeStatsPayload struct {
+	Data ResponseTimeStats `json:"data"`
+}
+
 // Incident defines model for Incident.
 type Incident struct {
 	CreatedAt time.Time `json:"created_at"`
@@ -110,7 +115,7 @@ type ResponseTimePerRegion struct {
 
 // ResponseTimeStats defines model for ResponseTimeStats.
 type ResponseTimeStats struct {
-	ResponseTimePerRegion *[]ResponseTimePerRegion `json:"response_time_per_region,omitempty"`
+	ResponseTimePerRegion []ResponseTimePerRegion `json:"response_time_per_region"`
 }
 
 // ToggleMonitorPauseRequest defines model for ToggleMonitorPauseRequest.
@@ -125,6 +130,11 @@ type DefaultError = ErrorResponse
 type GetAllMonitorsParams struct {
 	Page  *int `form:"page,omitempty" json:"page,omitempty"`
 	Limit *int `form:"limit,omitempty" json:"limit,omitempty"`
+}
+
+// GetMonitorResponseTimeStatsParams defines parameters for GetMonitorResponseTimeStats.
+type GetMonitorResponseTimeStatsParams struct {
+	RangeInDays *int `form:"range_in_days,omitempty" json:"range_in_days,omitempty"`
 }
 
 // CreateAccountJSONRequestBody defines body for CreateAccount for application/json ContentType.
@@ -250,7 +260,7 @@ type ClientInterface interface {
 	EditMonitor(ctx context.Context, monitorID string, body EditMonitorJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetMonitorResponseTimeStats request
-	GetMonitorResponseTimeStats(ctx context.Context, monitorID string, reqEditors ...RequestEditorFn) (*http.Response, error)
+	GetMonitorResponseTimeStats(ctx context.Context, monitorID string, params *GetMonitorResponseTimeStatsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 }
 
 func (c *Client) CreateAccountWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
@@ -409,8 +419,8 @@ func (c *Client) EditMonitor(ctx context.Context, monitorID string, body EditMon
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetMonitorResponseTimeStats(ctx context.Context, monitorID string, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetMonitorResponseTimeStatsRequest(c.Server, monitorID)
+func (c *Client) GetMonitorResponseTimeStats(ctx context.Context, monitorID string, params *GetMonitorResponseTimeStatsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetMonitorResponseTimeStatsRequest(c.Server, monitorID, params)
 	if err != nil {
 		return nil, err
 	}
@@ -767,7 +777,7 @@ func NewEditMonitorRequestWithBody(server string, monitorID string, contentType 
 }
 
 // NewGetMonitorResponseTimeStatsRequest generates requests for GetMonitorResponseTimeStats
-func NewGetMonitorResponseTimeStatsRequest(server string, monitorID string) (*http.Request, error) {
+func NewGetMonitorResponseTimeStatsRequest(server string, monitorID string, params *GetMonitorResponseTimeStatsParams) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -791,6 +801,26 @@ func NewGetMonitorResponseTimeStatsRequest(server string, monitorID string) (*ht
 	if err != nil {
 		return nil, err
 	}
+
+	queryValues := queryURL.Query()
+
+	if params.RangeInDays != nil {
+
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "range_in_days", runtime.ParamLocationQuery, *params.RangeInDays); err != nil {
+			return nil, err
+		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+			return nil, err
+		} else {
+			for k, v := range parsed {
+				for _, v2 := range v {
+					queryValues.Add(k, v2)
+				}
+			}
+		}
+
+	}
+
+	queryURL.RawQuery = queryValues.Encode()
 
 	req, err := http.NewRequest("GET", queryURL.String(), nil)
 	if err != nil {
@@ -878,7 +908,7 @@ type ClientWithResponsesInterface interface {
 	EditMonitorWithResponse(ctx context.Context, monitorID string, body EditMonitorJSONRequestBody, reqEditors ...RequestEditorFn) (*EditMonitorResponse, error)
 
 	// GetMonitorResponseTimeStats request
-	GetMonitorResponseTimeStatsWithResponse(ctx context.Context, monitorID string, reqEditors ...RequestEditorFn) (*GetMonitorResponseTimeStatsResponse, error)
+	GetMonitorResponseTimeStatsWithResponse(ctx context.Context, monitorID string, params *GetMonitorResponseTimeStatsParams, reqEditors ...RequestEditorFn) (*GetMonitorResponseTimeStatsResponse, error)
 }
 
 type CreateAccountResponse struct {
@@ -1063,7 +1093,7 @@ func (r EditMonitorResponse) StatusCode() int {
 type GetMonitorResponseTimeStatsResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON200      *ResponseTimeStats
+	JSON200      *GetMonitorResponseTimeStatsPayload
 	JSONDefault  *ErrorResponse
 }
 
@@ -1196,8 +1226,8 @@ func (c *ClientWithResponses) EditMonitorWithResponse(ctx context.Context, monit
 }
 
 // GetMonitorResponseTimeStatsWithResponse request returning *GetMonitorResponseTimeStatsResponse
-func (c *ClientWithResponses) GetMonitorResponseTimeStatsWithResponse(ctx context.Context, monitorID string, reqEditors ...RequestEditorFn) (*GetMonitorResponseTimeStatsResponse, error) {
-	rsp, err := c.GetMonitorResponseTimeStats(ctx, monitorID, reqEditors...)
+func (c *ClientWithResponses) GetMonitorResponseTimeStatsWithResponse(ctx context.Context, monitorID string, params *GetMonitorResponseTimeStatsParams, reqEditors ...RequestEditorFn) (*GetMonitorResponseTimeStatsResponse, error) {
+	rsp, err := c.GetMonitorResponseTimeStats(ctx, monitorID, params, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
@@ -1448,7 +1478,7 @@ func ParseGetMonitorResponseTimeStatsResponse(rsp *http.Response) (*GetMonitorRe
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest ResponseTimeStats
+		var dest GetMonitorResponseTimeStatsPayload
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -1469,30 +1499,31 @@ func ParseGetMonitorResponseTimeStatsResponse(rsp *http.Response) (*GetMonitorRe
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"H4sIAAAAAAAC/9xYW4/bNhP9KwS/D8iLajlNUAR+qhO7gdtNstjdog+BYdDUWGZWIhVytBtj4f9ekLpb",
-	"9CXZG9I3y6RmzsyZORryjnKVZkqCRENHd1SDyZQ04B4msGJ5glOtlbbPXEkEifYny7JEcIZCyfCLUdL+",
-	"Z/gaUmZ//V/Dio7o/8LGeFismtBZuyjd0O12G9AIDNcis8boiI5JDBK04ATsVqKbvUHpw6F7p4EhjDlX",
-	"ucQL+JqDcdAyrTLQKIoYWLG+kCwF+4ybDOiIGtRCxnQbUEiZSLwrGTPmVunIs7gNqIavudAQ0dHnrpPK",
-	"ZMvAfBuUcD8oKdDGvwcuXwO/XgiJoG9YshByYYArGbnFVEiR5ikdvRoGFSK7NQbtIpFRpoTERa6T45g7",
-	"u4MDji34aSTwXtCfFm2nxHpAoarnbt25twjPDaq0LD2uIiAm52vCDHnhaLW+cgMvaNAvmBSMYTH0TY9J",
-	"65mwpcqR4BoKL31Lu7GXuyrz8/oFtfwCHK3r94DjJCkperuZRedskygW9aOPGB7t0dJOD4l7d77rzhz1",
-	"JRBSc7LTOjymNdsUnRiDv4rsysI135510Iv9b6NCljSvr5ROGRZbfntN+z22kw5nuOWjA6drPWhyN5Nc",
-	"RKWM7nSQk4howbpoIobwCwonLb2aEyfIk4hsyzTGLYozFc/kXuJQXYM8brjYVpvbKw0PobFeUa1q5r5i",
-	"9COZPyJge6gJqCj5Nyd3Rl0xntYQZtEAyVoOl0olwGS5J2O5gci/nDCDC5ew78qAr8h2ZHoHXBtJOw+H",
-	"9LxXuJWuX4kUzkFPGIJXeOB0Jm9YknsVYifEYl9QWPdguYBYFKPQPWTQF5+Hd137OkxLua+lP20Hl8iK",
-	"OuwCrkauhc3Ywupb4+5HgigT0wvDgr1ScZxUc9G5LY69MuJKx1fDPV22++ZuXgSea4GbSwussPIWmAY9",
-	"znFtn5bu6Y+qTv7854qWU6bz4FabmlkjZgVs+IagJUsmipv+B9/uM6MwjAWu8+WAqzRcJeqWX4eRWoJO",
-	"mZThxXQ8+TAdpLYXnISc8lYhICtVjeOMY0tg6UroVEg14GsmYybF77FdsJZob86eVDZfGLJk/BqkRZII",
-	"DuXUVIzM9MPs6nsQhmezd9OPly4wSzjo1HxaXYK+ERxODDKgKDCxuxuzDcQb0KYIYTgYDl5aLyoDyTJB",
-	"R/TVYDh45T4TuHbEhCzHdVhO6EUZqaK4bGm5E8wsoqPucYIWBQUG36po82BnH++RZdstX9Q5uD9aB7Ff",
-	"hy/7NfbuYjq+mk4KYt1BbZ/72lbYOdG5/sjTlOlNHb8hjEi4JazOA7LY2KZyDeN6qshoomIh96fzzC0/",
-	"Tho7w8ZJ6Rs+rO9qbvKcXi9n7z9OJ+Tv84fi5UzFxGXSQ0RaDuDWQQweFrpzumsLzVJAsO98vqOWQfo1",
-	"B72hQdXv5SjbpKM+dr70TcR+I4lIBXatsG+lleEwOGxz/oj8+U8uHiI//XVPBssvj8tz+5vzeW4DbAh+",
-	"D0hYkpCKTCIkYeRW4JpkLBbSRdniv2bTfswPaVk1HD+mlu1cCjyvlp2a8QJ6qXRpnSVPgttNFt6Vv2aT",
-	"bRFBAsWU2U3+xP3fJN/Xcvbr1DRLbZfuJq/dQLtzXr9LXvcTO5meTZ8usUXoh1Ma7FWq5vZi8qRpeyRx",
-	"ad/C/Mf0pT+zPzZhD69f+88dJ4mYp9eejFGHlihNcumOOu4u8UjTZbmHx9a17s9HoOdO+vRZ8JmYs5gJ",
-	"q7giyw1x1ybf8eUJjT2y12DcncbB+a9O0e6p/+eU2H4cz62ttvkcKa2L/co2qa6cPAQ7P/qmyn5zwB6F",
-	"YaI4S9bK4OjN8M2QbufbfwMAAP//p+Gy5akbAAA=",
+	"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",
+	"AA==",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

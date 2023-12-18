@@ -165,6 +165,11 @@ paths:
           required: true
           schema:
             type: string
+        - name: range_in_days
+          in: query
+          required: false
+          schema:
+            type: integer
       security:
         - BearerAuth: [ ]
       responses:
@@ -173,7 +178,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ResponseTimeStats'
+                $ref: '#/components/schemas/GetMonitorResponseTimeStatsPayload'
         default:
           $ref: '#/components/responses/DefaultError'
   /auth/accounts:
@@ -217,7 +222,7 @@ paths:
 components:
   schemas:
     ResponseTimeStats:
-      required: []
+      required: [response_time_per_region]
       properties:
         response_time_per_region:
           type: array
@@ -240,7 +245,7 @@ components:
         date:
           type: string
           format: date-time
-    GetMonitorResponseTimeStats:
+    GetMonitorResponseTimeStatsPayload:
       required: [data]
       properties:
         data:
