@@ -148,6 +148,10 @@ func TestMonitors(t *testing.T) {
 		assert.Equal(t, newDetails.EndpointUrl, monitor00.EndpointURL)
 		assert.Equal(t, newDetails.CheckIntervalInSeconds, monitor00.CheckIntervalInSeconds)
 	})
+
+	t.Run("get_monitor_response_time_stats", func(t *testing.T) {
+
+	})
 }
 
 func endpointUrlGenerator(isUp bool) string {
