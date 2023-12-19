@@ -30,14 +30,14 @@ func NewBulkCheckEndpointsHandler(
 }
 
 func (c BulkCheckEndpointsHandler) Execute(ctx context.Context, cmd BulkCheckEndpoints) error {
-	checkResults := new(map[domain.ID]*monitor.CheckResult)
+	checkResults := make(map[domain.ID]*monitor.CheckResult)
 
-	err := c.txProvider.Transact(ctx, c.checkMatchedEndpoints(ctx, checkResults))
+	err := c.txProvider.Transact(ctx, c.checkMatchedEndpoints(ctx, &checkResults))
 	if err != nil {
 		return err
 	}
 
-	err = c.saveCheckResults(ctx, checkResults)
+	err = c.saveCheckResults(ctx, &checkResults)
 	if err != nil {
 		return err
 	}
