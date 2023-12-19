@@ -7,12 +7,14 @@ import (
 	"testing"
 	"time"
 
+	"github.com/flowck/dobermann/backend/internal/adapters/psql"
 	"github.com/flowck/dobermann/backend/internal/common/postgres"
 )
 
 var (
-	db  *sql.DB
-	ctx context.Context
+	db                *sql.DB
+	ctx               context.Context
+	monitorRepository psql.MonitorRepository
 )
 
 // Set up file
@@ -31,6 +33,8 @@ func TestMain(m *testing.M) {
 	if err != nil {
 		panic(err)
 	}
+
+	monitorRepository = psql.NewMonitorRepository(db)
 
 	os.Exit(m.Run())
 }

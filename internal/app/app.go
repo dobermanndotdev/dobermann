@@ -39,8 +39,9 @@ type Commands struct {
 }
 
 type Queries struct {
-	MonitorByID QueryHandler[query.MonitorByID, *monitor.Monitor]
-	AllMonitors QueryHandler[query.AllMonitors, query.PaginatedResult[*monitor.Monitor]]
+	MonitorByID              QueryHandler[query.MonitorByID, *monitor.Monitor]
+	MonitorResponseTimeStats QueryHandler[query.MonitorResponseTimeStats, query.ResponseTimeStats]
+	AllMonitors              QueryHandler[query.AllMonitors, query.PaginatedResult[*monitor.Monitor]]
 }
 
 type App struct {

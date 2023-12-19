@@ -2,11 +2,13 @@ package psql_test
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/volatiletech/sqlboiler/v4/boil"
 
-	"github.com/flowck/dobermann/backend/internal/adapters/psql"
+	"github.com/flowck/dobermann/backend/internal/adapters/models"
 	"github.com/flowck/dobermann/backend/internal/app/query"
 	"github.com/flowck/dobermann/backend/internal/domain"
 	"github.com/flowck/dobermann/backend/internal/domain/monitor"
@@ -15,18 +17,17 @@ import (
 
 func TestMonitorRepository_Lifecycle(t *testing.T) {
 	const maxMonitors = 10
-	repo := psql.NewMonitorRepository(db)
 	account00 := tests.FixtureAndInsertAccount(t, db, true)
 	monitors := make(map[domain.ID]*monitor.Monitor)
 
 	for i := 0; i < maxMonitors; i++ {
 		m := tests.FixtureMonitor(t, account00)
 		monitors[m.ID()] = m
-		require.NoError(t, repo.Insert(ctx, m))
+		require.NoError(t, monitorRepository.Insert(ctx, m))
 	}
 
 	limitPerPage := 2
-	result, err := repo.FindAll(ctx, account00.ID(), query.PaginationParams{
+	result, err := monitorRepository.FindAll(ctx, account00.ID(), query.PaginationParams{
 		Page:  1,
 		Limit: limitPerPage,
 	})
@@ -41,7 +42,7 @@ func TestMonitorRepository_Lifecycle(t *testing.T) {
 		expected := result.Data[0]
 		var found *monitor.Monitor
 
-		found, err = repo.FindByID(ctx, expected.ID())
+		found, err = monitorRepository.FindByID(ctx, expected.ID())
 		require.NoError(t, err)
 
 		assertMonitor(t, expected, found)
@@ -53,20 +54,65 @@ func TestMonitorRepository_Lifecycle(t *testing.T) {
 	})
 
 	t.Run("error_not_found_while_finding_by_id", func(t *testing.T) {
-		_, err = repo.FindByID(ctx, domain.NewID())
+		_, err = monitorRepository.FindByID(ctx, domain.NewID())
 		assert.ErrorIs(t, err, monitor.ErrMonitorNotFound)
 	})
 }
 
 func TestMonitorRepository_Delete(t *testing.T) {
-	repo := psql.NewMonitorRepository(db)
 	account00 := tests.FixtureAndInsertAccount(t, db, true)
 	monitor00 := tests.FixtureMonitor(t, account00)
-	require.NoError(t, repo.Insert(ctx, monitor00))
-	assert.NoError(t, repo.Delete(ctx, monitor00.ID()))
+	require.NoError(t, monitorRepository.Insert(ctx, monitor00))
+	assert.NoError(t, monitorRepository.Delete(ctx, monitor00.ID()))
 
-	_, err := repo.FindByID(ctx, monitor00.ID())
+	_, err := monitorRepository.FindByID(ctx, monitor00.ID())
 	assert.ErrorIs(t, err, monitor.ErrMonitorNotFound)
+}
+
+func TestMonitorRepository_ResponseTimeStats(t *testing.T) {
+	account00 := tests.FixtureAndInsertAccount(t, db, true)
+	monitor00 := tests.FixtureMonitor(t, account00)
+	require.NoError(t, monitorRepository.Insert(ctx, monitor00))
+	expectedAvgResponseTimeInMs := int16(200)
+	rangeInDays := 10
+
+	fixtureCheckResults(t, monitor00.ID(), expectedAvgResponseTimeInMs, rangeInDays)
+
+	responseTimeStats, err := monitorRepository.ResponseTimeStats(ctx, query.ResponseTimeStatsOptions{
+		RangeInDays: rangeInDays,
+		MonitorID:   monitor00.ID(),
+	})
+	require.NoError(t, err)
+	require.NotEmpty(t, responseTimeStats.ResponseTimePerRegion)
+
+	for _, region := range responseTimeStats.ResponseTimePerRegion {
+		for _, avgResponseTimePerDay := range region.Data {
+			assert.Equal(t, expectedAvgResponseTimeInMs, avgResponseTimePerDay.Value)
+		}
+	}
+}
+
+func fixtureCheckResults(t *testing.T, monitorID domain.ID, responseTimeInMs int16, rangeInDays int) {
+	now := time.Now()
+	startCheckedAt := time.Date(now.Year(), now.Month(), now.Day()-rangeInDays, 0, 0, 0, 0, time.UTC)
+
+	for i := 0; i < rangeInDays; i++ {
+		checkedAt := startCheckedAt.Add(time.Hour * 24 * time.Duration(i))
+
+		// 5 check results per day
+		for j := 0; j < 5; j++ {
+			checkedAt = checkedAt.Add(time.Hour * 2 * time.Duration(j))
+			model := models.MonitorCheckResult{
+				StatusCode:       200,
+				CheckedAt:        checkedAt,
+				ResponseTimeInMS: responseTimeInMs,
+				MonitorID:        monitorID.String(),
+				Region:           monitor.RegionEurope.String(),
+			}
+
+			require.NoError(t, model.Insert(ctx, db, boil.Infer()))
+		}
+	}
 }
 
 func assertMonitor(t *testing.T, expected, found *monitor.Monitor) {

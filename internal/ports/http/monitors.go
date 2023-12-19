@@ -2,6 +2,7 @@ package http
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -167,4 +168,20 @@ func (h handlers) EditMonitor(c echo.Context, monitorID string) error {
 	}
 
 	return c.NoContent(http.StatusOK)
+}
+
+func (h handlers) GetMonitorResponseTimeStats(c echo.Context, monitorID string) error {
+	_, err := retrieveUserFromCtx(c)
+	if err != nil {
+		return NewUnableToRetrieveUserFromCtx(err)
+	}
+
+	mID, err := domain.NewIdFromString(monitorID)
+	if err != nil {
+		return NewHandlerErrorWithStatus(err, "invalid-monitor-id", http.StatusBadRequest)
+	}
+
+	fmt.Println(mID)
+
+	return c.JSON(http.StatusOK, nil)
 }
