@@ -123,14 +123,13 @@ func TestMonitors(t *testing.T) {
 		assert.False(t, monitor00.IsPaused)
 	})
 
-	//FIXME: flacky
-	// t.Run("delete_monitor_by_id", func(t *testing.T) {
-	// 	monitorPayload := fixtureMonitors(t, cli, 1)[0]
-	// 	monitor00 := getMonitorByEndpointUrl(t, monitorPayload.EndpointUrl)
-	// 	resp, err := cli.DeleteMonitor(ctx, monitor00.ID)
-	// 	require.NoError(t, err)
-	// 	assert.Equal(t, http.StatusNoContent, resp.StatusCode)
-	// })
+	t.Run("delete_monitor_by_id", func(t *testing.T) {
+		monitorPayload := fixtureMonitors(t, cli, 1)[0]
+		monitor00 := getMonitorByEndpointUrl(t, monitorPayload.EndpointUrl)
+		resp, err := cli.DeleteMonitor(ctx, monitor00.ID)
+		require.NoError(t, err)
+		assert.Equal(t, http.StatusNoContent, resp.StatusCode)
+	})
 
 	t.Run("edit_monitor", func(t *testing.T) {
 		monitorPayload := fixtureMonitors(t, cli, 1)[0]
