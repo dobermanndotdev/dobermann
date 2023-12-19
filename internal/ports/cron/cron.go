@@ -24,7 +24,10 @@ func NewService(application *app.App, region string, isProduction bool) *kron.Se
 		interval = time.Second * 25
 	}
 
-	c.AddJob(kron.NewJob(interval, allHandlers.BulkCheckEndpoints))
+	bulkCheckEndpointsJob := kron.NewJob(interval, allHandlers.BulkCheckEndpoints)
+	bulkCheckEndpointsJob.AddMiddleware(withCorrelationIdMiddleware)
+
+	c.AddJob(bulkCheckEndpointsJob)
 
 	return c
 }
