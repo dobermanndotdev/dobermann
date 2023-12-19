@@ -80,14 +80,13 @@ func mapMonitorResponseTimeStatsToResponse(stats query.ResponseTimeStats) GetMon
 		}
 
 		for j, dataPoint := range region.Data {
-
 			result.ResponseTimePerRegion[i].Data[j] = ResponseTimePerDate{
 				Date:  dataPoint.Date,
 				Value: int(dataPoint.Value),
 			}
 		}
 	}
-	
+
 	return GetMonitorResponseTimeStatsPayload{
 		Data: result,
 	}

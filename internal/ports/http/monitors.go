@@ -196,6 +196,9 @@ func (h handlers) GetMonitorResponseTimeStats(
 		ID:          mID,
 		RangeInDays: rangeInDays,
 	})
+	if err != nil {
+		return NewHandlerError(err, "unable-to-query-stats")
+	}
 
 	return c.JSON(http.StatusOK, mapMonitorResponseTimeStatsToResponse(result))
 }

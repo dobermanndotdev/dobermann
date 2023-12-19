@@ -84,7 +84,7 @@ func TestMonitorRepository_ResponseTimeStats(t *testing.T) {
 
 	for _, region := range responseTimeStats.ResponseTimePerRegion {
 		require.Len(t, region.Data, rangeInDays)
-		
+
 		for _, avgResponseTimePerDay := range region.Data {
 			assert.Equal(t, expectedAvgResponseTimeInMs, avgResponseTimePerDay.Value)
 		}
