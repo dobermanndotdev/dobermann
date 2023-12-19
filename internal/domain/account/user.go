@@ -25,12 +25,13 @@ type User struct {
 
 func NewUser(
 	id domain.ID,
-	firstName string,
+	firstName,
 	lastName string,
 	email Email,
 	role Role,
 	password Password,
 	accountID domain.ID,
+	createdAt time.Time,
 ) (*User, error) {
 	firstName = strings.TrimSpace(firstName)
 	lastName = strings.TrimSpace(lastName)
@@ -43,6 +44,10 @@ func NewUser(
 		return nil, errors.New("password cannot be invalid")
 	}
 
+	if time.Now().Before(createdAt) {
+		return nil, errors.New("createdAt cannot be set in the future")
+	}
+
 	return &User{
 		id:        id,
 		firstName: firstName,
@@ -51,6 +56,7 @@ func NewUser(
 		password:  password,
 		role:      role,
 		accountID: accountID,
+		createdAt: createdAt.UTC(),
 	}, nil
 }
 

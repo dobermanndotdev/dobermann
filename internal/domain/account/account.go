@@ -48,7 +48,7 @@ func NewFirstTimeAccount(name string, email Email, password Password) (*Account,
 		return nil, errors.New("account name cannot be empty")
 	}
 
-	user, err := NewUser(domain.NewID(), "", "", email, RoleOwner, password, accountID)
+	user, err := NewUser(domain.NewID(), "", "", email, RoleOwner, password, accountID, time.Now())
 	if err != nil {
 		return nil, err
 	}

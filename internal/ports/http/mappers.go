@@ -5,6 +5,7 @@ import (
 
 	"github.com/flowck/dobermann/backend/internal/app/query"
 	"github.com/flowck/dobermann/backend/internal/domain"
+	"github.com/flowck/dobermann/backend/internal/domain/account"
 	"github.com/flowck/dobermann/backend/internal/domain/monitor"
 )
 
@@ -90,4 +91,15 @@ func mapMonitorResponseTimeStatsToResponse(stats query.ResponseTimeStats) GetMon
 	return GetMonitorResponseTimeStatsPayload{
 		Data: result,
 	}
+}
+
+func mapUserToResponse(user *account.User) GetProfileDetailsPayload {
+	return GetProfileDetailsPayload{Data: User{
+		Id:        user.ID().String(),
+		Email:     user.Email().Address(),
+		FirstName: user.FirstName(),
+		LastName:  user.LastName(),
+		Role:      user.Role().String(),
+		CreatedAt: user.CreatedAt(),
+	}}
 }

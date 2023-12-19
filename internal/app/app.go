@@ -5,6 +5,7 @@ import (
 
 	"github.com/flowck/dobermann/backend/internal/app/command"
 	"github.com/flowck/dobermann/backend/internal/app/query"
+	"github.com/flowck/dobermann/backend/internal/domain/account"
 	"github.com/flowck/dobermann/backend/internal/domain/monitor"
 )
 
@@ -42,6 +43,9 @@ type Queries struct {
 	MonitorByID              QueryHandler[query.MonitorByID, *monitor.Monitor]
 	MonitorResponseTimeStats QueryHandler[query.MonitorResponseTimeStats, query.ResponseTimeStats]
 	AllMonitors              QueryHandler[query.AllMonitors, query.PaginatedResult[*monitor.Monitor]]
+
+	// IAM
+	UserByID QueryHandler[query.UserByID, *account.User]
 }
 
 type App struct {
