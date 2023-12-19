@@ -31,6 +31,7 @@ import (
 	"github.com/flowck/dobermann/backend/internal/common/observability"
 	"github.com/flowck/dobermann/backend/internal/common/postgres"
 	"github.com/flowck/dobermann/backend/internal/common/watermill_logger"
+	"github.com/flowck/dobermann/backend/internal/domain/account"
 	"github.com/flowck/dobermann/backend/internal/domain/monitor"
 	amqpport "github.com/flowck/dobermann/backend/internal/ports/amqp"
 	httpport "github.com/flowck/dobermann/backend/internal/ports/http"
@@ -178,6 +179,9 @@ func main() {
 			MonitorByID:              observability.NewQueryDecorator[query.MonitorByID, *monitor.Monitor](query.NewMonitorByIdHandler(monitorRepository), logger),
 			AllMonitors:              observability.NewQueryDecorator[query.AllMonitors, query.PaginatedResult[*monitor.Monitor]](query.NewAllMonitorsHandler(monitorRepository), logger),
 			MonitorResponseTimeStats: observability.NewQueryDecorator[query.MonitorResponseTimeStats, query.ResponseTimeStats](query.NewMonitorResponseTimeStatsHandler(monitorRepository), logger),
+
+			// IAM
+			UserByID: observability.NewQueryDecorator[query.UserByID, *account.User](query.NewUserByIdHandler(userRepository), logger),
 		},
 	}
 

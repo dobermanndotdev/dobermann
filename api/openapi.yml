@@ -181,6 +181,23 @@ paths:
                 $ref: '#/components/schemas/GetMonitorResponseTimeStatsPayload'
         default:
           $ref: '#/components/responses/DefaultError'
+  /accounts/profile:
+    get:
+      tags:
+        - Accounts
+      operationId: getProfileDetails
+      summary: Get details about the user currently logged in
+      security:
+        - BearerAuth: [ ]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetProfileDetailsPayload'
+        default:
+          $ref: '#/components/responses/DefaultError'
   /auth/accounts:
     post:
       tags:
@@ -221,6 +238,27 @@ paths:
           $ref: '#/components/responses/DefaultError'
 components:
   schemas:
+    GetProfileDetailsPayload:
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/User'
+    User:
+      required: [id, first_name, last_name, email, role, created_at]
+      properties:
+        id:
+          type: string
+        first_name:
+          type: string
+        last_name:
+          type: string
+        email:
+          type: string
+        role:
+          type: string
+        created_at:
+          type: string
+          format: date-time
     ResponseTimeStats:
       required: [response_time_per_region]
       properties:

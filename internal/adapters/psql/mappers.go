@@ -52,7 +52,16 @@ func mapModelToUser(model *models.User) (*account.User, error) {
 		return nil, err
 	}
 
-	return account.NewUser(id, model.FirstName.String, model.LastName.String, email, role, password, accountId)
+	return account.NewUser(
+		id,
+		model.FirstName.String,
+		model.LastName.String,
+		email,
+		role,
+		password,
+		accountId,
+		model.CreatedAt,
+	)
 }
 
 func mapMonitorToModel(m *monitor.Monitor) *models.Monitor {
