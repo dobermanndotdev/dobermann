@@ -206,6 +206,7 @@ func (p MonitorRepository) SaveCheckResult(
 func (p MonitorRepository) Delete(ctx context.Context, ID domain.ID) error {
 	model, err := models.Monitors(
 		models.MonitorWhere.ID.EQ(ID.String()),
+		qm.For("UPDATE"),
 	).One(ctx, p.db)
 	if errors.Is(err, sql.ErrNoRows) {
 		return monitor.ErrMonitorNotFound
