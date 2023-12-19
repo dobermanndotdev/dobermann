@@ -2,13 +2,10 @@ package psql_test
 
 import (
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/volatiletech/sqlboiler/v4/boil"
 
-	"github.com/flowck/dobermann/backend/internal/adapters/models"
 	"github.com/flowck/dobermann/backend/internal/app/query"
 	"github.com/flowck/dobermann/backend/internal/domain"
 	"github.com/flowck/dobermann/backend/internal/domain/monitor"
@@ -76,7 +73,7 @@ func TestMonitorRepository_ResponseTimeStats(t *testing.T) {
 	expectedAvgResponseTimeInMs := int16(200)
 	rangeInDays := 10
 
-	fixtureCheckResults(t, monitor00.ID(), expectedAvgResponseTimeInMs, rangeInDays)
+	fixtureClient.FixtureCheckResults(t, monitor00.ID(), expectedAvgResponseTimeInMs, rangeInDays)
 
 	responseTimeStats, err := monitorRepository.ResponseTimeStats(ctx, query.ResponseTimeStatsOptions{
 		RangeInDays: rangeInDays,
@@ -86,31 +83,10 @@ func TestMonitorRepository_ResponseTimeStats(t *testing.T) {
 	require.NotEmpty(t, responseTimeStats.ResponseTimePerRegion)
 
 	for _, region := range responseTimeStats.ResponseTimePerRegion {
+		require.Len(t, region.Data, rangeInDays)
+		
 		for _, avgResponseTimePerDay := range region.Data {
 			assert.Equal(t, expectedAvgResponseTimeInMs, avgResponseTimePerDay.Value)
-		}
-	}
-}
-
-func fixtureCheckResults(t *testing.T, monitorID domain.ID, responseTimeInMs int16, rangeInDays int) {
-	now := time.Now()
-	startCheckedAt := time.Date(now.Year(), now.Month(), now.Day()-rangeInDays, 0, 0, 0, 0, time.UTC)
-
-	for i := 0; i < rangeInDays; i++ {
-		checkedAt := startCheckedAt.Add(time.Hour * 24 * time.Duration(i))
-
-		// 5 check results per day
-		for j := 0; j < 5; j++ {
-			checkedAt = checkedAt.Add(time.Hour * 2 * time.Duration(j))
-			model := models.MonitorCheckResult{
-				StatusCode:       200,
-				CheckedAt:        checkedAt,
-				ResponseTimeInMS: responseTimeInMs,
-				MonitorID:        monitorID.String(),
-				Region:           monitor.RegionEurope.String(),
-			}
-
-			require.NoError(t, model.Insert(ctx, db, boil.Infer()))
 		}
 	}
 }
