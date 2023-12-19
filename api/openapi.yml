@@ -153,6 +153,34 @@ paths:
           description: DELETED
         default:
           $ref: '#/components/responses/DefaultError'
+  /monitors/{monitorID}/stats/response-times:
+    get:
+      tags:
+        - Monitors
+      operationId: getMonitorResponseTimeStats
+      summary: Get the stats about the response time
+      parameters:
+        - name: monitorID
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: range_in_days
+          in: query
+          required: false
+          schema:
+            type: integer
+      security:
+        - BearerAuth: [ ]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetMonitorResponseTimeStatsPayload'
+        default:
+          $ref: '#/components/responses/DefaultError'
   /auth/accounts:
     post:
       tags:
@@ -193,6 +221,35 @@ paths:
           $ref: '#/components/responses/DefaultError'
 components:
   schemas:
+    ResponseTimeStats:
+      required: [response_time_per_region]
+      properties:
+        response_time_per_region:
+          type: array
+          items:
+            $ref: '#/components/schemas/ResponseTimePerRegion'
+    ResponseTimePerRegion:
+      required: [region, data]
+      properties:
+        region:
+          type: string
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/ResponseTimePerDate'
+    ResponseTimePerDate:
+      required: [value, date]
+      properties:
+        value:
+          type: integer
+        date:
+          type: string
+          format: date-time
+    GetMonitorResponseTimeStatsPayload:
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/ResponseTimeStats'
     EditMonitorRequest:
       required: [endpoint_url, check_interval_in_seconds]
       properties:

@@ -14,12 +14,14 @@ import (
 	_ "github.com/lib/pq"
 
 	"github.com/flowck/dobermann/backend/internal/common/postgres"
+	"github.com/flowck/dobermann/backend/tests"
 	"github.com/flowck/dobermann/backend/tests/client"
 )
 
 var (
-	db  *sql.DB
-	ctx context.Context
+	db            *sql.DB
+	ctx           context.Context
+	fixtureClient tests.FixtureClient
 )
 
 func TestMain(m *testing.M) {
@@ -36,6 +38,11 @@ func TestMain(m *testing.M) {
 	err = postgres.ApplyMigrations(db, "../../misc/sql/migrations")
 	if err != nil {
 		panic(err)
+	}
+
+	fixtureClient = tests.FixtureClient{
+		Db:  db,
+		Ctx: ctx,
 	}
 
 	os.Exit(m.Run())

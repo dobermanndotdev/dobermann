@@ -102,3 +102,31 @@ func FixtureIncident(t *testing.T) *monitor.Incident {
 
 	return incident
 }
+
+type FixtureClient struct {
+	Db  *sql.DB
+	Ctx context.Context
+}
+
+func (f *FixtureClient) FixtureCheckResults(t *testing.T, monitorID domain.ID, responseTimeInMs int16, rangeInDays int) {
+	now := time.Now()
+	startCheckedAt := time.Date(now.Year(), now.Month(), now.Day()-rangeInDays, 0, 0, 0, 0, time.UTC)
+
+	for i := 0; i < rangeInDays; i++ {
+		checkedAt := startCheckedAt.Add(time.Hour * 24 * time.Duration(i))
+
+		// 5 check results per day
+		for j := 0; j < 5; j++ {
+			checkedAt = checkedAt.Add(time.Hour * 2 * time.Duration(j))
+			model := models.MonitorCheckResult{
+				StatusCode:       200,
+				CheckedAt:        checkedAt,
+				ResponseTimeInMS: responseTimeInMs,
+				MonitorID:        monitorID.String(),
+				Region:           monitor.RegionEurope.String(),
+			}
+
+			require.NoError(t, model.Insert(f.Ctx, f.Db, boil.Infer()))
+		}
+	}
+}

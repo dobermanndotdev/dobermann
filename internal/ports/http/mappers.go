@@ -3,6 +3,7 @@ package http
 import (
 	"time"
 
+	"github.com/flowck/dobermann/backend/internal/app/query"
 	"github.com/flowck/dobermann/backend/internal/domain"
 	"github.com/flowck/dobermann/backend/internal/domain/monitor"
 )
@@ -65,4 +66,28 @@ func mapRequestToMonitor(body CreateMonitorRequest, user *authenticatedUser) (*m
 		time.Second*time.Duration(body.CheckIntervalInSeconds),
 		nil,
 	)
+}
+
+func mapMonitorResponseTimeStatsToResponse(stats query.ResponseTimeStats) GetMonitorResponseTimeStatsPayload {
+	result := ResponseTimeStats{
+		ResponseTimePerRegion: make([]ResponseTimePerRegion, len(stats.ResponseTimePerRegion)),
+	}
+
+	for i, region := range stats.ResponseTimePerRegion {
+		result.ResponseTimePerRegion[i] = ResponseTimePerRegion{
+			Region: region.Region.String(),
+			Data:   make([]ResponseTimePerDate, len(region.Data)),
+		}
+
+		for j, dataPoint := range region.Data {
+			result.ResponseTimePerRegion[i].Data[j] = ResponseTimePerDate{
+				Date:  dataPoint.Date,
+				Value: int(dataPoint.Value),
+			}
+		}
+	}
+
+	return GetMonitorResponseTimeStatsPayload{
+		Data: result,
+	}
 }

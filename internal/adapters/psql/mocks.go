@@ -4,6 +4,7 @@ import (
 	"context"
 	"sync"
 
+	"github.com/flowck/dobermann/backend/internal/app/query"
 	"github.com/flowck/dobermann/backend/internal/domain"
 	"github.com/flowck/dobermann/backend/internal/domain/account"
 	"github.com/flowck/dobermann/backend/internal/domain/monitor"
@@ -179,4 +180,8 @@ func (m MonitorRepositoryMock) UpdateForCheck(ctx context.Context, fn func(found
 func (m MonitorRepositoryMock) Delete(ctx context.Context, ID domain.ID) error {
 	delete(m.monitors, ID)
 	return nil
+}
+
+func (m MonitorRepositoryMock) ResponseTimeStats(ctx context.Context, monitorID domain.ID) (query.ResponseTimeStats, error) {
+	return query.ResponseTimeStats{}, nil
 }

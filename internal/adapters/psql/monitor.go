@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"github.com/volatiletech/sqlboiler/v4/queries"
@@ -26,7 +27,10 @@ type MonitorRepository struct {
 	db boil.ContextExecutor
 }
 
-func (p MonitorRepository) UpdateForCheck(ctx context.Context, fn func(foundMonitors []*monitor.Monitor) error) error {
+func (p MonitorRepository) UpdateForCheck(
+	ctx context.Context,
+	fn func(foundMonitors []*monitor.Monitor) error,
+) error {
 	mods := []qm.QueryMod{
 		models.MonitorWhere.IsPaused.EQ(false),
 		qm.Where("DATE_PART('seconds', now()::timestamp - last_checked_at::timestamp) >= check_interval_in_seconds"),
@@ -175,7 +179,11 @@ func (p MonitorRepository) FindAll(
 	}, nil
 }
 
-func (p MonitorRepository) SaveCheckResult(ctx context.Context, monitorID domain.ID, checkResult *monitor.CheckResult) error {
+func (p MonitorRepository) SaveCheckResult(
+	ctx context.Context,
+	monitorID domain.ID,
+	checkResult *monitor.CheckResult,
+) error {
 	exists, err := models.Monitors(models.MonitorWhere.ID.EQ(monitorID.String())).Exists(ctx, p.db)
 	if err != nil {
 		return fmt.Errorf("unable to check if monitor with id %s exists: %v", monitorID, err)
@@ -240,4 +248,58 @@ func (p MonitorRepository) Delete(ctx context.Context, ID domain.ID) error {
 	}
 
 	return nil
+}
+
+type avgResponseTime struct {
+	Date  time.Time `boil:"tstamp"`
+	Value int16     `boil:"value"`
+}
+
+func (p MonitorRepository) ResponseTimeStats(
+	ctx context.Context,
+	options query.ResponseTimeStatsOptions,
+) (query.ResponseTimeStats, error) {
+	regions := []monitor.Region{
+		monitor.RegionEurope,
+		//TODO: extend this with more regions
+	}
+
+	var responseTimePerRegion []query.ResponseTimePerRegion
+
+	for _, region := range regions {
+		var rows []avgResponseTime
+		err := queries.Raw(
+			`
+			SELECT DATE_TRUNC('day', checked_at) AS tstamp, AVG(response_time_in_ms)::INTEGER AS value
+			FROM monitor_check_results
+			WHERE monitor_id = $1 AND region = $2 AND checked_at >= CURRENT_DATE - ($3 || ' days')::INTERVAL
+			GROUP BY tstamp
+			ORDER BY tstamp;
+		`,
+			options.MonitorID.String(),
+			region.String(),
+			fmt.Sprintf(`'%d days'`, options.RangeInDays),
+		).Bind(ctx, p.db, &rows)
+		if err != nil {
+			return query.ResponseTimeStats{}, fmt.Errorf("error querying avg response time of monitor with id '%s': %v", options.MonitorID, err)
+		}
+
+		data := query.ResponseTimePerRegion{
+			Region: region,
+			Data:   make([]query.ResponseTimePerDate, len(rows)),
+		}
+
+		for i, row := range rows {
+			data.Data[i] = query.ResponseTimePerDate{
+				Value: row.Value,
+				Date:  row.Date,
+			}
+		}
+
+		responseTimePerRegion = append(responseTimePerRegion, data)
+	}
+
+	return query.ResponseTimeStats{
+		ResponseTimePerRegion: responseTimePerRegion,
+	}, nil
 }

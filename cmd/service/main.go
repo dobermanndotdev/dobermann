@@ -175,8 +175,9 @@ func main() {
 			NotifyOnIncidentResolved:           observability.NewCommandDecorator[command.NotifyOnIncidentResolved](command.NewNotifyOnIncidentResolvedHandler(monitorRepository, userRepository, resendService), logger),
 		},
 		Queries: app.Queries{
-			AllMonitors: observability.NewQueryDecorator[query.AllMonitors, query.PaginatedResult[*monitor.Monitor]](query.NewAllMonitorsHandler(monitorRepository), logger),
-			MonitorByID: observability.NewQueryDecorator[query.MonitorByID, *monitor.Monitor](query.NewMonitorByIdHandler(monitorRepository), logger),
+			MonitorByID:              observability.NewQueryDecorator[query.MonitorByID, *monitor.Monitor](query.NewMonitorByIdHandler(monitorRepository), logger),
+			AllMonitors:              observability.NewQueryDecorator[query.AllMonitors, query.PaginatedResult[*monitor.Monitor]](query.NewAllMonitorsHandler(monitorRepository), logger),
+			MonitorResponseTimeStats: observability.NewQueryDecorator[query.MonitorResponseTimeStats, query.ResponseTimeStats](query.NewMonitorResponseTimeStatsHandler(monitorRepository), logger),
 		},
 	}
 

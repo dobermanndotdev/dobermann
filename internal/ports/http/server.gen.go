@@ -65,6 +65,11 @@ type GetAllMonitorsPayload struct {
 	TotalCount int64     `json:"total_count"`
 }
 
+// GetMonitorResponseTimeStatsPayload defines model for GetMonitorResponseTimeStatsPayload.
+type GetMonitorResponseTimeStatsPayload struct {
+	Data ResponseTimeStats `json:"data"`
+}
+
 // Incident defines model for Incident.
 type Incident struct {
 	CreatedAt time.Time `json:"created_at"`
@@ -94,6 +99,23 @@ type Monitor struct {
 	LastCheckedAt          *time.Time `json:"last_checked_at,omitempty"`
 }
 
+// ResponseTimePerDate defines model for ResponseTimePerDate.
+type ResponseTimePerDate struct {
+	Date  time.Time `json:"date"`
+	Value int       `json:"value"`
+}
+
+// ResponseTimePerRegion defines model for ResponseTimePerRegion.
+type ResponseTimePerRegion struct {
+	Data   []ResponseTimePerDate `json:"data"`
+	Region string                `json:"region"`
+}
+
+// ResponseTimeStats defines model for ResponseTimeStats.
+type ResponseTimeStats struct {
+	ResponseTimePerRegion []ResponseTimePerRegion `json:"response_time_per_region"`
+}
+
 // ToggleMonitorPauseRequest defines model for ToggleMonitorPauseRequest.
 type ToggleMonitorPauseRequest struct {
 	Pause bool `json:"pause"`
@@ -106,6 +128,11 @@ type DefaultError = ErrorResponse
 type GetAllMonitorsParams struct {
 	Page  *int `form:"page,omitempty" json:"page,omitempty"`
 	Limit *int `form:"limit,omitempty" json:"limit,omitempty"`
+}
+
+// GetMonitorResponseTimeStatsParams defines parameters for GetMonitorResponseTimeStats.
+type GetMonitorResponseTimeStatsParams struct {
+	RangeInDays *int `form:"range_in_days,omitempty" json:"range_in_days,omitempty"`
 }
 
 // CreateAccountJSONRequestBody defines body for CreateAccount for application/json ContentType.
@@ -149,6 +176,9 @@ type ServerInterface interface {
 	// Edit a monitor by id
 	// (PUT /monitors/{monitorID})
 	EditMonitor(ctx echo.Context, monitorID string) error
+	// Get the stats about the response time
+	// (GET /monitors/{monitorID}/stats/response-times)
+	GetMonitorResponseTimeStats(ctx echo.Context, monitorID string, params GetMonitorResponseTimeStatsParams) error
 }
 
 // ServerInterfaceWrapper converts echo contexts to parameters.
@@ -284,6 +314,33 @@ func (w *ServerInterfaceWrapper) EditMonitor(ctx echo.Context) error {
 	return err
 }
 
+// GetMonitorResponseTimeStats converts echo context to params.
+func (w *ServerInterfaceWrapper) GetMonitorResponseTimeStats(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "monitorID" -------------
+	var monitorID string
+
+	err = runtime.BindStyledParameterWithLocation("simple", false, "monitorID", runtime.ParamLocationPath, ctx.Param("monitorID"), &monitorID)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter monitorID: %s", err))
+	}
+
+	ctx.Set(BearerAuthScopes, []string{""})
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params GetMonitorResponseTimeStatsParams
+	// ------------- Optional query parameter "range_in_days" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "range_in_days", ctx.QueryParams(), &params.RangeInDays)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter range_in_days: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshalled arguments
+	err = w.Handler.GetMonitorResponseTimeStats(ctx, monitorID, params)
+	return err
+}
+
 // This is a simple interface which specifies echo.Route addition functions which
 // are present on both echo.Echo and echo.Group, since we want to allow using
 // either of them for path registration
@@ -320,34 +377,38 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 	router.GET(baseURL+"/monitors/:monitorID", wrapper.GetMonitorByID)
 	router.POST(baseURL+"/monitors/:monitorID", wrapper.ToggleMonitorPause)
 	router.PUT(baseURL+"/monitors/:monitorID", wrapper.EditMonitor)
+	router.GET(baseURL+"/monitors/:monitorID/stats/response-times", wrapper.GetMonitorResponseTimeStats)
 
 }
 
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"H4sIAAAAAAAC/9xYb2/bthP+KgR/P6BvNMtdi6Hwq7m1F3hL2iDJsBeBYdDUWWJDkQp5SmoE/u4DKcmS",
-	"LDl2lz/F9s4yqefunufueNQD5TrNtAKFlo4eqAGbaWXBP0xgxXKJU2O0cc9cKwSF7ifLMik4Q6FV+NVq",
-	"5f6zPIGUuV//N7CiI/q/sAYPi1UberSL0gzdbDYBjcByIzIHRkd0TGJQYAQn4LYSU+8NShveu08GGMKY",
-	"c50rvIDbHKx3LTM6A4OiiIEV6wvFUnDPuM6AjqhFI1RMNwGFlAnZu5Ixa++1iXoWNwE1cJsLAxEdXbeN",
-	"VJANgPkmKN0900qgi3+PuzwBfrMQCsHcMbkQamGBaxX5xVQokeYpHb0bBpVHbmsMxkeiokwLhYvcyMM+",
-	"t3YHjxh2zk8jgU9y/XW9baVYx1Go8rmdd/4twnOLOi1Tj+sIiM15Qpglb7yszlZu4Q0NugmTgrUshi70",
-	"mDSeCVvqHAkmUFjpIu3GXu6q4OfbF/TyK3B0pk8Ax1KWEn1cz6JztpaaRd3oI4YHa7TE6Xji353vmrMH",
-	"bQmE1B5tdBseM4ati0qMoT+L3MrCF9+edTCL/W+jRibr11fapAyLLb+8p90a26HDAzdstNxpowc1dzPF",
-	"RVS20Z0K8i0iWrC2NxFD+AmFby2dnBNHtCcRuZKpwZ0Xpzqeqb3Cob4BdRi42LaF29sanqPH9jbVKmee",
-	"2oz+CfMHGtgeaQIqSv3t0ZWxzZie0hB2UTuSNQwutZbAVLknY7mFqH9ZMosLT9h3MdCXZDttese5pidN",
-	"Hh7r553EvdJxLKtz9NyB7U07b6ov5k4du31zP18Az43A9aWjvkD5CMyAGeeYuKelf/qt4uf3v65oOZV4",
-	"C3615ipBzIoZB74hGMXkRHPbPSDcPjsKw1hgki8HXKfhSup7fhNGegkmZUqFF9Px5Gw6SB13PuWOeatI",
-	"uJWuxjfGsVGQdCVMKpQe8ISpmCnxa+wWHBLtzGWTCvONJUvGb0A5T6TgUJ6yxYhFz2ZX3+NheDr7NP18",
-	"6QNz+Q0mtV9Wl2DuBIcjgwwoCpRudw1bu3gHxhYhDAfDwVtnRWegWCboiL4bDAfvfFvBxAsTshyTsJzo",
-	"ijTSRXK51PIT7yyio/b4SYuEAosfdbR+tlm5d8TdtNMXTQ7+j8bg/vPwbTfHPl1Mx1fTSSGsH+z3md9i",
-	"ha0bgK+PPE2ZWW/jt4QRBfeEbXlAFltXVL5gfE0VjEodC7WfzlO//DI0tg6no+gbPq/t6pztue1czk4+",
-	"Tyfkz/Pn0uVUx8Qz2SNEWg5szkAMPSq05zpfFoalgODeuX6gTkF6m4NZ06Cq93L0qenYXlPe9k1Q/SBS",
-	"pALbKOxbiTIcBo9jzl9Qv/5Jt0fIL388UcHy5PE8N8+c67kLsBb4BJAwKUklJhGKMHIvMCEZi4XyUTb0",
-	"36rpTs/Helk1TL1kL9u5RP7YXnYs44XrZadLtyz1ENwssvCh/DWbbIoIJCB0yZ/4/2vy+0rOnU51sWxx",
-	"6S55zQLaHde6VfK+S+xkejp9PWKL0B+nNNjbqerb7uRVaXuh5tK8tf/H+kt3Zn9pwZ6/f+2/dxzVxHpq",
-	"7dUU9d4SbUiu/FXHf3s6UHRZ3qNj4zPgv0/Anm+Yx8+CP0g55zNhlVZkuSb+mt138nhYc1epUd+/RmEo",
-	"NWcy0RZHH4YfhnQz3/wdAAD//5e70RT4FwAA",
+	"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",
+	"AA==",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

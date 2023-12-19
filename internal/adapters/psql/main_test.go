@@ -7,12 +7,16 @@ import (
 	"testing"
 	"time"
 
+	"github.com/flowck/dobermann/backend/internal/adapters/psql"
 	"github.com/flowck/dobermann/backend/internal/common/postgres"
+	"github.com/flowck/dobermann/backend/tests"
 )
 
 var (
-	db  *sql.DB
-	ctx context.Context
+	db                *sql.DB
+	ctx               context.Context
+	monitorRepository psql.MonitorRepository
+	fixtureClient     tests.FixtureClient
 )
 
 // Set up file
@@ -30,6 +34,13 @@ func TestMain(m *testing.M) {
 	err = postgres.ApplyMigrations(db, "../../../misc/sql/migrations")
 	if err != nil {
 		panic(err)
+	}
+
+	monitorRepository = psql.NewMonitorRepository(db)
+
+	fixtureClient = tests.FixtureClient{
+		Db:  db,
+		Ctx: ctx,
 	}
 
 	os.Exit(m.Run())
