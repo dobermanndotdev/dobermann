@@ -74,7 +74,7 @@ func main() {
 	}
 
 	monitorRepository := psql.NewMonitorRepository(db)
-	txProvider := transaction.NewPsqlProvider(db, publisher)
+	txProvider := transaction.NewPsqlProvider(db, publisher, logger)
 
 	application := &app.App{
 		Commands: app.Commands{

@@ -35,7 +35,7 @@ func (h CreateAccountHandler) Execute(ctx context.Context, cmd CreateAccount) er
 
 		err = adapters.UserRepository.Insert(ctx, accountOwner)
 		if err != nil {
-			return fmt.Errorf("unable to save user: %v", err)
+			return err
 		}
 
 		return nil
