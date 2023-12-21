@@ -216,33 +216,6 @@ func (p MonitorRepository) Delete(ctx context.Context, ID domain.ID) error {
 		return fmt.Errorf("error querying the monitor by id %s: %v", ID, err)
 	}
 
-	incidents, err := models.Incidents(models.IncidentWhere.MonitorID.EQ(ID.String())).All(ctx, p.db)
-	if err != nil {
-		return fmt.Errorf("error querying incidents of monitor with id '%s': %v", ID, err)
-	}
-
-	for _, incident := range incidents {
-		_, err = models.IncidentActions(models.IncidentActionWhere.IncidentID.EQ(incident.ID)).DeleteAll(ctx, p.db)
-		if err != nil {
-			return fmt.Errorf("error deleting monitor incident actions of monitor with id '%s': %v", ID, err)
-		}
-	}
-
-	_, err = models.Incidents(models.IncidentWhere.MonitorID.EQ(ID.String())).DeleteAll(ctx, p.db)
-	if err != nil {
-		return fmt.Errorf("error deleting monitor incident of monitor with id '%s': %v", ID, err)
-	}
-
-	_, err = queries.Raw("DELETE FROM subscribers WHERE monitor_id = $1", ID.String()).ExecContext(ctx, p.db)
-	if err != nil {
-		return fmt.Errorf("error deleting subscribers of monitor with id '%s': %v", ID, err)
-	}
-
-	_, err = queries.Raw("DELETE FROM monitor_check_results WHERE monitor_id = $1", ID.String()).ExecContext(ctx, p.db)
-	if err != nil {
-		return fmt.Errorf("error deleting check results of monitor with id '%s': %v", ID, err)
-	}
-
 	_, err = model.Delete(ctx, p.db)
 	if err != nil {
 		return fmt.Errorf("error deleting monitor with id '%s': %v", ID, err)
