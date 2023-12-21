@@ -146,7 +146,7 @@ func main() {
 	userRepository := psql.NewUserRepository(db)
 	eventPublisher := events.NewPublisher(publisher)
 	monitorRepository := psql.NewMonitorRepository(db)
-	txProvider := transaction.NewPsqlProvider(db, publisher)
+	txProvider := transaction.NewPsqlProvider(db, publisher, logger)
 
 	//POST_IDEA: Mocking services and its dynamic initialisation
 	var resendService resend.Service

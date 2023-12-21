@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 
 	"github.com/volatiletech/sqlboiler/v4/boil"
 
@@ -49,11 +50,15 @@ func (p UserRepository) FindByEmail(ctx context.Context, email account.Email) (*
 }
 
 func (p UserRepository) Insert(ctx context.Context, user *account.User) error {
-	model := mapUserToModel(user)
-	err := model.Insert(ctx, p.db, boil.Infer())
+	exists, err := models.Users(models.UserWhere.Email.EQ(user.Email().Address())).Exists(ctx, p.db)
 	if err != nil {
-		return err
+		return fmt.Errorf("unable to check if %s is already taken: %v", user.Email(), err)
 	}
 
-	return nil
+	if exists {
+		return account.ErrAccountExists
+	}
+
+	model := mapUserToModel(user)
+	return model.Insert(ctx, p.db, boil.Infer())
 }

@@ -10,15 +10,18 @@ import (
 	"github.com/flowck/dobermann/backend/internal/adapters/events"
 	"github.com/flowck/dobermann/backend/internal/adapters/psql"
 	"github.com/flowck/dobermann/backend/internal/app/command"
+	"github.com/flowck/dobermann/backend/internal/common/logs"
 )
 
 type PsqlProvider struct {
+	logger    *logs.Logger
 	publisher message.Publisher
 	db        boil.ContextBeginner
 }
 
-func NewPsqlProvider(db boil.ContextBeginner, publisher message.Publisher) PsqlProvider {
+func NewPsqlProvider(db boil.ContextBeginner, publisher message.Publisher, logger *logs.Logger) PsqlProvider {
 	return PsqlProvider{
+		logger:    logger,
 		db:        db,
 		publisher: publisher,
 	}
@@ -39,15 +42,15 @@ func (p PsqlProvider) Transact(ctx context.Context, f command.TransactFunc) erro
 	}
 
 	if err = f(adapters); err != nil {
-		if rollbackErr := tx.Rollback(); err != nil {
-			return fmt.Errorf("an error while trying to rollback transaction failed due to: %v %v", err, rollbackErr)
+		if rollbackErr := tx.Rollback(); rollbackErr != nil {
+			p.logger.WithError(err).WithField("rollback_err", rollbackErr).Error("Rollback error")
 		}
 
-		return fmt.Errorf("transaction rolled back due to: %v", err)
+		return err
 	}
 
 	if err = tx.Commit(); err != nil {
-		return fmt.Errorf("unable to commit transaction: %v", err)
+		return err
 	}
 
 	return nil

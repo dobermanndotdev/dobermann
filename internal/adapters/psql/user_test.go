@@ -20,6 +20,7 @@ func TestUserRepository_Lifecycle(t *testing.T) {
 
 	repo := psql.NewUserRepository(db)
 	require.NoError(t, repo.Insert(ctx, user))
+	require.ErrorIs(t, repo.Insert(ctx, user), account.ErrAccountExists)
 
 	t.Run("find_by_email", func(t *testing.T) {
 		userFound, err := repo.FindByEmail(ctx, user.Email())
