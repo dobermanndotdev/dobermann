@@ -8,6 +8,7 @@ import (
 
 	"github.com/brianvoe/gofakeit"
 	"github.com/stretchr/testify/require"
+	"github.com/volatiletech/null/v8"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 
 	"github.com/flowck/dobermann/backend/internal/adapters/models"
@@ -106,6 +107,35 @@ func FixtureIncident(t *testing.T) *monitor.Incident {
 type FixtureClient struct {
 	Db  *sql.DB
 	Ctx context.Context
+}
+
+func (f *FixtureClient) FixtureAndInsertIncidents(t *testing.T, monitorID domain.ID, count int) []models.Incident {
+	var model models.Incident
+	incidents := make([]models.Incident, count)
+
+	for i := 0; i < count; i++ {
+		model = models.Incident{
+			ID:         domain.NewID().String(),
+			MonitorID:  monitorID.String(),
+			IsResolved: false,
+			CreatedAt:  time.Now(),
+		}
+		require.NoError(t, model.Insert(f.Ctx, f.Db, boil.Infer()))
+
+		incidentAction := models.IncidentAction{
+			ID:                domain.NewID().String(),
+			Description:       null.StringFrom(gofakeit.Sentence(20)),
+			ActionType:        monitor.IncidentActionTypeCreated.String(),
+			IncidentID:        model.ID,
+			TakenByUserWithID: null.String{},
+			At:                time.Now(),
+		}
+		require.NoError(t, incidentAction.Insert(f.Ctx, f.Db, boil.Infer()))
+
+		incidents[i] = model
+	}
+
+	return incidents
 }
 
 func (f *FixtureClient) FixtureCheckResults(t *testing.T, monitorID domain.ID, responseTimeInMs int16, rangeInDays int) {

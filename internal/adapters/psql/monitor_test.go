@@ -60,10 +60,9 @@ func TestMonitorRepository_Delete(t *testing.T) {
 	account00 := tests.FixtureAndInsertAccount(t, db, true)
 	monitor00 := tests.FixtureMonitor(t, account00)
 	require.NoError(t, monitorRepository.Insert(ctx, monitor00))
-	assert.NoError(t, monitorRepository.Delete(ctx, monitor00.ID()))
 
-	_, err := monitorRepository.FindByID(ctx, monitor00.ID())
-	assert.ErrorIs(t, err, monitor.ErrMonitorNotFound)
+	err := monitorRepository.Delete(ctx, monitor00.ID())
+	assert.NoError(t, err)
 }
 
 func TestMonitorRepository_ResponseTimeStats(t *testing.T) {

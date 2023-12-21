@@ -19,7 +19,7 @@ CREATE TABLE users (
     account_id VARCHAR(26) NOT NULL,
     created_at TIMESTAMPTZ DEFAULT now() NOT NULL,
 
-    CONSTRAINT pk_user_belongs_to_account FOREIGN KEY (account_id) REFERENCES accounts(id),
+    CONSTRAINT pk_user_belongs_to_account FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE CASCADE,
     CONSTRAINT un_email_is_unique UNIQUE (email)
 );
 
@@ -32,7 +32,7 @@ CREATE TABLE monitors (
     last_checked_at TIMESTAMPTZ,
     check_interval_in_seconds INT NOT NULL DEFAULT 30,
 
-    CONSTRAINT pk_monitor_belongs_to_account FOREIGN KEY (account_id) REFERENCES accounts(id)
+    CONSTRAINT pk_monitor_belongs_to_account FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE CASCADE
 );
 
 CREATE TABLE incidents (
@@ -41,7 +41,7 @@ CREATE TABLE incidents (
     is_resolved BOOLEAN DEFAULT false NOT NULL,
     created_at TIMESTAMPTZ DEFAULT now() NOT NULL,
 
-    CONSTRAINT pk_incident_belongs_to_monitor FOREIGN KEY (monitor_id) REFERENCES monitors (id)
+    CONSTRAINT pk_incident_belongs_to_monitor FOREIGN KEY (monitor_id) REFERENCES monitors (id) ON DELETE CASCADE
 );
 
 CREATE TYPE INCIDENT_ACTION_TYPE AS ENUM('resolved', 'acknowledged', 'created');
@@ -54,8 +54,8 @@ CREATE TABLE incident_actions (
     taken_by_user_with_id VARCHAR(26),
     at TIMESTAMPTZ DEFAULT now() NOT NULL,
 
-    CONSTRAINT pk_incident_action_belongs_to_incidents FOREIGN KEY (incident_id) REFERENCES incidents (id),
-    CONSTRAINT pk_incident_action_can_be_taken_by_user FOREIGN KEY (taken_by_user_with_id) REFERENCES users (id)
+    CONSTRAINT pk_incident_action_belongs_to_incidents FOREIGN KEY (incident_id) REFERENCES incidents (id) ON DELETE CASCADE,
+    CONSTRAINT pk_incident_action_can_be_taken_by_user FOREIGN KEY (taken_by_user_with_id) REFERENCES users (id) ON DELETE CASCADE
 );
 
 CREATE TABLE subscribers (
@@ -63,8 +63,8 @@ CREATE TABLE subscribers (
     monitor_id VARCHAR(26) NOT NULL,
 
     CONSTRAINT pk_user_id_monitor_id PRIMARY KEY (user_id, monitor_id),
-    CONSTRAINT fk_is_attached_to_a_user FOREIGN KEY (user_id) REFERENCES users (id),
-    CONSTRAINT fk_is_attached_to_a_monitor FOREIGN KEY (monitor_id) REFERENCES monitors (id)
+    CONSTRAINT fk_is_attached_to_a_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
+    CONSTRAINT fk_is_attached_to_a_monitor FOREIGN KEY (monitor_id) REFERENCES monitors (id) ON DELETE CASCADE
 );
 
 -- +goose StatementEnd
