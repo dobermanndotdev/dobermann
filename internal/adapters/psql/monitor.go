@@ -228,7 +228,7 @@ func (p MonitorRepository) Delete(ctx context.Context, ID domain.ID) error {
 		}
 	}
 
-	_, err = models.Incidents(models.IncidentWhere.MonitorID.EQ(ID.String())).All(ctx, p.db)
+	_, err = models.Incidents(models.IncidentWhere.MonitorID.EQ(ID.String())).DeleteAll(ctx, p.db)
 	if err != nil {
 		return fmt.Errorf("error deleting monitor incident of monitor with id '%s': %v", ID, err)
 	}

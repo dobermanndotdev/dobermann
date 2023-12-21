@@ -6,6 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/flowck/dobermann/backend/internal/adapters/models"
 	"github.com/flowck/dobermann/backend/internal/app/query"
 	"github.com/flowck/dobermann/backend/internal/domain"
 	"github.com/flowck/dobermann/backend/internal/domain/monitor"
@@ -60,10 +61,25 @@ func TestMonitorRepository_Delete(t *testing.T) {
 	account00 := tests.FixtureAndInsertAccount(t, db, true)
 	monitor00 := tests.FixtureMonitor(t, account00)
 	require.NoError(t, monitorRepository.Insert(ctx, monitor00))
-	assert.NoError(t, monitorRepository.Delete(ctx, monitor00.ID()))
 
-	_, err := monitorRepository.FindByID(ctx, monitor00.ID())
-	assert.ErrorIs(t, err, monitor.ErrMonitorNotFound)
+	fixtureClient.FixtureCheckResults(t, monitor00.ID(), 100, 2)
+	fixtureClient.FixtureAndInsertIncidents(t, monitor00.ID(), 10)
+
+	err := monitorRepository.Delete(ctx, monitor00.ID())
+	assert.NoError(t, err)
+
+	_, err = monitorRepository.FindByID(ctx, monitor00.ID())
+	assert.ErrorIs(t, err, monitor.ErrMonitorNotFound, "monitor must be deleted")
+
+	incidentRows, err := models.Incidents(models.IncidentWhere.MonitorID.EQ(monitor00.ID().String())).All(ctx, db)
+	require.NoError(t, err)
+	assert.Nil(t, incidentRows, "incidents must be deleted")
+
+	checkResultRows, err := models.MonitorCheckResults(
+		models.MonitorCheckResultWhere.MonitorID.EQ(monitor00.ID().String()),
+	).All(ctx, db)
+	require.NoError(t, err)
+	assert.Nil(t, checkResultRows, "check results must be deleted")
 }
 
 func TestMonitorRepository_ResponseTimeStats(t *testing.T) {
