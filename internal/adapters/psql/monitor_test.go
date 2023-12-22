@@ -2,6 +2,7 @@ package psql_test
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -90,6 +91,28 @@ func TestMonitorRepository_ResponseTimeStats(t *testing.T) {
 	}
 }
 
+func TestMonitorRepository_UpdateForCheck(t *testing.T) {
+	accID := tests.FixtureAndInsertAccount(t, db, true).ID()
+	monitor01 := fixtureMonitor(t, accID, time.Second*30, time.Now().Add(-time.Minute))
+
+	err := monitorRepository.Insert(ctx, monitor01)
+	require.NoError(t, err)
+
+	var allFoundMonitors []*monitor.Monitor
+	err = monitorRepository.UpdateForCheck(ctx, func(foundMonitors []*monitor.Monitor) error {
+		allFoundMonitors = foundMonitors
+		return nil
+	})
+
+	require.NotEmpty(t, allFoundMonitors)
+
+	for _, m := range allFoundMonitors {
+		assert.True(t, time.Since(*m.LastCheckedAt()) > m.CheckInterval(), "monitor's now() - lastCheckedAt must be equal or greater than check interval in seconds")
+	}
+
+	require.NoError(t, err)
+}
+
 func assertMonitor(t *testing.T, expected, found *monitor.Monitor) {
 	t.Helper()
 
@@ -101,4 +124,27 @@ func assertMonitor(t *testing.T, expected, found *monitor.Monitor) {
 	assert.Equal(t, expected.IsEndpointUp(), found.IsEndpointUp())
 	assert.Equal(t, expected.CheckInterval(), found.CheckInterval())
 	assert.NotEmpty(t, found.Subscribers(), "has subscribers")
+}
+
+func fixtureMonitor(
+	t *testing.T,
+	accID domain.ID,
+	checkInterval time.Duration,
+	lastCheckedAt time.Time,
+) *monitor.Monitor {
+	m, err := monitor.NewMonitor(
+		domain.NewID(),
+		tests.EndpointUrlGenerator(true),
+		accID,
+		true,
+		false,
+		nil,
+		nil,
+		time.Now(),
+		checkInterval,
+		tests.ToPtr(lastCheckedAt),
+	)
+	require.NoError(t, err)
+
+	return m
 }

@@ -100,7 +100,7 @@ func (c BulkCheckEndpointsHandler) handleEndpointDown(
 	adapters TransactableAdapters,
 	m *monitor.Monitor,
 ) error {
-	m.MarkEndpointAsUp()
+	m.MarkEndpointAsDown()
 
 	return adapters.EventPublisher.PublishEndpointCheckFailed(ctx, EndpointCheckFailedEvent{
 		MonitorID: m.ID().String(),

@@ -33,7 +33,8 @@ func (p MonitorRepository) UpdateForCheck(
 ) error {
 	mods := []qm.QueryMod{
 		models.MonitorWhere.IsPaused.EQ(false),
-		qm.Where("DATE_PART('seconds', now()::timestamp - last_checked_at::timestamp) >= check_interval_in_seconds"),
+		models.MonitorWhere.LastCheckedAt.IsNotNull(),
+		qm.Where("EXTRACT(EPOCH FROM now() - last_checked_at) >= check_interval_in_seconds"),
 		qm.For("UPDATE SKIP LOCKED"),
 		qm.Limit(100),
 	}
