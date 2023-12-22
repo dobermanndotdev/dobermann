@@ -8,8 +8,7 @@ on:
 
 jobs:
   deploy:
-    # runs-on: ubuntu-latest
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     steps:
       - name: Clone
         uses: actions/checkout@v4
