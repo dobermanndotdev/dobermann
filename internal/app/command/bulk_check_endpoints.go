@@ -76,14 +76,18 @@ func (c BulkCheckEndpointsHandler) checkMatchedEndpoints(
 				(*results)[foundMonitor.ID()] = checkResult
 
 				if checkResult.IsEndpointDown() {
-					if err = c.handleEndpointDown(ctx, adapters, foundMonitor); err != nil {
+					err = c.handleEndpointDown(ctx, adapters, foundMonitor)
+					if err != nil {
 						return err
 					}
 
 					continue
 				}
 
-				return c.handleEndpointIsUp(ctx, adapters, foundMonitor)
+				err = c.handleEndpointIsUp(ctx, adapters, foundMonitor)
+				if err != nil {
+					return err
+				}
 			}
 
 			return nil
