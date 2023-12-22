@@ -3,6 +3,7 @@ package tests
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"testing"
 	"time"
 
@@ -159,4 +160,14 @@ func (f *FixtureClient) FixtureCheckResults(t *testing.T, monitorID domain.ID, r
 			require.NoError(t, model.Insert(f.Ctx, f.Db, boil.Infer()))
 		}
 	}
+}
+
+func EndpointUrlGenerator(isUp bool) string {
+	isUpParam := "false"
+
+	if isUp {
+		isUpParam = "true"
+	}
+
+	return fmt.Sprintf("%s?id=%s&is_up=%s", SimulatorEndpointUrl, domain.NewID().String(), isUpParam)
 }
