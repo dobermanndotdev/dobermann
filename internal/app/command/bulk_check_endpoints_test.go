@@ -88,7 +88,6 @@ func TestNewBulkCheckEndpointsHandler(t *testing.T) {
 			}
 		})
 	}
-
 }
 
 func fixtureMonitor(t *testing.T, acc *account.Account, isUp bool) *monitor.Monitor {
