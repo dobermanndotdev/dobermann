@@ -259,35 +259,23 @@ components:
         created_at:
           type: string
           format: date-time
-    ResponseTimeStats:
-      required: [response_time_per_region]
-      properties:
-        response_time_per_region:
-          type: array
-          items:
-            $ref: '#/components/schemas/ResponseTimePerRegion'
-    ResponseTimePerRegion:
-      required: [region, data]
-      properties:
-        region:
-          type: string
-        data:
-          type: array
-          items:
-            $ref: '#/components/schemas/ResponseTimePerDate'
-    ResponseTimePerDate:
-      required: [value, date]
+    ResponseTimeStat:
+      required: [value, date, region]
       properties:
         value:
           type: integer
         date:
           type: string
           format: date-time
+        region:
+          type: string
     GetMonitorResponseTimeStatsPayload:
       required: [data]
       properties:
         data:
-          $ref: '#/components/schemas/ResponseTimeStats'
+          type: array
+          items:
+            $ref: '#/components/schemas/ResponseTimeStat'
     EditMonitorRequest:
       required: [endpoint_url, check_interval_in_seconds]
       properties:

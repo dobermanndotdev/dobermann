@@ -68,26 +68,56 @@ func TestMonitorRepository_Delete(t *testing.T) {
 
 func TestMonitorRepository_ResponseTimeStats(t *testing.T) {
 	account00 := tests.FixtureAndInsertAccount(t, db, true)
-	monitor00 := tests.FixtureMonitor(t, account00)
-	require.NoError(t, monitorRepository.Insert(ctx, monitor00))
-	expectedAvgResponseTimeInMs := int16(200)
-	rangeInDays := 10
+	now := time.Now()
 
-	fixtureClient.FixtureCheckResults(t, monitor00.ID(), expectedAvgResponseTimeInMs, rangeInDays)
+	testCases := []struct {
+		name                   string
+		rangeInDays            int
+		checksPerDay           int
+		checkIntervalInSeconds int
+		startCheckedAt         time.Time
+		expectedCheckResults   int
+	}{
+		{
+			name:                   "query_only_daily_check_results",
+			rangeInDays:            1,
+			checksPerDay:           48,
+			checkIntervalInSeconds: 30,
+			startCheckedAt:         time.Date(now.Year(), now.Month(), now.Day()-1, 0, 0, 0, 0, time.UTC),
+			expectedCheckResults:   48,
+		},
+		{
+			name:                   "query_weekly_check_results",
+			rangeInDays:            7,
+			checksPerDay:           8,
+			checkIntervalInSeconds: 60 * 60, // 1h
+			startCheckedAt:         time.Date(now.Year(), now.Month(), now.Day()-7, 0, 0, 0, 0, time.UTC),
+			expectedCheckResults:   8 * 7,
+		},
+		{
+			name:                   "query_monthly_check_results",
+			rangeInDays:            31,
+			checksPerDay:           8,
+			checkIntervalInSeconds: 60 * 60, // 1h
+			startCheckedAt:         time.Date(now.Year(), now.Month(), now.Day()-31, 0, 0, 0, 0, time.UTC),
+			expectedCheckResults:   8 * 31,
+		},
+	}
 
-	responseTimeStats, err := monitorRepository.ResponseTimeStats(ctx, query.ResponseTimeStatsOptions{
-		RangeInDays: rangeInDays,
-		MonitorID:   monitor00.ID(),
-	})
-	require.NoError(t, err)
-	require.NotEmpty(t, responseTimeStats.ResponseTimePerRegion)
+	for i := range testCases {
+		tc := testCases[i]
 
-	for _, region := range responseTimeStats.ResponseTimePerRegion {
-		require.Len(t, region.Data, rangeInDays)
+		t.Run(tc.name, func(t *testing.T) {
+			monitor00 := tests.FixtureMonitor(t, account00)
+			require.NoError(t, monitorRepository.Insert(ctx, monitor00))
+			fixtureClient.FixtureCheckResults(t, monitor00.ID(), tc.startCheckedAt, tc.rangeInDays, tc.checksPerDay, tc.checkIntervalInSeconds)
 
-		for _, avgResponseTimePerDay := range region.Data {
-			assert.Equal(t, expectedAvgResponseTimeInMs, avgResponseTimePerDay.Value)
-		}
+			result, err := monitorRepository.ResponseTimeStats(ctx, monitor00.ID(), tests.ToPtr(tc.rangeInDays))
+			require.NoError(t, err)
+			require.NotEmpty(t, result)
+
+			assert.Equal(t, tc.expectedCheckResults, len(result))
+		})
 	}
 }
 

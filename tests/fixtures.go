@@ -30,7 +30,7 @@ func FixtureAccount(t *testing.T) *account.Account {
 	email, err := account.NewEmail(gofakeit.Email())
 	require.NoError(t, err)
 
-	password, err := account.NewPassword(FixturePassword())
+	password, err := account.NewPassword(email.Address())
 	require.NoError(t, err)
 
 	acc, err := account.NewFirstTimeAccount(gofakeit.Company(), email, password)
@@ -139,22 +139,23 @@ func (f *FixtureClient) FixtureAndInsertIncidents(t *testing.T, monitorID domain
 	return incidents
 }
 
-func (f *FixtureClient) FixtureCheckResults(t *testing.T, monitorID domain.ID, responseTimeInMs int16, rangeInDays int) {
-	now := time.Now()
-	startCheckedAt := time.Date(now.Year(), now.Month(), now.Day()-rangeInDays, 0, 0, 0, 0, time.UTC)
-
+func (f *FixtureClient) FixtureCheckResults(
+	t *testing.T,
+	monitorID domain.ID,
+	startCheckedAt time.Time,
+	rangeInDays, checksPerDay, checkIntervalInSeconds int,
+) {
 	for i := 0; i < rangeInDays; i++ {
-		checkedAt := startCheckedAt.Add(time.Hour * 24 * time.Duration(i))
+		checkedAt := startCheckedAt.Add(time.Hour * 24 * time.Duration(i+1))
 
-		// 5 check results per day
-		for j := 0; j < 5; j++ {
-			checkedAt = checkedAt.Add(time.Hour * 2 * time.Duration(j))
+		for j := 0; j < checksPerDay; j++ {
+			checkedAt = checkedAt.Add(time.Second * time.Duration(checkIntervalInSeconds))
 			model := models.MonitorCheckResult{
 				StatusCode:       200,
 				CheckedAt:        checkedAt,
-				ResponseTimeInMS: responseTimeInMs,
 				MonitorID:        monitorID.String(),
-				Region:           monitor.RegionEurope.String(),
+				ResponseTimeInMS: int16(gofakeit.Number(150, 350)),
+				Region:           monitor.Regions[gofakeit.Number(0, len(monitor.Regions)-1)].String(),
 			}
 
 			require.NoError(t, model.Insert(f.Ctx, f.Db, boil.Infer()))

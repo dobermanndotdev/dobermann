@@ -69,22 +69,14 @@ func mapRequestToMonitor(body CreateMonitorRequest, user *authenticatedUser) (*m
 	)
 }
 
-func mapMonitorResponseTimeStatsToResponse(stats query.ResponseTimeStats) GetMonitorResponseTimeStatsPayload {
-	result := ResponseTimeStats{
-		ResponseTimePerRegion: make([]ResponseTimePerRegion, len(stats.ResponseTimePerRegion)),
-	}
+func mapMonitorResponseTimeStatsToResponse(stats []query.ResponseTimeStat) GetMonitorResponseTimeStatsPayload {
+	result := make([]ResponseTimeStat, len(stats))
 
-	for i, region := range stats.ResponseTimePerRegion {
-		result.ResponseTimePerRegion[i] = ResponseTimePerRegion{
-			Region: region.Region.String(),
-			Data:   make([]ResponseTimePerDate, len(region.Data)),
-		}
-
-		for j, dataPoint := range region.Data {
-			result.ResponseTimePerRegion[i].Data[j] = ResponseTimePerDate{
-				Date:  dataPoint.Date,
-				Value: int(dataPoint.Value),
-			}
+	for i, stat := range stats {
+		result[i] = ResponseTimeStat{
+			Region: stat.Region,
+			Date:   stat.Date,
+			Value:  stat.Value,
 		}
 	}
 
