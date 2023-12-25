@@ -40,16 +40,17 @@ import (
 var Version = "development"
 
 type Config struct {
-	AmqpUrl                  string `envconfig:"AMQP_URL"`
-	Port                     int    `envconfig:"HTTP_PORT"`
-	JwtSecret                string `envconfig:"JWT_SECRET"`
-	DebugMode                string `envconfig:"DEBUG_MODE"`
-	DatabaseURL              string `envconfig:"DATABASE_URL"`
-	ResendApiKey             string `envconfig:"RESEND_API_KEY"`
-	HostnameForNotifications string `envconfig:"HOSTNAME_NOTIFICATION"`
-	SentFromEmailAddress     string `envconfig:"SENT_FROM_EMAIL_ADDRESS"`
-	IsProductionMode         bool   `envconfig:"PRODUCTION_MODE"`
-	Region                   string `envconfig:"WORKER_REGION"`
+	AmqpUrl                       string `envconfig:"AMQP_URL"`
+	Port                          int    `envconfig:"HTTP_PORT"`
+	JwtSecret                     string `envconfig:"JWT_SECRET"`
+	DebugMode                     string `envconfig:"DEBUG_MODE"`
+	DatabaseURL                   string `envconfig:"DATABASE_URL"`
+	ResendApiKey                  string `envconfig:"RESEND_API_KEY"`
+	HostnameForNotifications      string `envconfig:"HOSTNAME_NOTIFICATION"`
+	SentFromEmailAddress          string `envconfig:"SENT_FROM_EMAIL_ADDRESS"`
+	IsProductionMode              bool   `envconfig:"PRODUCTION_MODE"`
+	Region                        string `envconfig:"WORKER_REGION"`
+	EndpointCheckTimeoutInSeconds int    `envconfig:"ENDPOINT_CHECK_TIMEOUT_IN_SECONDS" required:"true"`
 }
 
 func (c Config) IsDebugMode() bool {
@@ -138,7 +139,7 @@ func main() {
 
 	logger.Info("Connected successfully to RabbitMQ")
 
-	httpChecker, err := endpoint_checkers.NewHttpChecker(config.Region)
+	httpChecker, err := endpoint_checkers.NewHttpChecker(config.Region, config.EndpointCheckTimeoutInSeconds)
 	if err != nil {
 		logger.Fatal(err)
 	}

@@ -25,12 +25,13 @@ import (
 var Version = "development"
 
 type Config struct {
-	AmqpUrl          string `envconfig:"AMQP_URL"`
-	Port             int    `envconfig:"HTTP_PORT"`
-	DebugMode        string `envconfig:"DEBUG_MODE"`
-	DatabaseURL      string `envconfig:"DATABASE_URL"`
-	Region           string `envconfig:"WORKER_REGION" required:"true"`
-	IsProductionMode bool   `envconfig:"PRODUCTION_MODE"`
+	AmqpUrl                       string `envconfig:"AMQP_URL"`
+	Port                          int    `envconfig:"HTTP_PORT"`
+	DebugMode                     string `envconfig:"DEBUG_MODE"`
+	DatabaseURL                   string `envconfig:"DATABASE_URL"`
+	Region                        string `envconfig:"WORKER_REGION" required:"true"`
+	IsProductionMode              bool   `envconfig:"PRODUCTION_MODE"`
+	EndpointCheckTimeoutInSeconds int    `envconfig:"ENDPOINT_CHECK_TIMEOUT_IN_SECONDS" required:"true"`
 }
 
 func (c Config) IsDebugMode() bool {
@@ -68,7 +69,7 @@ func main() {
 		logger.Fatal(err)
 	}
 
-	httpChecker, err := endpoint_checkers.NewHttpChecker(config.Region)
+	httpChecker, err := endpoint_checkers.NewHttpChecker(config.Region, config.EndpointCheckTimeoutInSeconds)
 	if err != nil {
 		logger.Fatal(err)
 	}
