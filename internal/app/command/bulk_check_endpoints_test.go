@@ -35,7 +35,7 @@ func (p mockTxProvider) Transact(ctx context.Context, fn command.TransactFunc) e
 }
 
 func TestNewBulkCheckEndpointsHandler(t *testing.T) {
-	endpointsChecker, err := endpoint_checkers.NewHttpChecker("europe")
+	endpointsChecker, err := endpoint_checkers.NewHttpChecker("europe", 5)
 	require.NoError(t, err)
 	txProvider := mockTxProvider{
 		EventPublisher:    events.NewPublisherMock(),

@@ -66,6 +66,10 @@ func main() {
 	signal.Notify(done, syscall.SIGINT, syscall.SIGTERM)
 
 	router.GET("/", func(c echo.Context) error {
+		if c.QueryParam("timeout") == "true" {
+			time.Sleep(time.Second * 15)
+		}
+
 		if c.QueryParam("is_up") == "true" {
 			return c.NoContent(http.StatusOK)
 		}
