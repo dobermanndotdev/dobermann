@@ -154,16 +154,15 @@ func TestMonitors(t *testing.T) {
 		monitor00 := getMonitorByEndpointUrl(t, monitorPayload.EndpointUrl)
 		monitorID, err := domain.NewIdFromString(monitor00.ID)
 		require.NoError(t, err)
-		expectedAvgResponseTime := int16(200)
 
-		fixtureClient.FixtureCheckResults(t, monitorID, expectedAvgResponseTime, 10)
+		fixtureClient.FixtureCheckResults(t, monitorID, time.Now().Add(time.Hour*-24*7), 7, 2, 30)
 
 		resp01, err := cli.GetMonitorResponseTimeStatsWithResponse(ctx, monitor00.ID, &client.GetMonitorResponseTimeStatsParams{
-			RangeInDays: tests.ToPtr(10),
+			RangeInDays: tests.ToPtr(7),
 		})
 		require.NoError(t, err)
 		require.Equal(t, http.StatusOK, resp01.StatusCode())
-		require.NotEmpty(t, resp01.JSON200.Data.ResponseTimePerRegion)
+		require.NotEmpty(t, resp01.JSON200.Data)
 	})
 }
 

@@ -8,6 +8,15 @@ var (
 	RegionMiddleEast   = Region{"middle-east"}
 	RegionAsia         = Region{"asia"}
 	RegionAustralia    = Region{"australia"}
+	Regions            = []Region{
+		RegionAfrica,
+		RegionEurope,
+		RegionNorthAmerica,
+		RegionSouthAmerica,
+		RegionMiddleEast,
+		RegionAsia,
+		RegionAustralia,
+	}
 )
 
 type Region struct {

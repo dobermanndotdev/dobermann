@@ -186,15 +186,14 @@ func (h handlers) GetMonitorResponseTimeStats(
 		return NewHandlerErrorWithStatus(err, "invalid-monitor-id", http.StatusBadRequest)
 	}
 
-	rangeInDays := 1
-	if params.RangeInDays != nil {
-		rangeInDays = *params.RangeInDays
+	if params.RangeInDays == nil {
+		*params.RangeInDays = 1
 	}
 
 	ctx := c.Request().Context()
 	result, err := h.application.Queries.MonitorResponseTimeStats.Execute(ctx, query.MonitorResponseTimeStats{
 		ID:          mID,
-		RangeInDays: rangeInDays,
+		RangeInDays: params.RangeInDays,
 	})
 	if err != nil {
 		return NewHandlerError(err, "unable-to-query-stats")

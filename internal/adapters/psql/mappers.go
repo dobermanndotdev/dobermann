@@ -8,6 +8,7 @@ import (
 	"github.com/volatiletech/null/v8"
 
 	"github.com/flowck/dobermann/backend/internal/adapters/models"
+	"github.com/flowck/dobermann/backend/internal/app/query"
 	"github.com/flowck/dobermann/backend/internal/domain"
 	"github.com/flowck/dobermann/backend/internal/domain/account"
 	"github.com/flowck/dobermann/backend/internal/domain/monitor"
@@ -253,4 +254,18 @@ func mapCheckResultToModel(monitorID domain.ID, checkResult *monitor.CheckResult
 		CheckedAt:        checkResult.CheckedAt(),
 		ResponseTimeInMS: checkResult.ResponseTimeInMs(),
 	}
+}
+
+func mapModelToResponseTimeStats(modelList []*models.MonitorCheckResult) []query.ResponseTimeStat {
+	result := make([]query.ResponseTimeStat, len(modelList))
+
+	for i, model := range modelList {
+		result[i] = query.ResponseTimeStat{
+			Value:  int(model.ResponseTimeInMS),
+			Region: model.Region,
+			Date:   model.CheckedAt,
+		}
+	}
+
+	return result
 }

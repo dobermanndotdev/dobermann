@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/volatiletech/sqlboiler/v4/boil"
-	"github.com/volatiletech/sqlboiler/v4/queries"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
 
 	"github.com/flowck/dobermann/backend/internal/adapters/models"
@@ -225,56 +224,28 @@ func (p MonitorRepository) Delete(ctx context.Context, ID domain.ID) error {
 	return nil
 }
 
-type avgResponseTime struct {
-	Date  time.Time `boil:"tstamp"`
-	Value int16     `boil:"value"`
-}
-
 func (p MonitorRepository) ResponseTimeStats(
 	ctx context.Context,
-	options query.ResponseTimeStatsOptions,
-) (query.ResponseTimeStats, error) {
-	regions := []monitor.Region{
-		monitor.RegionEurope,
-		//TODO: extend this with more regions
+	monitorID domain.ID,
+	rangeInDays *int,
+) ([]query.ResponseTimeStat, error) {
+	boil.DebugMode = true
+	qms := []qm.QueryMod{
+		models.MonitorCheckResultWhere.MonitorID.EQ(monitorID.String()),
+		qm.OrderBy(fmt.Sprintf("%s ASC", models.MonitorCheckResultColumns.CheckedAt)),
 	}
 
-	var responseTimePerRegion []query.ResponseTimePerRegion
+	if rangeInDays != nil && *rangeInDays > 0 {
+		until := time.Now().Add(-1 * (time.Hour * 24 * time.Duration(*rangeInDays)))
+		until = until.Truncate(time.Hour)
 
-	for _, region := range regions {
-		var rows []avgResponseTime
-		err := queries.Raw(
-			`
-			SELECT DATE_TRUNC('day', checked_at) AS tstamp, AVG(response_time_in_ms)::INTEGER AS value
-			FROM monitor_check_results
-			WHERE monitor_id = $1 AND region = $2 AND checked_at >= CURRENT_DATE - ($3 || ' days')::INTERVAL
-			GROUP BY tstamp
-			ORDER BY tstamp;
-		`,
-			options.MonitorID.String(),
-			region.String(),
-			fmt.Sprintf(`'%d days'`, options.RangeInDays),
-		).Bind(ctx, p.db, &rows)
-		if err != nil {
-			return query.ResponseTimeStats{}, fmt.Errorf("error querying avg response time of monitor with id '%s': %v", options.MonitorID, err)
-		}
-
-		data := query.ResponseTimePerRegion{
-			Region: region,
-			Data:   make([]query.ResponseTimePerDate, len(rows)),
-		}
-
-		for i, row := range rows {
-			data.Data[i] = query.ResponseTimePerDate{
-				Value: row.Value,
-				Date:  row.Date,
-			}
-		}
-
-		responseTimePerRegion = append(responseTimePerRegion, data)
+		qms = append(qms, models.MonitorCheckResultWhere.CheckedAt.GTE(until))
 	}
 
-	return query.ResponseTimeStats{
-		ResponseTimePerRegion: responseTimePerRegion,
-	}, nil
+	modelList, err := models.MonitorCheckResults(qms...).All(ctx, p.db)
+	if err != nil {
+		return nil, err
+	}
+
+	return mapModelToResponseTimeStats(modelList), nil
 }

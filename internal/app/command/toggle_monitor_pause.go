@@ -13,23 +13,25 @@ type ToggleMonitorPause struct {
 }
 
 type ToggleMonitorPauseHandler struct {
-	monitorRepository monitor.Repository
+	txProvider TransactionProvider
 }
 
-func NewToggleMonitorPauseHandler(monitorRepository monitor.Repository) ToggleMonitorPauseHandler {
+func NewToggleMonitorPauseHandler(txProvider TransactionProvider) ToggleMonitorPauseHandler {
 	return ToggleMonitorPauseHandler{
-		monitorRepository: monitorRepository,
+		txProvider: txProvider,
 	}
 }
 
 func (h ToggleMonitorPauseHandler) Execute(ctx context.Context, cmd ToggleMonitorPause) error {
-	return h.monitorRepository.Update(ctx, cmd.MonitorID, func(foundMonitor *monitor.Monitor) error {
-		if cmd.Pause {
-			foundMonitor.Pause()
-		} else {
-			foundMonitor.UnPause()
-		}
+	return h.txProvider.Transact(ctx, func(adapters TransactableAdapters) error {
+		return adapters.MonitorRepository.Update(ctx, cmd.MonitorID, func(foundMonitor *monitor.Monitor) error {
+			if cmd.Pause {
+				foundMonitor.Pause()
+			} else {
+				foundMonitor.UnPause()
+			}
 
-		return nil
+			return nil
+		})
 	})
 }

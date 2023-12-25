@@ -182,6 +182,6 @@ func (m MonitorRepositoryMock) Delete(ctx context.Context, ID domain.ID) error {
 	return nil
 }
 
-func (m MonitorRepositoryMock) ResponseTimeStats(ctx context.Context, monitorID domain.ID) (query.ResponseTimeStats, error) {
-	return query.ResponseTimeStats{}, nil
+func (m MonitorRepositoryMock) ResponseTimeStats(ctx context.Context, monitorID domain.ID) ([]query.ResponseTimeStat, error) {
+	return nil, nil
 }

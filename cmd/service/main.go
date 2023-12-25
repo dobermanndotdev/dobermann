@@ -169,7 +169,7 @@ func main() {
 			CreateIncident:                     observability.NewCommandDecorator[command.CreateIncident](command.NewCreateIncidentHandler(txProvider), logger),
 			EditMonitor:                        observability.NewCommandDecorator[command.EditMonitor](command.NewEditMonitorHandler(monitorRepository), logger),
 			ResolveIncident:                    observability.NewCommandDecorator[command.ResolveIncident](command.NewResolveIncidentHandler(txProvider), logger),
-			ToggleMonitorPause:                 observability.NewCommandDecorator[command.ToggleMonitorPause](command.NewToggleMonitorPauseHandler(monitorRepository), logger),
+			ToggleMonitorPause:                 observability.NewCommandDecorator[command.ToggleMonitorPause](command.NewToggleMonitorPauseHandler(txProvider), logger),
 			CreateMonitor:                      observability.NewCommandDecorator[command.CreateMonitor](command.NewCreateMonitorHandler(monitorRepository, eventPublisher), logger),
 			CheckEndpoint:                      observability.NewCommandDecorator[command.CheckEndpoint](command.NewCheckEndpointHandler(httpChecker, monitorRepository, eventPublisher), logger),
 			NotifyMonitorSubscribersOnIncident: observability.NewCommandDecorator[command.NotifyMonitorSubscribersOnIncident](command.NewNotifyMonitorSubscribersOnIncidentHandler(txProvider, resendService), logger),
@@ -178,7 +178,7 @@ func main() {
 		Queries: app.Queries{
 			MonitorByID:              observability.NewQueryDecorator[query.MonitorByID, *monitor.Monitor](query.NewMonitorByIdHandler(monitorRepository), logger),
 			AllMonitors:              observability.NewQueryDecorator[query.AllMonitors, query.PaginatedResult[*monitor.Monitor]](query.NewAllMonitorsHandler(monitorRepository), logger),
-			MonitorResponseTimeStats: observability.NewQueryDecorator[query.MonitorResponseTimeStats, query.ResponseTimeStats](query.NewMonitorResponseTimeStatsHandler(monitorRepository), logger),
+			MonitorResponseTimeStats: observability.NewQueryDecorator[query.MonitorResponseTimeStats, []query.ResponseTimeStat](query.NewMonitorResponseTimeStatsHandler(monitorRepository), logger),
 
 			// IAM
 			UserByID: observability.NewQueryDecorator[query.UserByID, *account.User](query.NewUserByIdHandler(userRepository), logger),
