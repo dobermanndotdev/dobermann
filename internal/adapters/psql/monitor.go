@@ -33,6 +33,7 @@ func (p MonitorRepository) UpdateForCheck(
 	mods := []qm.QueryMod{
 		models.MonitorWhere.IsPaused.EQ(false),
 		models.MonitorWhere.LastCheckedAt.IsNotNull(),
+		qm.Load(models.MonitorRels.Incidents),
 		qm.Where("EXTRACT(EPOCH FROM now() - last_checked_at) >= check_interval_in_seconds"),
 		qm.For("UPDATE SKIP LOCKED"),
 		qm.Limit(100),

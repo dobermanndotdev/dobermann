@@ -6,7 +6,9 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/volatiletech/sqlboiler/v4/boil"
 
+	"github.com/flowck/dobermann/backend/internal/adapters/models"
 	"github.com/flowck/dobermann/backend/internal/app/query"
 	"github.com/flowck/dobermann/backend/internal/domain"
 	"github.com/flowck/dobermann/backend/internal/domain/monitor"
@@ -128,6 +130,8 @@ func TestMonitorRepository_UpdateForCheck(t *testing.T) {
 	err := monitorRepository.Insert(ctx, monitor01)
 	require.NoError(t, err)
 
+	saveIncident(t, monitor01.ID())
+
 	var allFoundMonitors []*monitor.Monitor
 	err = monitorRepository.UpdateForCheck(ctx, func(foundMonitors []*monitor.Monitor) error {
 		allFoundMonitors = foundMonitors
@@ -138,6 +142,10 @@ func TestMonitorRepository_UpdateForCheck(t *testing.T) {
 
 	for _, m := range allFoundMonitors {
 		assert.True(t, time.Since(*m.LastCheckedAt()) > m.CheckInterval(), "monitor's now() - lastCheckedAt must be equal or greater than check interval in seconds")
+
+		if m.ID() == monitor01.ID() {
+			assert.Len(t, m.Incidents(), 1)
+		}
 	}
 
 	require.NoError(t, err)
@@ -154,6 +162,15 @@ func assertMonitor(t *testing.T, expected, found *monitor.Monitor) {
 	assert.Equal(t, expected.IsEndpointUp(), found.IsEndpointUp())
 	assert.Equal(t, expected.CheckInterval(), found.CheckInterval())
 	assert.NotEmpty(t, found.Subscribers(), "has subscribers")
+}
+
+func saveIncident(t *testing.T, monitorID domain.ID) {
+	model := models.Incident{
+		ID:         domain.NewID().String(),
+		MonitorID:  monitorID.String(),
+		IsResolved: false,
+	}
+	require.NoError(t, model.Insert(ctx, db, boil.Infer()))
 }
 
 func fixtureMonitor(
