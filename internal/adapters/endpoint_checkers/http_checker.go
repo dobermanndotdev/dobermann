@@ -41,6 +41,8 @@ func (h HttpChecker) Check(ctx context.Context, endpointUrl string) (*monitor.Ch
 		return nil, fmt.Errorf("unable to create request: %v", err)
 	}
 
+	req.Header.Add("Accept-Encoding", "identity")
+
 	startedAt := time.Now()
 	resp, err := h.client.Do(req)
 	if err != nil {
