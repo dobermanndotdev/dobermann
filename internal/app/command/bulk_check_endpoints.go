@@ -114,6 +114,7 @@ func (c BulkCheckEndpointsHandler) handleEndpointIsUp(
 	m *monitor.Monitor,
 ) error {
 	m.MarkEndpointAsUp()
+
 	if !m.HasIncidentUnresolved() {
 		return nil
 	}
