@@ -39,7 +39,7 @@ func (s *service) SendEmailAboutIncident(
 	incident *monitor.Incident,
 ) error {
 	body := fmt.Sprintf(`
-Hi %s,</br>
+%s,</br>
 An incident has been created for the monitor %s. </br>
 For more details please follow the link %s. </br>
 
@@ -61,7 +61,7 @@ Dobermann - Endpoint monitoring
 
 func (s *service) SendEmailIncidentResolution(ctx context.Context, user *account.User, m *monitor.Monitor, incidentID domain.ID) error {
 	body := fmt.Sprintf(`
-Hi %s,</br>
+%s,</br>
 The last incident reported on the monitor %s has been resolved. </br>
 For more details please follow the link %s. </br>
 
