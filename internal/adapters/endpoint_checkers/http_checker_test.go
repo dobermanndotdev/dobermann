@@ -15,9 +15,6 @@ import (
 )
 
 func TestHttpChecker(t *testing.T) {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
 	simulatorEndpointUrl := os.Getenv("SIMULATOR_ENDPOINT_URL")
 
 	httpChecker, err := endpoint_checkers.NewHttpChecker(monitor.RegionEurope.String(), 2)
@@ -25,22 +22,25 @@ func TestHttpChecker(t *testing.T) {
 
 	t.Run("is_up", func(t *testing.T) {
 		t.Parallel()
-		_, err = httpChecker.Check(ctx, fmt.Sprintf("%s?is_up=true", simulatorEndpointUrl))
-		assert.NoError(t, err)
+		result, err := httpChecker.Check(context.Background(), fmt.Sprintf("%s?is_up=true", simulatorEndpointUrl))
+		require.NoError(t, err)
+		assert.Equal(t, http.StatusOK, int(result.StatusCode()))
+		assert.False(t, result.IsEndpointDown())
 	})
 
 	t.Run("is_down", func(t *testing.T) {
 		t.Parallel()
-		checkResult, err := httpChecker.Check(ctx, fmt.Sprintf("%s?is_up=false", simulatorEndpointUrl))
+		result, err := httpChecker.Check(context.Background(), fmt.Sprintf("%s?is_up=false", simulatorEndpointUrl))
 		require.NoError(t, err)
-		assert.True(t, checkResult.IsEndpointDown())
+		assert.True(t, result.IsEndpointDown())
 	})
 
 	t.Run("error_endpoint_timeouts", func(t *testing.T) {
 		t.Parallel()
 
-		result, err := httpChecker.Check(ctx, fmt.Sprintf("%s?is_up=true&timeout=true", simulatorEndpointUrl))
+		result, err := httpChecker.Check(context.Background(), fmt.Sprintf("%s?is_up=true&timeout=true", simulatorEndpointUrl))
 		require.NoError(t, err)
 		assert.Equal(t, http.StatusRequestTimeout, int(result.StatusCode()))
+		assert.True(t, result.IsEndpointDown())
 	})
 }
