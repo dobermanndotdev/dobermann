@@ -34,20 +34,23 @@ func NewHttpChecker(region string, timeoutInSeconds int) (HttpChecker, error) {
 }
 
 func (h HttpChecker) Check(ctx context.Context, endpointUrl string) (*monitor.CheckResult, error) {
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, endpointUrl, nil)
+	hCtx, cancel := context.WithTimeout(ctx, h.client.Timeout)
+	defer cancel()
+	req, err := http.NewRequestWithContext(hCtx, http.MethodGet, endpointUrl, nil)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create request: %v", err)
 	}
 
 	startedAt := time.Now()
 	resp, err := h.client.Do(req)
-	if errors.Is(err, errors.Unwrap(err)) {
-		return h.createCheckResults(startedAt, nil, true)
-	}
-
 	if err != nil {
+		if errors.Is(hCtx.Err(), context.Canceled) || errors.Is(hCtx.Err(), context.DeadlineExceeded) {
+			return h.createCheckResults(startedAt, nil, true)
+		}
+
 		return nil, fmt.Errorf("unable to check endpoint %s: %v", endpointUrl, err)
 	}
+
 	defer func() { _ = resp.Body.Close() }()
 
 	return h.createCheckResults(startedAt, &resp.StatusCode, false)
