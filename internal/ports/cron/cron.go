@@ -21,7 +21,7 @@ func NewService(application *app.App, region string, isProduction bool) *kron.Se
 
 	interval := time.Second * 5
 	if isProduction {
-		interval = time.Second * 25
+		interval = time.Second * 10
 	}
 
 	bulkCheckEndpointsJob := kron.NewJob(interval, allHandlers.BulkCheckEndpoints)
