@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"net/http"
 	"testing"
 	"time"
 
@@ -99,7 +100,20 @@ func FixtureMonitor(t *testing.T, acc *account.Account) *monitor.Monitor {
 }
 
 func FixtureIncident(t *testing.T) *monitor.Incident {
-	incident, err := monitor.NewIncident(domain.NewID(), false, time.Now().UTC(), nil)
+	incident, err := monitor.NewIncident(
+		domain.NewID(),
+		nil,
+		time.Now().UTC(),
+		gofakeit.URL(),
+		nil,
+		monitor.IncidentDetails{
+			Cause:           "",
+			Status:          http.StatusInternalServerError,
+			ResponseBody:    "",
+			ResponseHeaders: "",
+			RequestHeaders:  "",
+		},
+	)
 	require.NoError(t, err)
 
 	return incident
@@ -116,10 +130,16 @@ func (f *FixtureClient) FixtureAndInsertIncidents(t *testing.T, monitorID domain
 
 	for i := 0; i < count; i++ {
 		model = models.Incident{
-			ID:         domain.NewID().String(),
-			MonitorID:  monitorID.String(),
-			IsResolved: false,
-			CreatedAt:  time.Now(),
+			ID:              domain.NewID().String(),
+			MonitorID:       monitorID.String(),
+			ResolvedAt:      null.TimeFromPtr(nil),
+			Cause:           null.String{},
+			ResponseBody:    null.String{},
+			ResponseHeaders: null.String{},
+			ResponseStatus:  500,
+			RequestHeaders:  null.String{},
+			CheckedURL:      gofakeit.URL(),
+			CreatedAt:       time.Now(),
 		}
 		require.NoError(t, model.Insert(f.Ctx, f.Db, boil.Infer()))
 

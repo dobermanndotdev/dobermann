@@ -38,7 +38,13 @@ CREATE TABLE monitors (
 CREATE TABLE incidents (
     id VARCHAR(26) NOT NULL PRIMARY KEY,
     monitor_id VARCHAR(26) NOT NULL,
-    is_resolved BOOLEAN DEFAULT false NOT NULL,
+    resolved_at TIMESTAMPTZ,
+    cause VARCHAR(300),
+    response_body TEXT,
+    response_headers TEXT,
+    response_status SMALLINT NOT NULL,
+    request_headers TEXT,
+    checked_url VARCHAR(2048) NOT NULL,
     created_at TIMESTAMPTZ DEFAULT now() NOT NULL,
 
     CONSTRAINT pk_incident_belongs_to_monitor FOREIGN KEY (monitor_id) REFERENCES monitors (id) ON DELETE CASCADE

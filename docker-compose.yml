@@ -21,6 +21,7 @@ services:
 
   app:
     build: ./misc/tools/reflex
+    stop_grace_period: 1s
     links:
       - postgres
     depends_on:
@@ -37,6 +38,7 @@ services:
 
   worker:
     build: ./misc/tools/reflex
+    stop_grace_period: 1s
     links:
       - postgres
     depends_on:
@@ -53,6 +55,7 @@ services:
 
   endpoint_simulator:
     build: ./misc/tools/reflex
+    stop_grace_period: 1s
     environment:
       SERVICE: endpoint_simulator
     ports:

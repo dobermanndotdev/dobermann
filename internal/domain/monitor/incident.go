@@ -3,6 +3,9 @@ package monitor
 import (
 	"context"
 	"errors"
+	"fmt"
+	"net/url"
+	"strings"
 	"time"
 
 	"github.com/flowck/dobermann/backend/internal/domain"
@@ -10,20 +13,62 @@ import (
 
 type Incident struct {
 	id         domain.ID
-	isResolved bool
 	createdAt  time.Time
+	resolvedAt *time.Time
+	checkedURL string
+	details    IncidentDetails
 	actions    []IncidentAction
 }
 
-func NewIncident(id domain.ID, isResolved bool, createdAt time.Time, actions []IncidentAction) (*Incident, error) {
+func (i *Incident) CheckedURL() string {
+	return i.checkedURL
+}
+
+func (i *Incident) Details() IncidentDetails {
+	return i.details
+}
+
+func NewIncident(
+	id domain.ID,
+	resolvedAt *time.Time,
+	createdAt time.Time,
+	checkedURL string,
+	actions []IncidentAction,
+	details IncidentDetails,
+) (*Incident, error) {
 	if id.IsEmpty() {
 		return nil, errors.New("id cannot be empty or invalid")
+	}
+
+	var resolvedAtUTC *time.Time
+	if resolvedAt != nil {
+		if resolvedAt.UTC().After(time.Now().UTC()) {
+			return nil, errors.New("resolvedAt cannot be set in the future")
+		}
+
+		r := resolvedAt.UTC()
+		resolvedAtUTC = &r
+	}
+
+	if details.Status < 100 || details.Status > 599 {
+		return nil, errors.New("the status provided is invalid")
+	}
+
+	checkedURL = strings.TrimSpace(checkedURL)
+	if checkedURL == "" {
+		return nil, errors.New("checkedURL cannot be empty")
+	}
+
+	if _, err := url.Parse(checkedURL); err != nil {
+		return nil, fmt.Errorf("the url provided is invalid")
 	}
 
 	return &Incident{
 		id:         id,
 		actions:    actions,
-		isResolved: isResolved,
+		details:    details,
+		checkedURL: checkedURL,
+		resolvedAt: resolvedAtUTC,
 		createdAt:  createdAt.UTC(),
 	}, nil
 }
@@ -37,7 +82,7 @@ func (i *Incident) Actions() []IncidentAction {
 }
 
 func (i *Incident) IsResolved() bool {
-	return i.isResolved
+	return i.resolvedAt != nil
 }
 
 func (i *Incident) CreatedAt() time.Time {
@@ -45,7 +90,20 @@ func (i *Incident) CreatedAt() time.Time {
 }
 
 func (i *Incident) Resolve() {
-	i.isResolved = true
+	now := time.Now()
+	i.resolvedAt = &now
+}
+
+func (i *Incident) ResolvedAt() *time.Time {
+	return i.resolvedAt
+}
+
+type IncidentDetails struct {
+	Cause           string
+	Status          int16
+	ResponseBody    string
+	ResponseHeaders string
+	RequestHeaders  string
 }
 
 //

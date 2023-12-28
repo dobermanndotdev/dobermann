@@ -24,15 +24,15 @@ func TestHttpChecker(t *testing.T) {
 		t.Parallel()
 		result, err := httpChecker.Check(context.Background(), fmt.Sprintf("%s?is_up=true", simulatorEndpointUrl))
 		require.NoError(t, err)
-		assert.Equal(t, http.StatusOK, int(result.StatusCode()))
-		assert.False(t, result.IsEndpointDown())
+		assert.Equal(t, http.StatusOK, int(result.Result.StatusCode()))
+		assert.False(t, result.Result.IsEndpointDown())
 	})
 
 	t.Run("is_down", func(t *testing.T) {
 		t.Parallel()
 		result, err := httpChecker.Check(context.Background(), fmt.Sprintf("%s?is_up=false", simulatorEndpointUrl))
 		require.NoError(t, err)
-		assert.True(t, result.IsEndpointDown())
+		assert.True(t, result.Result.IsEndpointDown())
 	})
 
 	t.Run("error_endpoint_timeouts", func(t *testing.T) {
@@ -40,7 +40,7 @@ func TestHttpChecker(t *testing.T) {
 
 		result, err := httpChecker.Check(context.Background(), fmt.Sprintf("%s?is_up=true&timeout=true", simulatorEndpointUrl))
 		require.NoError(t, err)
-		assert.Equal(t, http.StatusRequestTimeout, int(result.StatusCode()))
-		assert.True(t, result.IsEndpointDown())
+		assert.Equal(t, http.StatusRequestTimeout, int(result.Result.StatusCode()))
+		assert.True(t, result.Result.IsEndpointDown())
 	})
 }

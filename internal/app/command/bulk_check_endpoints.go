@@ -73,10 +73,10 @@ func (c BulkCheckEndpointsHandler) checkMatchedEndpoints(
 					return fmt.Errorf("error checking endpoint %s due to: %v", foundMonitor.EndpointUrl(), err)
 				}
 
-				(*results)[foundMonitor.ID()] = checkResult
+				(*results)[foundMonitor.ID()] = checkResult.Result
 
-				if checkResult.IsEndpointDown() {
-					err = c.handleEndpointDown(ctx, adapters, foundMonitor)
+				if checkResult.Result.IsEndpointDown() {
+					err = c.handleEndpointDown(ctx, adapters, foundMonitor, checkResult)
 					if err != nil {
 						return err
 					}
@@ -99,12 +99,19 @@ func (c BulkCheckEndpointsHandler) handleEndpointDown(
 	ctx context.Context,
 	adapters TransactableAdapters,
 	m *monitor.Monitor,
+	checkResult CheckResult,
 ) error {
 	m.MarkEndpointAsDown()
 
 	return adapters.EventPublisher.PublishEndpointCheckFailed(ctx, EndpointCheckFailedEvent{
-		MonitorID: m.ID().String(),
-		At:        *m.LastCheckedAt(),
+		MonitorID:       m.ID().String(),
+		CheckedURL:      m.EndpointUrl(),
+		At:              *m.LastCheckedAt(),
+		ResponseBody:    checkResult.ResponseBody,
+		ResponseStatus:  checkResult.ResponseStatus,
+		RequestHeaders:  checkResult.RequestHeaders,
+		ResponseHeaders: checkResult.ResponseHeaders,
+		Cause:           fmt.Sprintf("Request failed with status code %d", checkResult.ResponseStatus),
 	})
 }
 

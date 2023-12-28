@@ -7,6 +7,7 @@ import (
 	"github.com/flowck/dobermann/backend/internal/app"
 	"github.com/flowck/dobermann/backend/internal/app/command"
 	"github.com/flowck/dobermann/backend/internal/domain"
+	"github.com/flowck/dobermann/backend/internal/domain/monitor"
 )
 
 type EndpointCheckFailedHandler struct {
@@ -33,7 +34,15 @@ func (e EndpointCheckFailedHandler) Handle(m *message.Message) error {
 	}
 
 	err = e.application.Commands.CreateIncident.Execute(m.Context(), command.CreateIncident{
-		MonitorID: monitorID,
+		MonitorID:  monitorID,
+		CheckedURL: event.CheckedURL,
+		Details: monitor.IncidentDetails{
+			Cause:           event.Cause,
+			Status:          int16(event.ResponseStatus),
+			ResponseBody:    event.ResponseBody,
+			ResponseHeaders: event.ResponseHeaders,
+			RequestHeaders:  event.RequestHeaders,
+		},
 	})
 	if err != nil {
 		return err

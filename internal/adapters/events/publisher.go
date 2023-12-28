@@ -38,9 +38,15 @@ func (p Publisher) PublishMonitorCreated(ctx context.Context, event command.Moni
 
 func (p Publisher) PublishEndpointCheckFailed(ctx context.Context, event command.EndpointCheckFailedEvent) error {
 	m, err := mapEventToMessage(ctx, EndpointCheckFailed{
-		At:        event.At,
-		MonitorID: event.MonitorID,
-		Header:    NewHeader(ctx, EndpointCheckFailed{}.EventName()),
+		Header:          NewHeader(ctx, EndpointCheckFailed{}.EventName()),
+		MonitorID:       event.MonitorID,
+		ResponseHeaders: event.ResponseHeaders,
+		ResponseBody:    event.ResponseBody,
+		ResponseStatus:  int(event.ResponseStatus),
+		RequestHeaders:  event.RequestHeaders,
+		Cause:           event.Cause,
+		CheckedURL:      event.CheckedURL,
+		At:              event.At,
 	})
 	if err != nil {
 		return err

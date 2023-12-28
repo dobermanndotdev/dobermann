@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/friendsofgo/errors"
+	"github.com/volatiletech/null/v8"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"github.com/volatiletech/sqlboiler/v4/queries"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
@@ -23,60 +24,116 @@ import (
 
 // Incident is an object representing the database table.
 type Incident struct {
-	ID         string    `boil:"id" json:"id" toml:"id" yaml:"id"`
-	MonitorID  string    `boil:"monitor_id" json:"monitor_id" toml:"monitor_id" yaml:"monitor_id"`
-	IsResolved bool      `boil:"is_resolved" json:"is_resolved" toml:"is_resolved" yaml:"is_resolved"`
-	CreatedAt  time.Time `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
+	ID              string      `boil:"id" json:"id" toml:"id" yaml:"id"`
+	MonitorID       string      `boil:"monitor_id" json:"monitor_id" toml:"monitor_id" yaml:"monitor_id"`
+	ResolvedAt      null.Time   `boil:"resolved_at" json:"resolved_at,omitempty" toml:"resolved_at" yaml:"resolved_at,omitempty"`
+	Cause           null.String `boil:"cause" json:"cause,omitempty" toml:"cause" yaml:"cause,omitempty"`
+	ResponseBody    null.String `boil:"response_body" json:"response_body,omitempty" toml:"response_body" yaml:"response_body,omitempty"`
+	ResponseHeaders null.String `boil:"response_headers" json:"response_headers,omitempty" toml:"response_headers" yaml:"response_headers,omitempty"`
+	ResponseStatus  int16       `boil:"response_status" json:"response_status" toml:"response_status" yaml:"response_status"`
+	RequestHeaders  null.String `boil:"request_headers" json:"request_headers,omitempty" toml:"request_headers" yaml:"request_headers,omitempty"`
+	CheckedURL      string      `boil:"checked_url" json:"checked_url" toml:"checked_url" yaml:"checked_url"`
+	CreatedAt       time.Time   `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
 
 	R *incidentR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L incidentL  `boil:"-" json:"-" toml:"-" yaml:"-"`
 }
 
 var IncidentColumns = struct {
-	ID         string
-	MonitorID  string
-	IsResolved string
-	CreatedAt  string
+	ID              string
+	MonitorID       string
+	ResolvedAt      string
+	Cause           string
+	ResponseBody    string
+	ResponseHeaders string
+	ResponseStatus  string
+	RequestHeaders  string
+	CheckedURL      string
+	CreatedAt       string
 }{
-	ID:         "id",
-	MonitorID:  "monitor_id",
-	IsResolved: "is_resolved",
-	CreatedAt:  "created_at",
+	ID:              "id",
+	MonitorID:       "monitor_id",
+	ResolvedAt:      "resolved_at",
+	Cause:           "cause",
+	ResponseBody:    "response_body",
+	ResponseHeaders: "response_headers",
+	ResponseStatus:  "response_status",
+	RequestHeaders:  "request_headers",
+	CheckedURL:      "checked_url",
+	CreatedAt:       "created_at",
 }
 
 var IncidentTableColumns = struct {
-	ID         string
-	MonitorID  string
-	IsResolved string
-	CreatedAt  string
+	ID              string
+	MonitorID       string
+	ResolvedAt      string
+	Cause           string
+	ResponseBody    string
+	ResponseHeaders string
+	ResponseStatus  string
+	RequestHeaders  string
+	CheckedURL      string
+	CreatedAt       string
 }{
-	ID:         "incidents.id",
-	MonitorID:  "incidents.monitor_id",
-	IsResolved: "incidents.is_resolved",
-	CreatedAt:  "incidents.created_at",
+	ID:              "incidents.id",
+	MonitorID:       "incidents.monitor_id",
+	ResolvedAt:      "incidents.resolved_at",
+	Cause:           "incidents.cause",
+	ResponseBody:    "incidents.response_body",
+	ResponseHeaders: "incidents.response_headers",
+	ResponseStatus:  "incidents.response_status",
+	RequestHeaders:  "incidents.request_headers",
+	CheckedURL:      "incidents.checked_url",
+	CreatedAt:       "incidents.created_at",
 }
 
 // Generated where
 
-type whereHelperbool struct{ field string }
+type whereHelperint16 struct{ field string }
 
-func (w whereHelperbool) EQ(x bool) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.EQ, x) }
-func (w whereHelperbool) NEQ(x bool) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.NEQ, x) }
-func (w whereHelperbool) LT(x bool) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.LT, x) }
-func (w whereHelperbool) LTE(x bool) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.LTE, x) }
-func (w whereHelperbool) GT(x bool) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.GT, x) }
-func (w whereHelperbool) GTE(x bool) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.GTE, x) }
+func (w whereHelperint16) EQ(x int16) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.EQ, x) }
+func (w whereHelperint16) NEQ(x int16) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.NEQ, x) }
+func (w whereHelperint16) LT(x int16) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.LT, x) }
+func (w whereHelperint16) LTE(x int16) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.LTE, x) }
+func (w whereHelperint16) GT(x int16) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.GT, x) }
+func (w whereHelperint16) GTE(x int16) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.GTE, x) }
+func (w whereHelperint16) IN(slice []int16) qm.QueryMod {
+	values := make([]interface{}, 0, len(slice))
+	for _, value := range slice {
+		values = append(values, value)
+	}
+	return qm.WhereIn(fmt.Sprintf("%s IN ?", w.field), values...)
+}
+func (w whereHelperint16) NIN(slice []int16) qm.QueryMod {
+	values := make([]interface{}, 0, len(slice))
+	for _, value := range slice {
+		values = append(values, value)
+	}
+	return qm.WhereNotIn(fmt.Sprintf("%s NOT IN ?", w.field), values...)
+}
 
 var IncidentWhere = struct {
-	ID         whereHelperstring
-	MonitorID  whereHelperstring
-	IsResolved whereHelperbool
-	CreatedAt  whereHelpertime_Time
+	ID              whereHelperstring
+	MonitorID       whereHelperstring
+	ResolvedAt      whereHelpernull_Time
+	Cause           whereHelpernull_String
+	ResponseBody    whereHelpernull_String
+	ResponseHeaders whereHelpernull_String
+	ResponseStatus  whereHelperint16
+	RequestHeaders  whereHelpernull_String
+	CheckedURL      whereHelperstring
+	CreatedAt       whereHelpertime_Time
 }{
-	ID:         whereHelperstring{field: "\"incidents\".\"id\""},
-	MonitorID:  whereHelperstring{field: "\"incidents\".\"monitor_id\""},
-	IsResolved: whereHelperbool{field: "\"incidents\".\"is_resolved\""},
-	CreatedAt:  whereHelpertime_Time{field: "\"incidents\".\"created_at\""},
+	ID:              whereHelperstring{field: "\"incidents\".\"id\""},
+	MonitorID:       whereHelperstring{field: "\"incidents\".\"monitor_id\""},
+	ResolvedAt:      whereHelpernull_Time{field: "\"incidents\".\"resolved_at\""},
+	Cause:           whereHelpernull_String{field: "\"incidents\".\"cause\""},
+	ResponseBody:    whereHelpernull_String{field: "\"incidents\".\"response_body\""},
+	ResponseHeaders: whereHelpernull_String{field: "\"incidents\".\"response_headers\""},
+	ResponseStatus:  whereHelperint16{field: "\"incidents\".\"response_status\""},
+	RequestHeaders:  whereHelpernull_String{field: "\"incidents\".\"request_headers\""},
+	CheckedURL:      whereHelperstring{field: "\"incidents\".\"checked_url\""},
+	CreatedAt:       whereHelpertime_Time{field: "\"incidents\".\"created_at\""},
 }
 
 // IncidentRels is where relationship names are stored.
@@ -117,9 +174,9 @@ func (r *incidentR) GetIncidentActions() IncidentActionSlice {
 type incidentL struct{}
 
 var (
-	incidentAllColumns            = []string{"id", "monitor_id", "is_resolved", "created_at"}
-	incidentColumnsWithoutDefault = []string{"id", "monitor_id"}
-	incidentColumnsWithDefault    = []string{"is_resolved", "created_at"}
+	incidentAllColumns            = []string{"id", "monitor_id", "resolved_at", "cause", "response_body", "response_headers", "response_status", "request_headers", "checked_url", "created_at"}
+	incidentColumnsWithoutDefault = []string{"id", "monitor_id", "response_status", "checked_url"}
+	incidentColumnsWithDefault    = []string{"resolved_at", "cause", "response_body", "response_headers", "request_headers", "created_at"}
 	incidentPrimaryKeyColumns     = []string{"id"}
 	incidentGeneratedColumns      = []string{}
 )
