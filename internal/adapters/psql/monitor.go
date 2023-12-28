@@ -70,7 +70,14 @@ func (p MonitorRepository) FindByID(ctx context.Context, id domain.ID) (*monitor
 	model, err := models.Monitors(
 		models.MonitorWhere.ID.EQ(id.String()),
 		qm.Load(models.MonitorRels.Users),
-		qm.Load(models.MonitorRels.Incidents),
+		qm.Load(models.MonitorRels.Incidents, qm.Select(
+			models.IncidentColumns.ID,
+			models.IncidentColumns.ResolvedAt,
+			models.IncidentColumns.CreatedAt,
+			models.IncidentColumns.Cause,
+			models.IncidentColumns.ResponseStatus,
+			models.IncidentColumns.CheckedURL,
+		)),
 	).One(ctx, p.db)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, monitor.ErrMonitorNotFound
@@ -150,7 +157,14 @@ func (p MonitorRepository) FindAll(
 ) (query.PaginatedResult[*monitor.Monitor], error) {
 	mods := []qm.QueryMod{
 		models.MonitorWhere.AccountID.EQ(accID.String()),
-		qm.Load(models.MonitorRels.Incidents),
+		qm.Load(models.MonitorRels.Incidents, qm.Load(models.MonitorRels.Incidents, qm.Select(
+			models.IncidentColumns.ID,
+			models.IncidentColumns.ResolvedAt,
+			models.IncidentColumns.CreatedAt,
+			models.IncidentColumns.Cause,
+			models.IncidentColumns.ResponseStatus,
+			models.IncidentColumns.CheckedURL,
+		))),
 		qm.Offset(mapPaginationParamsToOffset(params.Page, params.Limit)),
 		qm.Limit(params.Limit),
 		qm.OrderBy("created_at DESC"),
