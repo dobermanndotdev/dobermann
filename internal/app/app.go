@@ -41,6 +41,7 @@ type Commands struct {
 
 type Queries struct {
 	MonitorByID              QueryHandler[query.MonitorByID, *monitor.Monitor]
+	IncidentByID             QueryHandler[query.IncidentByID, *monitor.Incident]
 	MonitorResponseTimeStats QueryHandler[query.MonitorResponseTimeStats, []query.ResponseTimeStat]
 	AllMonitors              QueryHandler[query.AllMonitors, query.PaginatedResult[*monitor.Monitor]]
 
