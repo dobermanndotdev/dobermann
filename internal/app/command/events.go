@@ -8,8 +8,14 @@ type MonitorCreatedEvent struct {
 }
 
 type EndpointCheckFailedEvent struct {
-	MonitorID string
-	At        time.Time
+	MonitorID       string
+	CheckedURL      string
+	ResponseHeaders string
+	ResponseBody    string
+	ResponseStatus  int16
+	RequestHeaders  string
+	Cause           string
+	At              time.Time
 }
 
 type EndpointCheckSucceededEvent struct {

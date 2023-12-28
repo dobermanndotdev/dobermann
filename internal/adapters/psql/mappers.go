@@ -175,10 +175,16 @@ func mapModelToSubscriber(model *models.User) (*monitor.Subscriber, error) {
 
 func mapIncidentToModel(incident *monitor.Incident, monitorID domain.ID) *models.Incident {
 	return &models.Incident{
-		ID:         incident.ID().String(),
-		IsResolved: incident.IsResolved(),
-		MonitorID:  monitorID.String(),
-		CreatedAt:  incident.CreatedAt(),
+		ID:              incident.ID().String(),
+		MonitorID:       monitorID.String(),
+		ResolvedAt:      null.TimeFromPtr(incident.ResolvedAt()),
+		Cause:           null.StringFrom(incident.Details().Cause),
+		ResponseBody:    null.StringFrom(incident.Details().ResponseBody),
+		ResponseHeaders: null.StringFrom(incident.Details().ResponseHeaders),
+		ResponseStatus:  incident.Details().Status,
+		RequestHeaders:  null.StringFrom(incident.Details().RequestHeaders),
+		CheckedURL:      incident.CheckedURL(),
+		CreatedAt:       incident.CreatedAt(),
 	}
 }
 
@@ -188,7 +194,15 @@ func mapModelToIncident(model *models.Incident) (*monitor.Incident, error) {
 		return nil, err
 	}
 
-	return monitor.NewIncident(id, model.IsResolved, model.CreatedAt, nil)
+	details := monitor.IncidentDetails{
+		Cause:           model.Cause.String,
+		Status:          model.ResponseStatus,
+		ResponseBody:    model.ResponseBody.String,
+		ResponseHeaders: model.ResponseHeaders.String,
+		RequestHeaders:  model.RequestHeaders.String,
+	}
+
+	return monitor.NewIncident(id, model.ResolvedAt.Ptr(), model.CreatedAt, model.CheckedURL, nil, details)
 }
 
 func mapModelsToIncidents(modelList []*models.Incident) ([]*monitor.Incident, error) {

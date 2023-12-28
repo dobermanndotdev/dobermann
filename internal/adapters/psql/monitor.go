@@ -230,7 +230,6 @@ func (p MonitorRepository) ResponseTimeStats(
 	monitorID domain.ID,
 	rangeInDays *int,
 ) ([]query.ResponseTimeStat, error) {
-	boil.DebugMode = true
 	qms := []qm.QueryMod{
 		models.MonitorCheckResultWhere.MonitorID.EQ(monitorID.String()),
 		qm.OrderBy(fmt.Sprintf("%s ASC", models.MonitorCheckResultColumns.CheckedAt)),

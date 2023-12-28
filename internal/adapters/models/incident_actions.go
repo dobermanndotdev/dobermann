@@ -95,6 +95,12 @@ func (w whereHelpernull_String) LIKE(x null.String) qm.QueryMod {
 func (w whereHelpernull_String) NLIKE(x null.String) qm.QueryMod {
 	return qm.Where(w.field+" NOT LIKE ?", x)
 }
+func (w whereHelpernull_String) ILIKE(x null.String) qm.QueryMod {
+	return qm.Where(w.field+" ILIKE ?", x)
+}
+func (w whereHelpernull_String) NILIKE(x null.String) qm.QueryMod {
+	return qm.Where(w.field+" NOT ILIKE ?", x)
+}
 func (w whereHelpernull_String) IN(slice []string) qm.QueryMod {
 	values := make([]interface{}, 0, len(slice))
 	for _, value := range slice {

@@ -10,7 +10,9 @@ import (
 )
 
 type CreateIncident struct {
-	MonitorID domain.ID
+	MonitorID  domain.ID
+	CheckedURL string
+	Details    monitor.IncidentDetails
 }
 
 type CreateIncidentHandler struct {
@@ -35,7 +37,7 @@ func (h CreateIncidentHandler) Execute(ctx context.Context, cmd CreateIncident) 
 			return nil
 		}
 
-		incident, err := monitor.NewIncident(domain.NewID(), false, time.Now().UTC(), nil)
+		incident, err := monitor.NewIncident(domain.NewID(), nil, time.Now().UTC(), cmd.CheckedURL, nil, cmd.Details)
 		if err != nil {
 			return err
 		}

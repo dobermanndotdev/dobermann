@@ -57,6 +57,12 @@ func main() {
 			return nil
 		},
 	}))
+	router.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c echo.Context) error {
+			c.Response().Header().Add("Server", "EndpointSimulator")
+			return next(c)
+		}
+	})
 	router.Use(middleware.Recover())
 
 	ctx, cancel := context.WithCancel(context.Background())

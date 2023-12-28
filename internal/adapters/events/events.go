@@ -51,9 +51,15 @@ func (e MonitorCreatedEvent) EventName() string {
 }
 
 type EndpointCheckFailed struct {
-	Header    Header    `json:"header"`
-	MonitorID string    `json:"monitor_id"`
-	At        time.Time `json:"at"`
+	Header          Header    `json:"header"`
+	MonitorID       string    `json:"monitor_id"`
+	ResponseHeaders string    `json:"response_headers"`
+	ResponseBody    string    `json:"response_body"`
+	ResponseStatus  int       `json:"response_status"`
+	RequestHeaders  string    `json:"request_headers"`
+	Cause           string    `json:"cause"`
+	CheckedURL      string    `json:"checked_url"`
+	At              time.Time `json:"at"`
 }
 
 func (e EndpointCheckFailed) EventName() string {
