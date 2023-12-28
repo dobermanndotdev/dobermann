@@ -107,11 +107,11 @@ func FixtureIncident(t *testing.T) *monitor.Incident {
 		gofakeit.URL(),
 		nil,
 		monitor.IncidentDetails{
-			Cause:           "",
+			Cause:           gofakeit.Sentence(5),
 			Status:          http.StatusInternalServerError,
-			ResponseBody:    "",
-			ResponseHeaders: "",
-			RequestHeaders:  "",
+			ResponseBody:    gofakeit.Sentence(10),
+			ResponseHeaders: gofakeit.Sentence(10),
+			RequestHeaders:  gofakeit.Sentence(10),
 		},
 	)
 	require.NoError(t, err)

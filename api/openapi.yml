@@ -181,6 +181,29 @@ paths:
                 $ref: '#/components/schemas/GetMonitorResponseTimeStatsPayload'
         default:
           $ref: '#/components/responses/DefaultError'
+  /incidents/{incidentID}:
+    get:
+      tags:
+        - Incidents
+      operationId: getIncidentByID
+      summary: Get an incident by id
+      parameters:
+        - name: incidentID
+          in: path
+          required: true
+          schema:
+            type: string
+      security:
+        - BearerAuth: [ ]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetIncidentByByIdPayload'
+        default:
+          $ref: '#/components/responses/DefaultError'
   /accounts/profile:
     get:
       tags:
@@ -333,13 +356,32 @@ components:
         check_interval_in_seconds:
           type: integer
     Incident:
-      required: [id, created_at]
+      required: [id, cause, checked_url, created_at]
       properties:
         id:
           type: string
+        checked_url:
+          type: string
+        cause:
+          type: string
+        resolved_at:
+          type: string
+          format: date-time
         created_at:
           type: string
           format: date-time
+    FullIncident:
+      allOf:
+        - $ref: '#/components/schemas/Incident'
+        - type: object
+          required: [response_headers, response_status, request_headers]
+          properties:
+            response_headers:
+              type: string
+            request_headers:
+              type: string
+            response_status:
+              type: integer
     LogInPayload:
       required: [ token ]
       properties:
@@ -369,6 +411,11 @@ components:
         check_interval_in_seconds:
           type: integer
           minimum: 30
+    GetIncidentByByIdPayload:
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/FullIncident'
     GenericResponse:
       type: object
       required:
