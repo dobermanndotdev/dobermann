@@ -147,6 +147,7 @@ func main() {
 	userRepository := psql.NewUserRepository(db)
 	eventPublisher := events.NewPublisher(publisher)
 	monitorRepository := psql.NewMonitorRepository(db)
+	incidentRepository := psql.NewIncidentRepository(db)
 	txProvider := transaction.NewPsqlProvider(db, publisher, logger)
 
 	//POST_IDEA: Mocking services and its dynamic initialisation
@@ -178,6 +179,7 @@ func main() {
 		},
 		Queries: app.Queries{
 			MonitorByID:              observability.NewQueryDecorator[query.MonitorByID, *monitor.Monitor](query.NewMonitorByIdHandler(monitorRepository), logger),
+			IncidentByID:             observability.NewQueryDecorator[query.IncidentByID, *monitor.Incident](query.NewIncidentByIdHandler(incidentRepository), logger),
 			AllMonitors:              observability.NewQueryDecorator[query.AllMonitors, query.PaginatedResult[*monitor.Monitor]](query.NewAllMonitorsHandler(monitorRepository), logger),
 			MonitorResponseTimeStats: observability.NewQueryDecorator[query.MonitorResponseTimeStats, []query.ResponseTimeStat](query.NewMonitorResponseTimeStatsHandler(monitorRepository), logger),
 
