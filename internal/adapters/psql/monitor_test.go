@@ -45,6 +45,10 @@ func TestMonitorRepository_Lifecycle(t *testing.T) {
 		expected := result.Data[0]
 		var found *monitor.Monitor
 
+		incident00 := tests.FixtureIncident(t)
+		err = incidentRepository.Create(ctx, expected.ID(), incident00)
+		require.NoError(t, err)
+
 		found, err = monitorRepository.FindByID(ctx, expected.ID())
 		require.NoError(t, err)
 
@@ -52,8 +56,10 @@ func TestMonitorRepository_Lifecycle(t *testing.T) {
 
 		owner, err := account00.FirstAccountOwner()
 		require.NoError(t, err)
-
 		assert.Equal(t, found.Subscribers()[0].UserID(), owner.ID())
+
+		require.Len(t, found.Incidents(), 1)
+		assertIncident(t, incident00, found.Incidents()[0])
 	})
 
 	t.Run("error_not_found_while_finding_by_id", func(t *testing.T) {

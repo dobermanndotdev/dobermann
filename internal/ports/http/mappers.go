@@ -41,8 +41,11 @@ func mapIncidentsToResponse(incidents []*monitor.Incident) []Incident {
 
 	for i, incident := range incidents {
 		result[i] = Incident{
-			Id:        incident.ID().String(),
-			CreatedAt: incident.CreatedAt(),
+			Cause:      incident.Details().Cause,
+			CheckedUrl: incident.CheckedURL(),
+			CreatedAt:  incident.CreatedAt(),
+			Id:         incident.ID().String(),
+			ResolvedAt: incident.ResolvedAt(),
 		}
 	}
 

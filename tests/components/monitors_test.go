@@ -92,15 +92,25 @@ func TestMonitors(t *testing.T) {
 	t.Run("get_monitor_by_id", func(t *testing.T) {
 		monitorPayload := fixtureMonitors(t, cli, 1)[0]
 		monitor00 := getMonitorByEndpointUrl(t, monitorPayload.EndpointUrl)
+		monitorID, err := domain.NewIdFromString(monitor00.ID)
+		require.NoError(t, err)
+
+		incident00 := fixtureClient.FixtureAndInsertIncidents(t, monitorID, 1)[0]
 
 		resp01, err := cli.GetMonitorByIDWithResponse(ctx, monitor00.ID)
 		require.NoError(t, err)
 		require.Equal(t, http.StatusOK, resp01.StatusCode())
 
-		assert.Equal(t, monitor00.ID, resp01.JSON200.Data.Id)
-		assert.Equal(t, monitor00.EndpointURL, resp01.JSON200.Data.EndpointUrl)
-		assert.False(t, monitor00.IsPaused)
-		assert.Equal(t, monitorPayload.CheckIntervalInSeconds, monitor00.CheckIntervalInSeconds)
+		foundMonitor := resp01.JSON200.Data
+
+		assert.Equal(t, monitor00.ID, foundMonitor.Id)
+		assert.Equal(t, monitor00.EndpointURL, foundMonitor.EndpointUrl)
+		assert.False(t, foundMonitor.IsPaused)
+		assert.Equal(t, monitor00.CheckIntervalInSeconds, foundMonitor.CheckIntervalInSeconds)
+		assert.Equal(t, incident00.ID, foundMonitor.Incidents[0].Id)
+		assert.Equal(t, incident00.CheckedURL, foundMonitor.Incidents[0].CheckedUrl)
+		assert.Equal(t, incident00.Cause.String, foundMonitor.Incidents[0].Cause)
+		assert.Equal(t, incident00.CreatedAt.UTC().Truncate(time.Second), foundMonitor.Incidents[0].CreatedAt.Truncate(time.Second))
 	})
 
 	t.Run("pause_and_unpause_monitor", func(t *testing.T) {

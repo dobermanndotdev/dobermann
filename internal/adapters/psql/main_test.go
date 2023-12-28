@@ -7,16 +7,19 @@ import (
 	"testing"
 	"time"
 
+	_ "github.com/lib/pq"
+
 	"github.com/flowck/dobermann/backend/internal/adapters/psql"
 	"github.com/flowck/dobermann/backend/internal/common/postgres"
 	"github.com/flowck/dobermann/backend/tests"
 )
 
 var (
-	db                *sql.DB
-	ctx               context.Context
-	monitorRepository psql.MonitorRepository
-	fixtureClient     tests.FixtureClient
+	db                 *sql.DB
+	ctx                context.Context
+	monitorRepository  psql.MonitorRepository
+	incidentRepository psql.IncidentRepository
+	fixtureClient      tests.FixtureClient
 )
 
 // Set up file
@@ -37,6 +40,7 @@ func TestMain(m *testing.M) {
 	}
 
 	monitorRepository = psql.NewMonitorRepository(db)
+	incidentRepository = psql.NewIncidentRepository(db)
 
 	fixtureClient = tests.FixtureClient{
 		Db:  db,
