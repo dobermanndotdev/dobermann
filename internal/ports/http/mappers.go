@@ -54,15 +54,16 @@ func mapIncidentsToResponse(incidents []*monitor.Incident) []Incident {
 
 func mapIncidentToFullIncidentResponse(incident *monitor.Incident) FullIncident {
 	return FullIncident{
-		Cause:           incident.Details().Cause,
-		CheckedUrl:      incident.CheckedURL(),
-		CreatedAt:       incident.CreatedAt(),
 		Id:              incident.ID().String(),
-		RequestHeaders:  incident.Details().RequestHeaders,
+		MonitorId:       incident.MonitorID().String(),
+		CreatedAt:       incident.CreatedAt(),
+		CheckedUrl:      incident.CheckedURL(),
 		ResolvedAt:      incident.ResolvedAt(),
-		ResponseHeaders: incident.Details().RequestHeaders,
+		Cause:           incident.Details().Cause,
 		ResponseStatus:  int(incident.Details().Status),
 		ResponseBody:    incident.Details().ResponseBody,
+		RequestHeaders:  incident.Details().RequestHeaders,
+		ResponseHeaders: incident.Details().RequestHeaders,
 	}
 }
 

@@ -99,9 +99,13 @@ func FixtureMonitor(t *testing.T, acc *account.Account) *monitor.Monitor {
 	return newMonitor
 }
 
-func FixtureIncident(t *testing.T) *monitor.Incident {
+func FixtureIncident(t *testing.T, monitorID string) *monitor.Incident {
+	mID, err := domain.NewIdFromString(monitorID)
+	require.NoError(t, err)
+
 	incident, err := monitor.NewIncident(
 		domain.NewID(),
+		mID,
 		nil,
 		time.Now().UTC(),
 		gofakeit.URL(),

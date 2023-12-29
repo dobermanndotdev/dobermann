@@ -15,10 +15,10 @@ import (
 func TestIncidentRepository_Lifecycle(t *testing.T) {
 	account00 := tests.FixtureAndInsertAccount(t, db, true)
 	monitor00 := tests.FixtureMonitor(t, account00)
-	incident00 := tests.FixtureIncident(t)
+	incident00 := tests.FixtureIncident(t, monitor00.ID().String())
 
 	require.NoError(t, monitorRepository.Insert(ctx, monitor00))
-	assert.NoError(t, incidentRepository.Create(ctx, monitor00.ID(), incident00))
+	assert.NoError(t, incidentRepository.Create(ctx, incident00))
 
 	t.Run("find_incident_by_id", func(t *testing.T) {
 		t.Parallel()

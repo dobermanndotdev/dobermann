@@ -86,13 +86,13 @@ func (i IncidentRepositoryMock) FindByID(ctx context.Context, id domain.ID) (*mo
 	return nil, nil
 }
 
-func (i IncidentRepositoryMock) Create(ctx context.Context, monitorID domain.ID, incident *monitor.Incident) error {
+func (i IncidentRepositoryMock) Create(ctx context.Context, incident *monitor.Incident) error {
 	return nil
 }
 
 func (i IncidentRepositoryMock) Update(
 	ctx context.Context,
-	id, monitorID domain.ID,
+	id domain.ID,
 	fn func(incident *monitor.Incident) error,
 ) error {
 	incident := i.incidents[id]

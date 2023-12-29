@@ -46,7 +46,7 @@ func (h ResolveIncidentHandler) Execute(ctx context.Context, cmd ResolveIncident
 			return fmt.Errorf("unable to append incident action: %v", err)
 		}
 
-		err = adapters.IncidentRepository.Update(ctx, incident.ID(), cmd.MonitorID, func(incident *monitor.Incident) error {
+		err = adapters.IncidentRepository.Update(ctx, incident.ID(), func(incident *monitor.Incident) error {
 			incident.Resolve()
 
 			return nil

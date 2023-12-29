@@ -104,13 +104,15 @@ func fixtureMonitor(t *testing.T, acc *account.Account, isUp bool) *monitor.Moni
 		subscribers[i] = subscriber
 	}
 
+	monitorID := domain.NewID()
+
 	newMonitor, err := monitor.NewMonitor(
-		domain.NewID(),
+		monitorID,
 		endpointUrl,
 		acc.ID(),
 		isUp,
 		false,
-		[]*monitor.Incident{tests.FixtureIncident(t)},
+		[]*monitor.Incident{tests.FixtureIncident(t, monitorID.String())},
 		subscribers,
 		time.Now().UTC(),
 		time.Second*30,

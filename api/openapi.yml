@@ -374,8 +374,10 @@ components:
       allOf:
         - $ref: '#/components/schemas/Incident'
         - type: object
-          required: [response_headers, response_status, response_body, request_headers]
+          required: [monitor_id, response_headers, response_status, response_body, request_headers]
           properties:
+            monitor_id:
+              type: string
             response_headers:
               type: string
             request_headers:

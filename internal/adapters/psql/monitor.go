@@ -72,6 +72,7 @@ func (p MonitorRepository) FindByID(ctx context.Context, id domain.ID) (*monitor
 		qm.Load(models.MonitorRels.Users),
 		qm.Load(models.MonitorRels.Incidents, qm.Select(
 			models.IncidentColumns.ID,
+			models.IncidentColumns.MonitorID,
 			models.IncidentColumns.ResolvedAt,
 			models.IncidentColumns.CreatedAt,
 			models.IncidentColumns.Cause,
@@ -159,6 +160,7 @@ func (p MonitorRepository) FindAll(
 		models.MonitorWhere.AccountID.EQ(accID.String()),
 		qm.Load(models.MonitorRels.Incidents, qm.Load(models.MonitorRels.Incidents, qm.Select(
 			models.IncidentColumns.ID,
+			models.IncidentColumns.MonitorID,
 			models.IncidentColumns.ResolvedAt,
 			models.IncidentColumns.CreatedAt,
 			models.IncidentColumns.Cause,
