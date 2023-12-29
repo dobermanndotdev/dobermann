@@ -7,20 +7,17 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/flowck/dobermann/backend/internal/adapters/psql"
 	"github.com/flowck/dobermann/backend/internal/domain"
 	"github.com/flowck/dobermann/backend/internal/domain/monitor"
 	"github.com/flowck/dobermann/backend/tests"
 )
 
 func TestIncidentRepository_Lifecycle(t *testing.T) {
-	monitorRepo := psql.NewMonitorRepository(db)
-
 	account00 := tests.FixtureAndInsertAccount(t, db, true)
 	monitor00 := tests.FixtureMonitor(t, account00)
 	incident00 := tests.FixtureIncident(t)
 
-	require.NoError(t, monitorRepo.Insert(ctx, monitor00))
+	require.NoError(t, monitorRepository.Insert(ctx, monitor00))
 	assert.NoError(t, incidentRepository.Create(ctx, monitor00.ID(), incident00))
 
 	t.Run("find_incident_by_id", func(t *testing.T) {
