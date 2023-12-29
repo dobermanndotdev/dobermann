@@ -374,7 +374,7 @@ components:
       allOf:
         - $ref: '#/components/schemas/Incident'
         - type: object
-          required: [response_headers, response_status, request_headers]
+          required: [response_headers, response_status, response_body, request_headers]
           properties:
             response_headers:
               type: string
@@ -382,6 +382,8 @@ components:
               type: string
             response_status:
               type: integer
+            response_body:
+              type: string
     LogInPayload:
       required: [ token ]
       properties:
