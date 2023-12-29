@@ -39,12 +39,12 @@ func (s *service) SendEmailAboutIncident(
 	incident *monitor.Incident,
 ) error {
 	body := fmt.Sprintf(`
-%s,</br>
-An incident has been created for the monitor %s. </br>
-For more details please follow the link %s. </br>
+%s,<br>
+An incident has been created for the monitor %s. <br>
+For more details please follow the link %s. <br>
 
 Dobermann - Endpoint monitoring
-`, getGreetings(user), m.EndpointUrl(), getIncidentLink(s.hostname, m.ID(), incident.ID()))
+`, getGreetings(user), m.EndpointUrl(), getIncidentLink(s.hostname, incident.ID()))
 
 	_, err := s.client.Emails.SendWithContext(ctx, &resendsdk.SendEmailRequest{
 		From:    s.from,
@@ -59,17 +59,22 @@ Dobermann - Endpoint monitoring
 	return nil
 }
 
-func (s *service) SendEmailIncidentResolution(ctx context.Context, user *account.User, m *monitor.Monitor, incidentID domain.ID) error {
+func (s *service) SendEmailIncidentResolution(
+	ctx context.Context,
+	user *account.User,
+	m *monitor.Monitor,
+	incidentID domain.ID,
+) error {
 	body := fmt.Sprintf(`
-%s,</br>
-The last incident reported on the monitor %s has been resolved. </br>
-For more details please follow the link %s. </br>
+%s,<br>
+The last incident reported on the monitor %s has been resolved. <br>
+For more details please follow the link %s. <br>
 
 Dobermann - Endpoint monitoring
-`, getGreetings(user), m.EndpointUrl(), getIncidentLink(s.hostname, m.ID(), incidentID))
+`, getGreetings(user), m.EndpointUrl(), getIncidentLink(s.hostname, incidentID))
 
 	_, err := s.client.Emails.SendWithContext(ctx, &resendsdk.SendEmailRequest{
-		From:    s.from,
+		From:    fmt.Sprintf("Dobermann <%s>", s.from),
 		To:      []string{user.Email().Address()},
 		Subject: fmt.Sprintf("[Dobermann] - Incident resolved %s", m.EndpointUrl()),
 		Html:    body,
@@ -81,14 +86,14 @@ Dobermann - Endpoint monitoring
 	return nil
 }
 
-func getIncidentLink(host string, monitorID, incidentID domain.ID) string {
-	link := fmt.Sprintf("%s/dashboard/monitors/%s/incidents/%s", host, monitorID, incidentID)
+func getIncidentLink(host string, incidentID domain.ID) string {
+	link := fmt.Sprintf("%s/dashboard/incidents/%s", host, incidentID)
 	return fmt.Sprintf(`<a href="%s">%s</a>`, link, link)
 }
 
 func getGreetings(user *account.User) string {
 	if user.FirstName() == "" {
-		return "Hi,"
+		return "Hi"
 	}
 
 	return fmt.Sprintf("Hi %s", user.FirstName())
