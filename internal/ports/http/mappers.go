@@ -62,6 +62,7 @@ func mapIncidentToFullIncidentResponse(incident *monitor.Incident) FullIncident 
 		ResolvedAt:      incident.ResolvedAt(),
 		ResponseHeaders: incident.Details().RequestHeaders,
 		ResponseStatus:  int(incident.Details().Status),
+		ResponseBody:    incident.Details().ResponseBody,
 	}
 }
 
