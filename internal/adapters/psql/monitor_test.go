@@ -45,8 +45,8 @@ func TestMonitorRepository_Lifecycle(t *testing.T) {
 		expected := result.Data[0]
 		var found *monitor.Monitor
 
-		incident00 := tests.FixtureIncident(t)
-		err = incidentRepository.Create(ctx, expected.ID(), incident00)
+		incident00 := tests.FixtureIncident(t, expected.ID().String())
+		err = incidentRepository.Create(ctx, incident00)
 		require.NoError(t, err)
 
 		found, err = monitorRepository.FindByID(ctx, expected.ID())

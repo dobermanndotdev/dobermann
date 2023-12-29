@@ -33,8 +33,8 @@ func (i IncidentRepository) FindByID(ctx context.Context, id domain.ID) (*monito
 	return mapModelToIncident(model)
 }
 
-func (i IncidentRepository) Create(ctx context.Context, monitorID domain.ID, incident *monitor.Incident) error {
-	model := mapIncidentToModel(incident, monitorID)
+func (i IncidentRepository) Create(ctx context.Context, incident *monitor.Incident) error {
+	model := mapIncidentToModel(incident)
 	err := model.Insert(ctx, i.db, boil.Infer())
 	if err != nil {
 		return err
@@ -45,7 +45,7 @@ func (i IncidentRepository) Create(ctx context.Context, monitorID domain.ID, inc
 
 func (i IncidentRepository) Update(
 	ctx context.Context,
-	id, monitorID domain.ID,
+	id domain.ID,
 	fn func(incident *monitor.Incident) error,
 ) error {
 	incident, err := i.FindByID(ctx, id)
@@ -58,7 +58,7 @@ func (i IncidentRepository) Update(
 		return err
 	}
 
-	model := mapIncidentToModel(incident, monitorID)
+	model := mapIncidentToModel(incident)
 
 	_, err = model.Update(ctx, i.db, boil.Infer())
 	if err != nil {

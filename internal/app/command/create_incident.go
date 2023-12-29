@@ -37,12 +37,12 @@ func (h CreateIncidentHandler) Execute(ctx context.Context, cmd CreateIncident) 
 			return nil
 		}
 
-		incident, err := monitor.NewIncident(domain.NewID(), nil, time.Now().UTC(), cmd.CheckedURL, nil, cmd.Details)
+		incident, err := monitor.NewIncident(domain.NewID(), foundMonitor.ID(), nil, time.Now().UTC(), cmd.CheckedURL, nil, cmd.Details)
 		if err != nil {
 			return err
 		}
 
-		err = adapters.IncidentRepository.Create(ctx, cmd.MonitorID, incident)
+		err = adapters.IncidentRepository.Create(ctx, incident)
 		if err != nil {
 			return fmt.Errorf("unable to save incident: %v", err)
 		}

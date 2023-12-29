@@ -13,11 +13,16 @@ import (
 
 type Incident struct {
 	id         domain.ID
+	monitorID  domain.ID
 	createdAt  time.Time
 	resolvedAt *time.Time
 	checkedURL string
 	details    IncidentDetails
 	actions    []IncidentAction
+}
+
+func (i *Incident) MonitorID() domain.ID {
+	return i.monitorID
 }
 
 func (i *Incident) CheckedURL() string {
@@ -29,7 +34,8 @@ func (i *Incident) Details() IncidentDetails {
 }
 
 func NewIncident(
-	id domain.ID,
+	id,
+	monitorID domain.ID,
 	resolvedAt *time.Time,
 	createdAt time.Time,
 	checkedURL string,
@@ -65,6 +71,7 @@ func NewIncident(
 
 	return &Incident{
 		id:         id,
+		monitorID:  monitorID,
 		actions:    actions,
 		details:    details,
 		checkedURL: checkedURL,
@@ -112,7 +119,7 @@ type IncidentDetails struct {
 
 type IncidentRepository interface {
 	FindByID(ctx context.Context, id domain.ID) (*Incident, error)
-	Create(ctx context.Context, monitorID domain.ID, incident *Incident) error
-	Update(ctx context.Context, id, monitorID domain.ID, fn func(incident *Incident) error) error
+	Create(ctx context.Context, incident *Incident) error
+	Update(ctx context.Context, id domain.ID, fn func(incident *Incident) error) error
 	AppendIncidentAction(ctx context.Context, incidentID domain.ID, incidentAction *IncidentAction) error
 }
