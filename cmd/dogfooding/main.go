@@ -24,7 +24,7 @@ const (
 )
 
 func main() {
-	cli, err := client.NewClientWithResponses("https://api.dobermann.dev", client.WithRequestEditorFn(func(ctx context.Context, req *http.Request) error {
+	cli, err := client.NewClientWithResponses(os.Getenv("DOGFOODING_API"), client.WithRequestEditorFn(func(ctx context.Context, req *http.Request) error {
 		req.Header.Add(echo.HeaderAuthorization, fmt.Sprintf("Bearer %s", os.Getenv("DOGFOODING_JWT")))
 		return nil
 	}))

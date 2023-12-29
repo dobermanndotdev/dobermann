@@ -152,10 +152,8 @@ func main() {
 	//POST_IDEA: Mocking services and its dynamic initialisation
 	var resendService resend.Service
 	if config.IsProductionMode {
-		//resendService = resend.NewService(config.ResendApiKey, config.SentFromEmailAddress, config.HostnameForNotifications)
-		//logger.Info("Resend service has been initialised")
-		resendService = resend.NewServiceMock(logger)
-		logger.Warn("Resend service mock has been initialised")
+		resendService = resend.NewService(config.ResendApiKey, config.SentFromEmailAddress, config.HostnameForNotifications)
+		logger.Info("Resend service has been initialised")
 	} else {
 		resendService = resend.NewServiceMock(logger)
 		logger.Warn("Resend service mock has been initialised")
