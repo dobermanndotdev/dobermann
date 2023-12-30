@@ -47,7 +47,7 @@ Dobermann - Endpoint monitoring
 `, getGreetings(user), m.EndpointUrl(), getIncidentLink(s.hostname, incident.ID()))
 
 	_, err := s.client.Emails.SendWithContext(ctx, &resendsdk.SendEmailRequest{
-		From:    s.from,
+		From:    fmt.Sprintf("Dobermann <%s>", s.from),
 		To:      []string{user.Email().Address()},
 		Subject: fmt.Sprintf("[Dobermann] - New Incident for %s", m.EndpointUrl()),
 		Html:    body,
