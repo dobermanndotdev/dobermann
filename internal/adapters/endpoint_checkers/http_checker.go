@@ -14,8 +14,8 @@ import (
 )
 
 type HttpChecker struct {
-	client *http.Client
-	region monitor.Region
+	timeout time.Duration
+	region  monitor.Region
 }
 
 func NewHttpChecker(region string, timeoutInSeconds int) (HttpChecker, error) {
@@ -29,18 +29,20 @@ func NewHttpChecker(region string, timeoutInSeconds int) (HttpChecker, error) {
 	}
 
 	return HttpChecker{
-		client: &http.Client{
-			Timeout: time.Second * time.Duration(timeoutInSeconds),
-		},
-		region: reg,
+		timeout: time.Second * time.Duration(timeoutInSeconds),
+		region:  reg,
 	}, nil
 }
 
 func (h HttpChecker) Check(ctx context.Context, endpointUrl string) (command.CheckResult, error) {
-	hCtx, cancel := context.WithTimeout(ctx, h.client.Timeout)
+	requestCtx, cancel := context.WithTimeout(ctx, h.timeout)
 	defer cancel()
 
-	req, err := http.NewRequestWithContext(hCtx, http.MethodGet, endpointUrl, nil)
+	client := http.Client{
+		Timeout: h.timeout,
+	}
+
+	req, err := http.NewRequestWithContext(requestCtx, http.MethodGet, endpointUrl, nil)
 	if err != nil {
 		return command.CheckResult{}, fmt.Errorf("unable to create request: %v", err)
 	}
@@ -48,9 +50,9 @@ func (h HttpChecker) Check(ctx context.Context, endpointUrl string) (command.Che
 	req.Header.Add("Accept-Encoding", "identity")
 
 	startedAt := time.Now()
-	resp, err := h.client.Do(req)
+	resp, err := client.Do(req)
 	if err != nil {
-		if errors.Is(hCtx.Err(), context.Canceled) || errors.Is(hCtx.Err(), context.DeadlineExceeded) {
+		if errors.Is(requestCtx.Err(), context.Canceled) || errors.Is(requestCtx.Err(), context.DeadlineExceeded) {
 			return h.createCheckResults(startedAt, req, nil, true)
 		}
 
