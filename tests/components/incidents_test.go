@@ -8,7 +8,10 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/flowck/dobermann/backend/internal/adapters/models"
 	"github.com/flowck/dobermann/backend/internal/domain"
+	"github.com/flowck/dobermann/backend/tests"
+	"github.com/flowck/dobermann/backend/tests/client"
 )
 
 func TestIncidents(t *testing.T) {
@@ -37,4 +40,32 @@ func TestIncidents(t *testing.T) {
 		assert.Equal(t, incident00.RequestHeaders.String, foundIncident.RequestHeaders)
 		assert.Equal(t, incident00.ResponseHeaders.String, foundIncident.ResponseHeaders)
 	})
+
+	t.Run("get_all_incidents", func(t *testing.T) {
+		incident00 := fixtureClient.FixtureAndInsertIncidents(t, monitor00ID, 1)[0]
+		resp01, err := cli.GetAllIncidentsWithResponse(ctx, &client.GetAllIncidentsParams{
+			Page:  tests.ToPtr(1),
+			Limit: tests.ToPtr(100),
+		})
+		require.NoError(t, err)
+
+		matchedFixturedIncident := false
+		for _, foundIncident := range resp01.JSON200.Data {
+			if foundIncident.Id != incident00.ID {
+				continue
+			}
+
+			assertIncident(t, incident00, foundIncident)
+			matchedFixturedIncident = true
+		}
+
+		assert.True(t, matchedFixturedIncident)
+	})
+}
+
+func assertIncident(t *testing.T, expected models.Incident, found client.Incident) {
+	assert.Equal(t, expected.ID, found.Id)
+	assert.Equal(t, expected.CreatedAt.UTC().Truncate(time.Second), found.CreatedAt.Truncate(time.Second))
+	assert.Equal(t, expected.Cause.String, found.Cause)
+	assert.Equal(t, expected.CheckedURL, found.CheckedUrl)
 }

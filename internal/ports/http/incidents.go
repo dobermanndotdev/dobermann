@@ -31,3 +31,26 @@ func (h handlers) GetIncidentByID(c echo.Context, incidentID string) error {
 		Data: mapIncidentToFullIncidentResponse(foundIncident),
 	})
 }
+
+func (h handlers) GetAllIncidents(c echo.Context, params GetAllIncidentsParams) error {
+	user, err := retrieveUserFromCtx(c)
+	if err != nil {
+		return NewUnableToRetrieveUserFromCtx(err)
+	}
+
+	result, err := h.application.Queries.AllIncidents.Execute(c.Request().Context(), query.AllIncidents{
+		AccountID: user.AccountID,
+		Params:    query.NewPaginationParams(params.Page, params.Limit),
+	})
+	if err != nil {
+		return NewHandlerError(err, "unable-to-get-incidents")
+	}
+
+	return c.JSON(http.StatusOK, GetAllIncidentsPayload{
+		Data:       mapIncidentsToResponse(result.Data),
+		Page:       result.Page,
+		PageCount:  result.PageCount,
+		PerPage:    result.PerPage,
+		TotalCount: result.TotalCount,
+	})
+}
