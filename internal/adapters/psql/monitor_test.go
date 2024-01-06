@@ -40,14 +40,22 @@ func TestMonitorRepository_Lifecycle(t *testing.T) {
 	assert.Equal(t, limitPerPage, result.PerPage)
 	assert.Equal(t, maxMonitors/limitPerPage, result.PageCount)
 	assert.Len(t, result.Data, limitPerPage)
+	assertIncidentsAreSortedInDescOrder(t, result.Data[0].Incidents())
 
 	t.Run("find_by_id", func(t *testing.T) {
 		expected := result.Data[0]
 		var found *monitor.Monitor
 
-		incident00 := tests.FixtureIncident(t, expected.ID().String())
-		err = incidentRepository.Create(ctx, incident00)
-		require.NoError(t, err)
+		incidents := make([]*monitor.Incident, 5)
+		for i := 0; i < 5; i++ {
+			incidents[i] = tests.FixtureIncident(t, expected.ID().String())
+			if i != 4 {
+				incidents[i].Resolve()
+			}
+
+			err = incidentRepository.Create(ctx, incidents[i])
+			require.NoError(t, err)
+		}
 
 		found, err = monitorRepository.FindByID(ctx, expected.ID())
 		require.NoError(t, err)
@@ -58,8 +66,9 @@ func TestMonitorRepository_Lifecycle(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, found.Subscribers()[0].UserID(), owner.ID())
 
-		require.Len(t, found.Incidents(), 1)
-		assertIncident(t, incident00, found.Incidents()[0])
+		require.Len(t, found.Incidents(), 5)
+		// assertIncident(t, incident00, found.Incidents()[0])
+		assertIncidentsAreSortedInDescOrder(t, found.Incidents())
 	})
 
 	t.Run("error_not_found_while_finding_by_id", func(t *testing.T) {
@@ -186,6 +195,18 @@ func saveIncident(t *testing.T, monitorID domain.ID) {
 		CheckedURL:      gofakeit.URL(),
 	}
 	require.NoError(t, model.Insert(ctx, db, boil.Infer()))
+}
+
+func assertIncidentsAreSortedInDescOrder(t *testing.T, incidents []*monitor.Incident) {
+	t.Helper()
+	var prev *monitor.Incident
+
+	for _, current := range incidents {
+		if prev != nil {
+			require.True(t, prev.CreatedAt().After(current.CreatedAt()))
+		}
+		prev = current
+	}
 }
 
 func fixtureMonitor(

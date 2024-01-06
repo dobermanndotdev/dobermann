@@ -78,7 +78,7 @@ func (p MonitorRepository) FindByID(ctx context.Context, id domain.ID) (*monitor
 			models.IncidentColumns.Cause,
 			models.IncidentColumns.ResponseStatus,
 			models.IncidentColumns.CheckedURL,
-		)),
+		), qm.OrderBy("created_at DESC")),
 	).One(ctx, p.db)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, monitor.ErrMonitorNotFound
@@ -166,7 +166,7 @@ func (p MonitorRepository) FindAll(
 			models.IncidentColumns.Cause,
 			models.IncidentColumns.ResponseStatus,
 			models.IncidentColumns.CheckedURL,
-		))),
+		), qm.OrderBy("created_at DESC"))),
 		qm.Offset(mapPaginationParamsToOffset(params.Page, params.Limit)),
 		qm.Limit(params.Limit),
 		qm.OrderBy("created_at DESC"),
