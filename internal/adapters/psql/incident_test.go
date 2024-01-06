@@ -46,7 +46,7 @@ func TestIncidentRepository_Lifecycle(t *testing.T) {
 		require.NoError(t, err)
 
 		for _, foundIncident := range result.Data {
-			require.Equal(t, account00.ID(), foundIncident.MonitorID())
+			require.Equal(t, monitor00.ID(), foundIncident.MonitorID())
 		}
 	})
 }
