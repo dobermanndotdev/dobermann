@@ -77,6 +77,7 @@ func TestMonitors(t *testing.T) {
 			assert.NotEmpty(t, m.Id)
 			assert.NotEmpty(t, m.EndpointUrl)
 			assert.NotEmpty(t, m.CreatedAt)
+			assert.NotNil(t, m.UpSince)
 		}
 
 		resp02, err := cli.GetAllMonitorsWithResponse(ctx, &client.GetAllMonitorsParams{

@@ -172,3 +172,22 @@ func (m *Monitor) Edit(endpointUrl string, checkIntervalInSeconds time.Duration)
 
 	return nil
 }
+
+func (m *Monitor) UpSince() *time.Time {
+	if m.isPaused {
+		return nil
+	}
+
+	if len(m.incidents) > 0 {
+		mostRecentIncident := m.incidents[len(m.incidents)-1]
+
+		if !mostRecentIncident.IsResolved() {
+			return nil
+		}
+
+		return mostRecentIncident.resolvedAt
+	}
+
+	upSince := m.createdAt
+	return &upSince
+}

@@ -384,6 +384,9 @@ components:
         last_checked_at:
           type: string
           format: date-time
+        up_since:
+          type: string
+          format: date-time
         check_interval_in_seconds:
           type: integer
     Incident:

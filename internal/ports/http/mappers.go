@@ -19,6 +19,7 @@ func mapMonitorToResponseItem(m *monitor.Monitor) Monitor {
 		IsPaused:               m.IsPaused(),
 		LastCheckedAt:          m.LastCheckedAt(),
 		CheckIntervalInSeconds: int(m.CheckInterval().Seconds()),
+		UpSince:                m.UpSince(),
 	}
 }
 
