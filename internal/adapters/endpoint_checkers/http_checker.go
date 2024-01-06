@@ -128,5 +128,6 @@ func mapHeadersToString(headers http.Header) string {
 }
 
 func randomUserAgent(userAgents *[]string, max int) string {
+	//nolint:gosec
 	return (*userAgents)[rand.Intn(max-0)+0]
 }
