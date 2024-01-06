@@ -52,7 +52,7 @@ func (a *App) createMonitor(ctx context.Context, url string) error {
 	logs.Infof("URL: %s", url)
 
 	resp, err := a.cli.CreateMonitor(ctx, client.CreateMonitorRequest{
-		CheckIntervalInSeconds: 60 * 3,
+		CheckIntervalInSeconds: 30,
 		EndpointUrl:            fmt.Sprintf("https://%s", strings.TrimPrefix(url, "https://")),
 	})
 	if err != nil {

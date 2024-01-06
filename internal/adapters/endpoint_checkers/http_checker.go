@@ -5,13 +5,29 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
+	"math/rand"
 	"net/http"
 	"time"
 
 	"github.com/flowck/dobermann/backend/internal/app/command"
 	"github.com/flowck/dobermann/backend/internal/domain/monitor"
 )
+
+var userAgents = []string{
+	"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.6 Safari/605.1.1",
+	"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.3",
+	"Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.",
+	"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.2.1 Safari/605.1.1",
+	"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.3 Safari/605.1.1",
+	"Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:109.0) Gecko/20100101 Firefox/115.",
+	"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.3",
+	"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.3",
+	"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.",
+	"Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/117.",
+	"Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36 OPR/95.0.0.",
+	"Mozilla/5.0 (X11; CrOS x86_64 14541.0.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.3",
+	"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.3",
+}
 
 type HttpChecker struct {
 	timeout time.Duration
@@ -47,7 +63,10 @@ func (h HttpChecker) Check(ctx context.Context, endpointUrl string) (command.Che
 		return command.CheckResult{}, fmt.Errorf("unable to create request: %v", err)
 	}
 
-	req.Header.Add("Accept-Encoding", "identity")
+	req.Header.Add("Accept-Encoding", "gzip, deflate, br")
+	req.Header.Add("Accept-Language", "en-GB,en-US;q=0.9,en;q=0.8")
+	req.Header.Add("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8")
+	req.Header.Add("User-Agent", randomUserAgent(&userAgents, len(userAgents)-1))
 
 	startedAt := time.Now()
 	resp, err := client.Do(req)
@@ -72,7 +91,6 @@ func (h HttpChecker) createCheckResults(
 	checkDuration := time.Since(startedAt)
 
 	var statusCode int16
-	var responseBody string
 	var reqHeaders http.Header
 	var resHeaders http.Header
 
@@ -80,13 +98,6 @@ func (h HttpChecker) createCheckResults(
 		resHeaders = resp.Header
 		reqHeaders = req.Header
 		statusCode = int16(resp.StatusCode)
-
-		data, err := io.ReadAll(resp.Body)
-		if err != nil {
-			responseBody = ""
-		} else {
-			responseBody = string(data)
-		}
 	}
 
 	if isForcedTimeout {
@@ -101,7 +112,7 @@ func (h HttpChecker) createCheckResults(
 	return command.CheckResult{
 		Result:          result,
 		ResponseStatus:  statusCode,
-		ResponseBody:    responseBody,
+		ResponseBody:    "",
 		ResponseHeaders: mapHeadersToString(resHeaders),
 		RequestHeaders:  mapHeadersToString(reqHeaders),
 	}, nil
@@ -114,4 +125,9 @@ func mapHeadersToString(headers http.Header) string {
 	}
 
 	return string(data)
+}
+
+func randomUserAgent(userAgents *[]string, max int) string {
+	//nolint:gosec
+	return (*userAgents)[rand.Intn(max-0)+0]
 }
