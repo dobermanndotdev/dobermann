@@ -3,8 +3,6 @@ package kron
 import (
 	"context"
 	"sync"
-
-	"github.com/flowck/dobermann/backend/internal/common/logs"
 )
 
 type Service struct {
@@ -32,7 +30,6 @@ func (s *Service) Start(ctx context.Context) error {
 			defer wg.Done()
 			err := job.start(ctx)
 			if err != nil {
-				logs.Error(err)
 				return
 			}
 		}(wg, job)
