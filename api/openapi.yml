@@ -387,6 +387,9 @@ components:
         up_since:
           type: string
           format: date-time
+        down_since:
+          type: string
+          format: date-time
         check_interval_in_seconds:
           type: integer
     Incident:

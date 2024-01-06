@@ -6,6 +6,7 @@ import (
 	"net/url"
 	"time"
 
+	"github.com/flowck/dobermann/backend/internal/common/ptr"
 	"github.com/flowck/dobermann/backend/internal/domain"
 )
 
@@ -179,7 +180,7 @@ func (m *Monitor) UpSince() *time.Time {
 	}
 
 	if len(m.incidents) > 0 {
-		mostRecentIncident := m.incidents[len(m.incidents)-1]
+		mostRecentIncident := m.incidents[0]
 
 		if !mostRecentIncident.IsResolved() {
 			return nil
@@ -188,6 +189,13 @@ func (m *Monitor) UpSince() *time.Time {
 		return mostRecentIncident.resolvedAt
 	}
 
-	upSince := m.createdAt
-	return &upSince
+	return ptr.ToPtr(m.createdAt)
+}
+
+func (m *Monitor) DownSince() *time.Time {
+	if len(m.incidents) > 0 && !m.incidents[0].IsResolved() {
+		return ptr.ToPtr(m.incidents[0].CreatedAt())
+	}
+
+	return nil
 }
