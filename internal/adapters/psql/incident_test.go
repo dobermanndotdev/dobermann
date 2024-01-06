@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/flowck/dobermann/backend/internal/app/query"
 	"github.com/flowck/dobermann/backend/internal/domain"
 	"github.com/flowck/dobermann/backend/internal/domain/monitor"
 	"github.com/flowck/dobermann/backend/tests"
@@ -33,6 +34,20 @@ func TestIncidentRepository_Lifecycle(t *testing.T) {
 
 		_, err := incidentRepository.FindByID(ctx, domain.NewID())
 		assert.ErrorIs(t, err, monitor.ErrIncidentNotFound)
+	})
+
+	t.Run("all_incidents", func(t *testing.T) {
+		t.Parallel()
+
+		result, err := incidentRepository.FindAll(ctx, account00.ID(), query.PaginationParams{
+			Page:  1,
+			Limit: 100,
+		})
+		require.NoError(t, err)
+
+		for _, foundIncident := range result.Data {
+			require.Equal(t, monitor00.ID(), foundIncident.MonitorID())
+		}
 	})
 }
 

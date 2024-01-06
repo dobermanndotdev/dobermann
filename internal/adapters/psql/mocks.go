@@ -82,6 +82,11 @@ func NewIncidentRepositoryMock() IncidentRepositoryMock {
 	}
 }
 
+func (i IncidentRepositoryMock) FindAll(ctx context.Context, accountID domain.ID) ([]*monitor.Incident, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
 func (i IncidentRepositoryMock) FindByID(ctx context.Context, id domain.ID) (*monitor.Incident, error) {
 	return nil, nil
 }

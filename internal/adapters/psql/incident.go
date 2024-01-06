@@ -4,10 +4,13 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 
 	"github.com/volatiletech/sqlboiler/v4/boil"
+	"github.com/volatiletech/sqlboiler/v4/queries/qm"
 
 	"github.com/flowck/dobermann/backend/internal/adapters/models"
+	"github.com/flowck/dobermann/backend/internal/app/query"
 	"github.com/flowck/dobermann/backend/internal/domain"
 	"github.com/flowck/dobermann/backend/internal/domain/monitor"
 )
@@ -18,6 +21,52 @@ func NewIncidentRepository(db boil.ContextExecutor) IncidentRepository {
 
 type IncidentRepository struct {
 	db boil.ContextExecutor
+}
+
+func (i IncidentRepository) FindAll(
+	ctx context.Context,
+	accountID domain.ID,
+	params query.PaginationParams,
+) (query.PaginatedResult[*monitor.Incident], error) {
+	monitorModels, err := models.Monitors(models.MonitorWhere.AccountID.EQ(accountID.String()), qm.Select("id")).All(ctx, i.db)
+	if err != nil {
+		return query.PaginatedResult[*monitor.Incident]{}, fmt.Errorf("unable to query monitors of account %s due to: %v", accountID, err)
+	}
+
+	monitorIDs := make([]string, len(monitorModels))
+	for idx, m := range monitorModels {
+		monitorIDs[idx] = m.ID
+	}
+
+	mods := []qm.QueryMod{
+		models.IncidentWhere.MonitorID.IN(monitorIDs),
+		qm.Offset(mapPaginationParamsToOffset(params.Page, params.Limit)),
+		qm.Limit(params.Limit),
+		qm.OrderBy("created_at DESC"),
+	}
+
+	modelList, err := models.Incidents(mods...).All(ctx, i.db)
+	if err != nil {
+		return query.PaginatedResult[*monitor.Incident]{}, fmt.Errorf("error while querying monitors: %v", err)
+	}
+
+	count, err := models.Incidents(models.IncidentWhere.MonitorID.IN(monitorIDs)).Count(ctx, i.db)
+	if err != nil {
+		return query.PaginatedResult[*monitor.Incident]{}, fmt.Errorf("error while counting monitors: %v", err)
+	}
+
+	incidents, err := mapModelsToIncidents(modelList)
+	if err != nil {
+		return query.PaginatedResult[*monitor.Incident]{}, err
+	}
+
+	return query.PaginatedResult[*monitor.Incident]{
+		TotalCount: count,
+		Data:       incidents,
+		Page:       params.Page,
+		PerPage:    params.Limit,
+		PageCount:  mapPaginationPerPageCount(count, params.Limit),
+	}, nil
 }
 
 func (i IncidentRepository) FindByID(ctx context.Context, id domain.ID) (*monitor.Incident, error) {

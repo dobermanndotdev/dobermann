@@ -44,6 +44,7 @@ type Queries struct {
 	IncidentByID             QueryHandler[query.IncidentByID, *monitor.Incident]
 	MonitorResponseTimeStats QueryHandler[query.MonitorResponseTimeStats, []query.ResponseTimeStat]
 	AllMonitors              QueryHandler[query.AllMonitors, query.PaginatedResult[*monitor.Monitor]]
+	AllIncidents             QueryHandler[query.AllIncidents, query.PaginatedResult[*monitor.Incident]]
 
 	// IAM
 	UserByID QueryHandler[query.UserByID, *account.User]

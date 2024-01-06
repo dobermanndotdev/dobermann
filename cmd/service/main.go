@@ -181,6 +181,7 @@ func main() {
 			MonitorByID:              observability.NewQueryDecorator[query.MonitorByID, *monitor.Monitor](query.NewMonitorByIdHandler(monitorRepository), logger),
 			IncidentByID:             observability.NewQueryDecorator[query.IncidentByID, *monitor.Incident](query.NewIncidentByIdHandler(incidentRepository), logger),
 			AllMonitors:              observability.NewQueryDecorator[query.AllMonitors, query.PaginatedResult[*monitor.Monitor]](query.NewAllMonitorsHandler(monitorRepository), logger),
+			AllIncidents:             observability.NewQueryDecorator[query.AllIncidents, query.PaginatedResult[*monitor.Incident]](query.NewAllIncidentsHandler(incidentRepository), logger),
 			MonitorResponseTimeStats: observability.NewQueryDecorator[query.MonitorResponseTimeStats, []query.ResponseTimeStat](query.NewMonitorResponseTimeStatsHandler(monitorRepository), logger),
 
 			// IAM
