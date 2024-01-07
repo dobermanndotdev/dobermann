@@ -9,6 +9,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/cenkalti/backoff/v3"
+
 	"github.com/flowck/dobermann/backend/internal/app/command"
 	"github.com/flowck/dobermann/backend/internal/domain/monitor"
 )
@@ -54,32 +56,55 @@ func (h HttpChecker) Check(ctx context.Context, endpointUrl string) (command.Che
 	requestCtx, cancel := context.WithTimeout(ctx, h.timeout)
 	defer cancel()
 
-	client := http.Client{
-		Timeout: h.timeout,
-	}
+	exponentialBackoff := backoff.NewExponentialBackOff()
+	exponentialBackoff.MaxElapsedTime = h.timeout
+	exponentialBackoff.InitialInterval = time.Millisecond * 250
+	backoffStrategy := backoff.WithContext(exponentialBackoff, ctx)
 
-	req, err := http.NewRequestWithContext(requestCtx, http.MethodGet, endpointUrl, nil)
-	if err != nil {
-		return command.CheckResult{}, fmt.Errorf("unable to create request: %v", err)
-	}
+	var result command.CheckResult
 
-	req.Header.Add("Accept-Encoding", "gzip, deflate, br")
-	req.Header.Add("Accept-Language", "en-GB,en-US;q=0.9,en;q=0.8")
-	req.Header.Add("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8")
-	req.Header.Add("User-Agent", randomUserAgent(&userAgents, len(userAgents)-1))
+	err := backoff.Retry(func() error {
+		result = command.CheckResult{}
 
-	startedAt := time.Now()
-	resp, err := client.Do(req)
-	if err != nil {
-		if errors.Is(requestCtx.Err(), context.Canceled) || errors.Is(requestCtx.Err(), context.DeadlineExceeded) {
-			return h.createCheckResults(startedAt, req, nil, true)
+		client := http.Client{
+			Timeout: time.Second * 5,
 		}
 
-		return command.CheckResult{}, fmt.Errorf("unable to check endpoint %s: %v", endpointUrl, err)
-	}
-	defer func() { _ = resp.Body.Close() }()
+		req, err := http.NewRequestWithContext(requestCtx, http.MethodGet, endpointUrl, nil)
+		if err != nil {
+			return fmt.Errorf("unable to create request: %v", err)
+		}
 
-	return h.createCheckResults(startedAt, req, resp, false)
+		req.Header.Add("Accept-Encoding", "gzip, deflate, br")
+		req.Header.Add("Accept-Language", "en-GB,en-US;q=0.9,en;q=0.8")
+		req.Header.Add("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8")
+		req.Header.Add("User-Agent", randomUserAgent(&userAgents, len(userAgents)-1))
+
+		startedAt := time.Now()
+		resp, err := client.Do(req)
+		if err != nil {
+			if errors.Is(requestCtx.Err(), context.Canceled) || errors.Is(requestCtx.Err(), context.DeadlineExceeded) {
+				result, err = h.createCheckResults(startedAt, req, nil, true)
+				if err != nil {
+					return err
+				}
+
+				return nil
+			}
+
+			return fmt.Errorf("unable to check endpoint %s: %v", endpointUrl, err)
+		}
+		defer func() { _ = resp.Body.Close() }()
+
+		result, err = h.createCheckResults(startedAt, req, resp, false)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	}, backoffStrategy)
+
+	return result, err
 }
 
 func (h HttpChecker) createCheckResults(

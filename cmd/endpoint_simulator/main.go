@@ -73,7 +73,7 @@ func main() {
 
 	router.GET("/", func(c echo.Context) error {
 		if c.QueryParam("timeout") == "true" {
-			time.Sleep(time.Second * 15)
+			time.Sleep(time.Second * 10)
 		}
 
 		if c.QueryParam("is_up") == "true" {
