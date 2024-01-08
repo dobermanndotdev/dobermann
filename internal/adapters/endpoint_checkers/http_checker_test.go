@@ -17,7 +17,7 @@ import (
 func TestHttpChecker(t *testing.T) {
 	simulatorEndpointUrl := os.Getenv("SIMULATOR_ENDPOINT_URL")
 
-	httpChecker, err := endpoint_checkers.NewHttpChecker(monitor.RegionEurope.String(), 10)
+	httpChecker, err := endpoint_checkers.NewHttpChecker(monitor.RegionEurope.String(), 2)
 	require.NoError(t, err)
 
 	t.Run("is_up", func(t *testing.T) {

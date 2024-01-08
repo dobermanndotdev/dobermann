@@ -52,14 +52,14 @@ func NewHttpChecker(region string, timeoutInSeconds int) (HttpChecker, error) {
 	}, nil
 }
 
-func (h HttpChecker) Check(ctx context.Context, endpointUrl string) (command.CheckResult, error) {
-	requestCtx, cancel := context.WithTimeout(ctx, h.timeout)
+func (h HttpChecker) Check(_ context.Context, endpointUrl string) (command.CheckResult, error) {
+	requestCtx, cancel := context.WithTimeout(context.Background(), h.timeout)
 	defer cancel()
 
 	exponentialBackoff := backoff.NewExponentialBackOff()
 	exponentialBackoff.MaxElapsedTime = h.timeout
 	exponentialBackoff.InitialInterval = time.Millisecond * 250
-	backoffStrategy := backoff.WithContext(exponentialBackoff, ctx)
+	backoffStrategy := backoff.WithContext(exponentialBackoff, requestCtx)
 
 	var result command.CheckResult
 
@@ -83,7 +83,9 @@ func (h HttpChecker) Check(ctx context.Context, endpointUrl string) (command.Che
 		startedAt := time.Now()
 		resp, err := client.Do(req)
 		if err != nil {
-			if errors.Is(requestCtx.Err(), context.Canceled) || errors.Is(requestCtx.Err(), context.DeadlineExceeded) {
+			// fmt.Printf("context canceled? --> %v // context deadline exceeded? --> %v\n", errors.Is(requestCtx.Err(), context.Canceled), errors.Is(requestCtx.Err(), context.DeadlineExceeded))
+
+			if errors.Is(requestCtx.Err(), context.DeadlineExceeded) {
 				result, err = h.createCheckResults(startedAt, req, nil, true)
 				if err != nil {
 					return err
@@ -92,6 +94,7 @@ func (h HttpChecker) Check(ctx context.Context, endpointUrl string) (command.Che
 				return nil
 			}
 
+			// fmt.Println("error --> ", err)
 			return fmt.Errorf("unable to check endpoint %s: %v", endpointUrl, err)
 		}
 		defer func() { _ = resp.Body.Close() }()
