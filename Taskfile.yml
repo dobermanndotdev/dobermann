@@ -104,6 +104,10 @@ tasks:
     cmds:
       - docker build -t dobermann.dev/backend:latest .
 
+  docker:build-simulator:
+    cmds:
+      - docker build -t dobermann.dev/simulator:latest -f simulator.Dockerfile .
+
   docker:run:
     cmds:
       - docker run --env-file ./.env.local dobermann.dev/backend:latest
@@ -140,6 +144,10 @@ tasks:
   deploy:worker:
     cmds:
       - flyctl deploy --build-arg VERSION={{.CLI_ARGS}} --config ./misc/deploy/worker.fly.toml --remote-only
+
+  deploy:simulator:
+    cmds:
+      - flyctl deploy --build-arg VERSION={{.CLI_ARGS}} --config ./misc/deploy/simulator.fly.toml --remote-only
 
   deploy:prd:
     cmds:

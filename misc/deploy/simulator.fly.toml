@@ -3,15 +3,14 @@
 # See https://fly.io/docs/reference/configuration/ for information about how to use this file.
 #
 
-app = "prod-dobermann-worker"
+app = "dobermann-simulator"
 primary_region = "lhr"
 
 [build]
-  dockerfile = "../../worker.Dockerfile"
+  dockerfile = "../../simulator.Dockerfile"
 
 [env]
-  PRODUCTION_MODE=true
-  ENDPOINT_CHECK_TIMEOUT_IN_SECONDS=30
+  PORT = "8080"
 
 [http_service]
   internal_port = 8080
