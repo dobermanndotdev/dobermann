@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
 	"net"
 	"net/http"
@@ -71,31 +72,21 @@ func main() {
 	done := make(chan os.Signal, 1)
 	signal.Notify(done, syscall.SIGINT, syscall.SIGTERM)
 
-	router.GET("/", func(c echo.Context) error {
-		if c.QueryParam("timeout") == "true" {
-			time.Sleep(time.Second * 10)
-		}
+	router.GET("/", mainHandler)
+	router.GET("/random", randomFailureHandler)
 
-		if c.QueryParam("is_up") == "true" {
-			return c.NoContent(http.StatusOK)
-		}
-
-		if c.QueryParam("is_up") == "false" {
-			return c.NoContent(http.StatusInternalServerError)
-		}
-
-		// Quasi-random path
-		s := getStatusCode()
-		return c.NoContent(s)
-	})
+	port := "8090"
+	if os.Getenv("PORT") != "" {
+		port = os.Getenv("PORT")
+	}
 
 	server := http.Server{
-		Addr:              ":8090",
+		Addr:              fmt.Sprintf(":%s", port),
 		Handler:           router,
-		ReadTimeout:       time.Second * 30,
-		ReadHeaderTimeout: time.Second * 30,
-		WriteTimeout:      time.Second * 30,
-		IdleTimeout:       time.Second * 30,
+		ReadTimeout:       time.Minute * 2,
+		ReadHeaderTimeout: time.Minute * 2,
+		WriteTimeout:      time.Minute * 2,
+		IdleTimeout:       time.Minute * 2,
 		BaseContext: func(listener net.Listener) context.Context {
 			return ctx
 		},
