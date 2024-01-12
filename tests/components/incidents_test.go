@@ -36,9 +36,7 @@ func TestIncidents(t *testing.T) {
 		assert.Equal(t, incident00.CreatedAt.UTC().Truncate(time.Second), foundIncident.CreatedAt.Truncate(time.Second))
 		assert.Equal(t, incident00.Cause.String, foundIncident.Cause)
 		assert.Equal(t, incident00.CheckedURL, foundIncident.CheckedUrl)
-		assert.Equal(t, int(incident00.ResponseStatus), foundIncident.ResponseStatus)
-		assert.Equal(t, incident00.RequestHeaders.String, foundIncident.RequestHeaders)
-		assert.Equal(t, incident00.ResponseHeaders.String, foundIncident.ResponseHeaders)
+		assert.Equal(t, incident00.ResponseStatus.Int16, int16(*foundIncident.ResponseStatus))
 	})
 
 	t.Run("get_all_incidents", func(t *testing.T) {

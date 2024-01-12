@@ -411,18 +411,12 @@ components:
       allOf:
         - $ref: '#/components/schemas/Incident'
         - type: object
-          required: [monitor_id, response_headers, response_status, response_body, request_headers]
+          required: [monitor_id]
           properties:
             monitor_id:
               type: string
-            response_headers:
-              type: string
-            request_headers:
-              type: string
             response_status:
               type: integer
-            response_body:
-              type: string
     LogInPayload:
       required: [ token ]
       properties:

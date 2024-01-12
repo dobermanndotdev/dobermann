@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"net/http"
 	"testing"
 	"time"
 
@@ -14,6 +13,7 @@ import (
 	"github.com/volatiletech/sqlboiler/v4/boil"
 
 	"github.com/flowck/dobermann/backend/internal/adapters/models"
+	"github.com/flowck/dobermann/backend/internal/common/ptr"
 	"github.com/flowck/dobermann/backend/internal/domain"
 	"github.com/flowck/dobermann/backend/internal/domain/account"
 	"github.com/flowck/dobermann/backend/internal/domain/monitor"
@@ -110,13 +110,8 @@ func FixtureIncident(t *testing.T, monitorID string) *monitor.Incident {
 		time.Now().UTC(),
 		gofakeit.URL(),
 		nil,
-		monitor.IncidentDetails{
-			Cause:           gofakeit.Sentence(5),
-			Status:          http.StatusInternalServerError,
-			ResponseBody:    gofakeit.Sentence(10),
-			ResponseHeaders: gofakeit.Sentence(10),
-			RequestHeaders:  gofakeit.Sentence(10),
-		},
+		gofakeit.Sentence(10),
+		ptr.ToPtr(int16(500)),
 	)
 	require.NoError(t, err)
 
@@ -134,16 +129,13 @@ func (f *FixtureClient) FixtureAndInsertIncidents(t *testing.T, monitorID domain
 
 	for i := 0; i < count; i++ {
 		model = models.Incident{
-			ID:              domain.NewID().String(),
-			MonitorID:       monitorID.String(),
-			ResolvedAt:      null.TimeFromPtr(nil),
-			Cause:           null.String{},
-			ResponseBody:    null.String{},
-			ResponseHeaders: null.String{},
-			ResponseStatus:  500,
-			RequestHeaders:  null.String{},
-			CheckedURL:      gofakeit.URL(),
-			CreatedAt:       time.Now(),
+			ID:             domain.NewID().String(),
+			MonitorID:      monitorID.String(),
+			ResolvedAt:     null.TimeFromPtr(nil),
+			Cause:          null.String{},
+			ResponseStatus: null.Int16From(500),
+			CheckedURL:     gofakeit.URL(),
+			CreatedAt:      time.Now(),
 		}
 		require.NoError(t, model.Insert(f.Ctx, f.Db, boil.Infer()))
 
@@ -175,7 +167,8 @@ func (f *FixtureClient) FixtureCheckResults(
 		for j := 0; j < checksPerDay; j++ {
 			checkedAt = checkedAt.Add(time.Second * time.Duration(checkIntervalInSeconds))
 			model := models.MonitorCheckResult{
-				StatusCode:       200,
+				ID:               domain.NewID().String(),
+				StatusCode:       null.Int16From(200),
 				CheckedAt:        checkedAt,
 				MonitorID:        monitorID.String(),
 				ResponseTimeInMS: int16(gofakeit.Number(150, 350)),

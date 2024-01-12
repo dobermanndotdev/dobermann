@@ -20,7 +20,7 @@ type CheckEndpointHandler struct {
 }
 
 type httpChecker interface {
-	Check(ctx context.Context, endpointUrl string) (CheckResult, error)
+	Check(ctx context.Context, endpointUrl string) (*monitor.CheckResult, error)
 }
 
 type CheckResult struct {
@@ -45,7 +45,7 @@ func NewCheckEndpointHandler(
 
 func (c CheckEndpointHandler) Execute(ctx context.Context, cmd CheckEndpoint) error {
 	checkSucceeded := false
-	var checkResult CheckResult
+	var checkResult *monitor.CheckResult
 	var foundMonitor *monitor.Monitor
 
 	err := c.monitorRepository.Update(ctx, cmd.MonitorID, func(m *monitor.Monitor) error {
@@ -57,7 +57,7 @@ func (c CheckEndpointHandler) Execute(ctx context.Context, cmd CheckEndpoint) er
 			return fmt.Errorf("error checking endpoint %s due to: %v", m.EndpointUrl(), err)
 		}
 
-		if checkResult.Result.IsEndpointDown() {
+		if checkResult.IsEndpointDown() {
 			m.MarkEndpointAsDown()
 		} else {
 			m.MarkEndpointAsUp()
@@ -70,7 +70,7 @@ func (c CheckEndpointHandler) Execute(ctx context.Context, cmd CheckEndpoint) er
 		return fmt.Errorf("error updating monitor during check: %v", err)
 	}
 
-	err = c.monitorRepository.SaveCheckResult(ctx, cmd.MonitorID, checkResult.Result)
+	err = c.monitorRepository.SaveCheckResult(ctx, cmd.MonitorID, checkResult)
 	if err != nil {
 		return fmt.Errorf("unable to save the check result of monitor with id %s: %v", cmd.MonitorID, err)
 	}
@@ -86,14 +86,10 @@ func (c CheckEndpointHandler) Execute(ctx context.Context, cmd CheckEndpoint) er
 		}
 	} else {
 		err = c.eventPublisher.PublishEndpointCheckFailed(ctx, EndpointCheckFailedEvent{
-			At:              time.Now(),
-			MonitorID:       cmd.MonitorID.String(),
-			CheckedURL:      foundMonitor.EndpointUrl(),
-			ResponseHeaders: checkResult.ResponseHeaders,
-			ResponseBody:    checkResult.ResponseBody,
-			ResponseStatus:  checkResult.ResponseStatus,
-			RequestHeaders:  checkResult.RequestHeaders,
-			Cause:           fmt.Sprintf("Request failed with status code %d", checkResult.ResponseStatus),
+			At:            time.Now(),
+			MonitorID:     cmd.MonitorID.String(),
+			CheckedURL:    foundMonitor.EndpointUrl(),
+			CheckResultID: checkResult.ID().String(),
 		})
 		if err != nil {
 			return fmt.Errorf("error publishing event EndpointCheckFailedEvent: %v", err)

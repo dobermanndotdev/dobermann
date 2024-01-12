@@ -56,7 +56,7 @@ func assertIncident(t *testing.T, expected, found *monitor.Incident) {
 
 	assert.Equal(t, expected.ID(), found.ID())
 	assert.Equal(t, expected.CheckedURL(), found.CheckedURL())
-	assert.Equal(t, expected.Details().Cause, found.Details().Cause)
+	assert.Equal(t, expected.Cause(), found.Cause())
 
 	//POST_IDEA?: comparing dates in tests
 	assert.Equal(t, expected.CreatedAt().Truncate(time.Second), found.CreatedAt().Truncate(time.Second))

@@ -43,7 +43,7 @@ func mapIncidentsToResponse(incidents []*monitor.Incident) []Incident {
 
 	for i, incident := range incidents {
 		result[i] = Incident{
-			Cause:      incident.Details().Cause,
+			Cause:      incident.Cause(),
 			CheckedUrl: incident.CheckedURL(),
 			CreatedAt:  incident.CreatedAt(),
 			Id:         incident.ID().String(),
@@ -55,18 +55,21 @@ func mapIncidentsToResponse(incidents []*monitor.Incident) []Incident {
 }
 
 func mapIncidentToFullIncidentResponse(incident *monitor.Incident) FullIncident {
-	return FullIncident{
-		Id:              incident.ID().String(),
-		MonitorId:       incident.MonitorID().String(),
-		CreatedAt:       incident.CreatedAt(),
-		CheckedUrl:      incident.CheckedURL(),
-		ResolvedAt:      incident.ResolvedAt(),
-		Cause:           incident.Details().Cause,
-		ResponseStatus:  int(incident.Details().Status),
-		ResponseBody:    incident.Details().ResponseBody,
-		RequestHeaders:  incident.Details().RequestHeaders,
-		ResponseHeaders: incident.Details().RequestHeaders,
+	f := FullIncident{
+		Id:         incident.ID().String(),
+		MonitorId:  incident.MonitorID().String(),
+		CreatedAt:  incident.CreatedAt(),
+		CheckedUrl: incident.CheckedURL(),
+		ResolvedAt: incident.ResolvedAt(),
+		Cause:      incident.Cause(),
 	}
+
+	if incident.ResponseStatusCode() != nil {
+		val := int(*incident.ResponseStatusCode())
+		f.ResponseStatus = &val
+	}
+
+	return f
 }
 
 func mapRequestToMonitor(body CreateMonitorRequest, user *authenticatedUser) (*monitor.Monitor, error) {

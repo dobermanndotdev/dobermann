@@ -55,16 +55,13 @@ type ErrorResponse struct {
 
 // FullIncident defines model for FullIncident.
 type FullIncident struct {
-	Cause           string     `json:"cause"`
-	CheckedUrl      string     `json:"checked_url"`
-	CreatedAt       time.Time  `json:"created_at"`
-	Id              string     `json:"id"`
-	MonitorId       string     `json:"monitor_id"`
-	RequestHeaders  string     `json:"request_headers"`
-	ResolvedAt      *time.Time `json:"resolved_at,omitempty"`
-	ResponseBody    string     `json:"response_body"`
-	ResponseHeaders string     `json:"response_headers"`
-	ResponseStatus  int        `json:"response_status"`
+	Cause          string     `json:"cause"`
+	CheckedUrl     string     `json:"checked_url"`
+	CreatedAt      time.Time  `json:"created_at"`
+	Id             string     `json:"id"`
+	MonitorId      string     `json:"monitor_id"`
+	ResolvedAt     *time.Time `json:"resolved_at,omitempty"`
+	ResponseStatus *int       `json:"response_status,omitempty"`
 }
 
 // GetAllIncidentsPayload defines model for GetAllIncidentsPayload.
@@ -1922,35 +1919,34 @@ func ParseGetMonitorResponseTimeStatsResponse(rsp *http.Response) (*GetMonitorRe
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"H4sIAAAAAAAC/+xaX2/bOBL/KgTvgL7oIvdaHAo/XVK7hXfTNkhS7EMQCLQ0ltlQpEpSSY3A331BUv//",
-	"2WmcpLvYN8ukZoa/38xwZux7HIokFRy4Vnh6jyWoVHAF9mEGK5IxPZdSSPMcCq6Ba/ORpCmjIdFUcP+b",
-	"Etx8p8I1JMR8+reEFZ7if/mVcN+tKt9KO8/V4O126+EIVChpaoThKT5GMXCQNERgtiJZ7fVyHda69xKI",
-	"huMwFBnX5/A9A2VNS6VIQWrqzkDcesBJAuZZb1LAU6y0pDzGWw9DQijrXUmJUndCRj2LWw9L+J5RCRGe",
-	"XjWVFCJrAq63Xm7uJ8GpNucfMDdcQ3gTUK5B3hIWUB4oCAWP7GJCOU2yBE/fTLzCIrM1BmlPwqNUUK6D",
-	"TLLdNjd2eyOKjfHziOpHmf681jZcrGMoFP7c9Dv7FgozpUWSu14oIkAqC9eIKPTK0mp0ZQpeYa/rMAko",
-	"RWLoij5GtWdEliLTSK/BaelKap8931WIvy5fEMtvEGqj+kPG2IKHNCrik7EvKzy9Go/F8o2t1wYpcWwH",
-	"NOqNDem8IFgDiUCqgT2OgWApos34jr3EKE101utNLcBqtvfo6Epsm9o9Xhdy42cfQR9XsKszsmGCRF2H",
-	"i4i2aZFqSNSu/FjjpNBJpCQbl5Fi6I8msxLYJDSwDjIYflsLTVj1+krIhGi35X9vsbcLbyu4pqNhTlO6",
-	"58Co0MuzyslmEe3Ebwy2XE7Htn51B+KqVPr3p6pwy5PNo6lq5KoxvsobxwXnJU3gQpNDBVpbbJfFEdPO",
-	"pFhRBjPQhDL1KDi+Khhx23pSb923JFP9JY29HSEauFk9HNpSJApI04UiouE/mtoSpvPO4D2gBLt9kKzW",
-	"SW2SdmdpWt6w00BxKuIFH4RaixvguwsJt60UN1jNHKIs7K0Di5zx2PrpZ0iMxB0PFOUh7P/Ojjpt0DNo",
-	"cS0e5OajKqgMSWsKl0IwIDzfkxo/ivqXGVE6KBzsIahl6cMw63PwVv3aOk7d9jpyY4VuJzw6+awvGz2A",
-	"eAkxFbyX21vCMtijEHP7PKe4lGiMvRRxzIpu6MycfDAS01aeKyntXG1mnxFuM2o3vn4iYIazwIpKNdJV",
-	"DgSF9cHBl6RgsDurWH+qqa9LrXpPK6vlI6Z/hjCTVG8uTMw5XE6ASJDHmV6bp6V9+lCg89sflzjvui32",
-	"drVCaq116np4+KFBcsJmIlTdBsjsU1Pfj6leZ8ujUCT+iom78MaPxBJkQjj3z+fHs0/zo8Qcz+aafd5y",
-	"mWYlivEECXUtexuYEsrFUbgmPCac/j82C0YS7swdZoXMVwotSXgD3FjCaAh5F+l4w58Wlw+x0D9dvJ9/",
-	"vrAHM4kNZKK+rC5A3tIQ9jykhzXVxjdwJbYy8RakckeYHE2OXhstIgVOUoqn+M3R5OiNvYP02hLj58MK",
-	"5aeuhjFfxmBhM+FiZzqLCE+7ZU6tUbKi/juZHGwsNFhT9UyIvvzu2LPTqSHBpaV+Y4xVDwLbH9fd/+p6",
-	"e+1hlSUJkRuHAIqcObWuPVMgUZhJCVyzDWIijiFC1NJEYmViNJ9KKRd0Psn0usTdZiahegBvTLSqLvQk",
-	"b58PgnPv1GzbzDFaZrDtcP26G9bvz+fHl/PZI9ko4Xa2KUQQhztEShxKVA1JNUSZiCkfhvPULj8NjI3i",
-	"cS/4JofVPRIeF4uPn+cz9PXsULycirjl3hURjTJvKI3UpyQ2F0mSgLYDn6t7bDjE3zOQG+wVSTZvTitA",
-	"ytnn674et18IownVTSnkRy5lMvHGZV4/bbLrGxy9dKojjKF68VnQXXHX4ty/Lz4uZtsxB6imB4vZgAOY",
-	"C6qirpKL26FV57NdKT0xaf1DkBenjZesoeUG2fpwiLp8NLorWosx2T/BWgRre3D4K8RqQSaiHBF0R/Ua",
-	"pSSm3J6y5gQlm6Y5Gis9itnEU5YerZ+RXrb02BdxZ3pemCQlSj0A14PMv88/5dkxAgauA2+CP7PfV+Dv",
-	"To+l3Edmx7ddYGfz0/nzAeuOPg6pN5ipqh8PZs8K2xMll1/qUjlsfunOe56asMPnr+GZ1V5JrCfWno1R",
-	"ay0SEmXcjslsH7sj6NKsh8faHwH+egT2/Ith/9bthZgzNiNScNWp7/a4eXylSc0YO+scrf+GfnZ7QsIH",
-	"akJJeAwB5UFENgr3CHi2CnDXT5Evna5NPFuea3OqQjYqpts9PmP1yNuC0GqqOfV9JkLC1kLp6bvJuwne",
-	"Xm//DAAA//+E9ncKLiYAAA==",
+	"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",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

@@ -212,6 +212,7 @@ func (p MonitorRepository) SaveCheckResult(
 	}
 
 	model := mapCheckResultToModel(monitorID, checkResult)
+
 	err = model.Insert(ctx, p.db, boil.Infer())
 	if err != nil {
 		return fmt.Errorf("unable to save check result of monitor with id %s: %v", monitorID, err)
@@ -264,4 +265,24 @@ func (p MonitorRepository) ResponseTimeStats(
 	}
 
 	return mapModelToResponseTimeStats(modelList), nil
+}
+
+func (p MonitorRepository) FindById(ctx context.Context, id domain.ID) (*monitor.CheckResult, error) {
+	model, err := models.MonitorCheckResults(models.MonitorCheckResultWhere.ID.EQ(id.String())).One(ctx, p.db)
+	if err != nil {
+		return nil, err
+	}
+
+	region, err := monitor.NewRegion(model.Region)
+	if err != nil {
+		return nil, err
+	}
+
+	return monitor.NewCheckResult(
+		id,
+		model.StatusCode.Ptr(),
+		region,
+		model.CheckedAt,
+		model.ResponseTimeInMS,
+	)
 }

@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/friendsofgo/errors"
+	"github.com/volatiletech/null/v8"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"github.com/volatiletech/sqlboiler/v4/queries"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
@@ -23,12 +24,12 @@ import (
 
 // MonitorCheckResult is an object representing the database table.
 type MonitorCheckResult struct {
-	ID               int       `boil:"id" json:"id" toml:"id" yaml:"id"`
-	MonitorID        string    `boil:"monitor_id" json:"monitor_id" toml:"monitor_id" yaml:"monitor_id"`
-	StatusCode       int16     `boil:"status_code" json:"status_code" toml:"status_code" yaml:"status_code"`
-	Region           string    `boil:"region" json:"region" toml:"region" yaml:"region"`
-	CheckedAt        time.Time `boil:"checked_at" json:"checked_at" toml:"checked_at" yaml:"checked_at"`
-	ResponseTimeInMS int16     `boil:"response_time_in_ms" json:"response_time_in_ms" toml:"response_time_in_ms" yaml:"response_time_in_ms"`
+	ID               string     `boil:"id" json:"id" toml:"id" yaml:"id"`
+	MonitorID        string     `boil:"monitor_id" json:"monitor_id" toml:"monitor_id" yaml:"monitor_id"`
+	StatusCode       null.Int16 `boil:"status_code" json:"status_code,omitempty" toml:"status_code" yaml:"status_code,omitempty"`
+	Region           string     `boil:"region" json:"region" toml:"region" yaml:"region"`
+	ResponseTimeInMS int16      `boil:"response_time_in_ms" json:"response_time_in_ms" toml:"response_time_in_ms" yaml:"response_time_in_ms"`
+	CheckedAt        time.Time  `boil:"checked_at" json:"checked_at" toml:"checked_at" yaml:"checked_at"`
 
 	R *monitorCheckResultR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L monitorCheckResultL  `boil:"-" json:"-" toml:"-" yaml:"-"`
@@ -39,15 +40,15 @@ var MonitorCheckResultColumns = struct {
 	MonitorID        string
 	StatusCode       string
 	Region           string
-	CheckedAt        string
 	ResponseTimeInMS string
+	CheckedAt        string
 }{
 	ID:               "id",
 	MonitorID:        "monitor_id",
 	StatusCode:       "status_code",
 	Region:           "region",
-	CheckedAt:        "checked_at",
 	ResponseTimeInMS: "response_time_in_ms",
+	CheckedAt:        "checked_at",
 }
 
 var MonitorCheckResultTableColumns = struct {
@@ -55,35 +56,35 @@ var MonitorCheckResultTableColumns = struct {
 	MonitorID        string
 	StatusCode       string
 	Region           string
-	CheckedAt        string
 	ResponseTimeInMS string
+	CheckedAt        string
 }{
 	ID:               "monitor_check_results.id",
 	MonitorID:        "monitor_check_results.monitor_id",
 	StatusCode:       "monitor_check_results.status_code",
 	Region:           "monitor_check_results.region",
-	CheckedAt:        "monitor_check_results.checked_at",
 	ResponseTimeInMS: "monitor_check_results.response_time_in_ms",
+	CheckedAt:        "monitor_check_results.checked_at",
 }
 
 // Generated where
 
-type whereHelperint struct{ field string }
+type whereHelperint16 struct{ field string }
 
-func (w whereHelperint) EQ(x int) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.EQ, x) }
-func (w whereHelperint) NEQ(x int) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.NEQ, x) }
-func (w whereHelperint) LT(x int) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.LT, x) }
-func (w whereHelperint) LTE(x int) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.LTE, x) }
-func (w whereHelperint) GT(x int) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.GT, x) }
-func (w whereHelperint) GTE(x int) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.GTE, x) }
-func (w whereHelperint) IN(slice []int) qm.QueryMod {
+func (w whereHelperint16) EQ(x int16) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.EQ, x) }
+func (w whereHelperint16) NEQ(x int16) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.NEQ, x) }
+func (w whereHelperint16) LT(x int16) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.LT, x) }
+func (w whereHelperint16) LTE(x int16) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.LTE, x) }
+func (w whereHelperint16) GT(x int16) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.GT, x) }
+func (w whereHelperint16) GTE(x int16) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.GTE, x) }
+func (w whereHelperint16) IN(slice []int16) qm.QueryMod {
 	values := make([]interface{}, 0, len(slice))
 	for _, value := range slice {
 		values = append(values, value)
 	}
 	return qm.WhereIn(fmt.Sprintf("%s IN ?", w.field), values...)
 }
-func (w whereHelperint) NIN(slice []int) qm.QueryMod {
+func (w whereHelperint16) NIN(slice []int16) qm.QueryMod {
 	values := make([]interface{}, 0, len(slice))
 	for _, value := range slice {
 		values = append(values, value)
@@ -92,19 +93,19 @@ func (w whereHelperint) NIN(slice []int) qm.QueryMod {
 }
 
 var MonitorCheckResultWhere = struct {
-	ID               whereHelperint
+	ID               whereHelperstring
 	MonitorID        whereHelperstring
-	StatusCode       whereHelperint16
+	StatusCode       whereHelpernull_Int16
 	Region           whereHelperstring
-	CheckedAt        whereHelpertime_Time
 	ResponseTimeInMS whereHelperint16
+	CheckedAt        whereHelpertime_Time
 }{
-	ID:               whereHelperint{field: "\"monitor_check_results\".\"id\""},
+	ID:               whereHelperstring{field: "\"monitor_check_results\".\"id\""},
 	MonitorID:        whereHelperstring{field: "\"monitor_check_results\".\"monitor_id\""},
-	StatusCode:       whereHelperint16{field: "\"monitor_check_results\".\"status_code\""},
+	StatusCode:       whereHelpernull_Int16{field: "\"monitor_check_results\".\"status_code\""},
 	Region:           whereHelperstring{field: "\"monitor_check_results\".\"region\""},
-	CheckedAt:        whereHelpertime_Time{field: "\"monitor_check_results\".\"checked_at\""},
 	ResponseTimeInMS: whereHelperint16{field: "\"monitor_check_results\".\"response_time_in_ms\""},
+	CheckedAt:        whereHelpertime_Time{field: "\"monitor_check_results\".\"checked_at\""},
 }
 
 // MonitorCheckResultRels is where relationship names are stored.
@@ -135,9 +136,9 @@ func (r *monitorCheckResultR) GetMonitor() *Monitor {
 type monitorCheckResultL struct{}
 
 var (
-	monitorCheckResultAllColumns            = []string{"id", "monitor_id", "status_code", "region", "checked_at", "response_time_in_ms"}
-	monitorCheckResultColumnsWithoutDefault = []string{"monitor_id", "status_code", "region", "response_time_in_ms"}
-	monitorCheckResultColumnsWithDefault    = []string{"id", "checked_at"}
+	monitorCheckResultAllColumns            = []string{"id", "monitor_id", "status_code", "region", "response_time_in_ms", "checked_at"}
+	monitorCheckResultColumnsWithoutDefault = []string{"id", "monitor_id", "region", "response_time_in_ms"}
+	monitorCheckResultColumnsWithDefault    = []string{"status_code", "checked_at"}
 	monitorCheckResultPrimaryKeyColumns     = []string{"id"}
 	monitorCheckResultGeneratedColumns      = []string{}
 )
@@ -611,7 +612,7 @@ func MonitorCheckResults(mods ...qm.QueryMod) monitorCheckResultQuery {
 
 // FindMonitorCheckResult retrieves a single record by ID with an executor.
 // If selectCols is empty Find will return all columns.
-func FindMonitorCheckResult(ctx context.Context, exec boil.ContextExecutor, iD int, selectCols ...string) (*MonitorCheckResult, error) {
+func FindMonitorCheckResult(ctx context.Context, exec boil.ContextExecutor, iD string, selectCols ...string) (*MonitorCheckResult, error) {
 	monitorCheckResultObj := &MonitorCheckResult{}
 
 	sel := "*"
@@ -1110,7 +1111,7 @@ func (o *MonitorCheckResultSlice) ReloadAll(ctx context.Context, exec boil.Conte
 }
 
 // MonitorCheckResultExists checks if the MonitorCheckResult row exists.
-func MonitorCheckResultExists(ctx context.Context, exec boil.ContextExecutor, iD int) (bool, error) {
+func MonitorCheckResultExists(ctx context.Context, exec boil.ContextExecutor, iD string) (bool, error) {
 	var exists bool
 	sql := "select exists(select 1 from \"monitor_check_results\" where \"id\"=$1 limit 1)"
 

@@ -12,13 +12,22 @@ import (
 )
 
 type Incident struct {
-	id         domain.ID
-	monitorID  domain.ID
-	createdAt  time.Time
-	resolvedAt *time.Time
-	checkedURL string
-	details    IncidentDetails
-	actions    []IncidentAction
+	id                 domain.ID
+	monitorID          domain.ID
+	createdAt          time.Time
+	resolvedAt         *time.Time
+	checkedURL         string
+	cause              string
+	responseStatusCode *int16
+	actions            []IncidentAction
+}
+
+func (i *Incident) Cause() string {
+	return i.cause
+}
+
+func (i *Incident) ResponseStatusCode() *int16 {
+	return i.responseStatusCode
 }
 
 func (i *Incident) MonitorID() domain.ID {
@@ -29,10 +38,6 @@ func (i *Incident) CheckedURL() string {
 	return i.checkedURL
 }
 
-func (i *Incident) Details() IncidentDetails {
-	return i.details
-}
-
 func NewIncident(
 	id,
 	monitorID domain.ID,
@@ -40,7 +45,8 @@ func NewIncident(
 	createdAt time.Time,
 	checkedURL string,
 	actions []IncidentAction,
-	details IncidentDetails,
+	cause string,
+	responseStatusCode *int16,
 ) (*Incident, error) {
 	if id.IsEmpty() {
 		return nil, errors.New("id cannot be empty or invalid")
@@ -56,8 +62,10 @@ func NewIncident(
 		resolvedAtUTC = &r
 	}
 
-	if details.Status < 100 || details.Status > 599 {
-		return nil, errors.New("the status provided is invalid")
+	if responseStatusCode != nil {
+		if *responseStatusCode < 100 || *responseStatusCode > 599 {
+			return nil, errors.New("the status provided is invalid")
+		}
 	}
 
 	checkedURL = strings.TrimSpace(checkedURL)
@@ -70,13 +78,14 @@ func NewIncident(
 	}
 
 	return &Incident{
-		id:         id,
-		monitorID:  monitorID,
-		actions:    actions,
-		details:    details,
-		checkedURL: checkedURL,
-		resolvedAt: resolvedAtUTC,
-		createdAt:  createdAt.UTC(),
+		id:                 id,
+		cause:              cause,
+		actions:            actions,
+		monitorID:          monitorID,
+		checkedURL:         checkedURL,
+		resolvedAt:         resolvedAtUTC,
+		createdAt:          createdAt.UTC(),
+		responseStatusCode: responseStatusCode,
 	}, nil
 }
 
@@ -103,14 +112,6 @@ func (i *Incident) Resolve() {
 
 func (i *Incident) ResolvedAt() *time.Time {
 	return i.resolvedAt
-}
-
-type IncidentDetails struct {
-	Cause           string
-	Status          int16
-	ResponseBody    string
-	ResponseHeaders string
-	RequestHeaders  string
 }
 
 //

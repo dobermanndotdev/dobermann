@@ -184,15 +184,12 @@ func assertMonitor(t *testing.T, expected, found *monitor.Monitor) {
 
 func saveIncident(t *testing.T, monitorID domain.ID) {
 	model := models.Incident{
-		ID:              domain.NewID().String(),
-		MonitorID:       monitorID.String(),
-		ResolvedAt:      null.Time{},
-		Cause:           null.String{},
-		ResponseBody:    null.String{},
-		ResponseHeaders: null.String{},
-		ResponseStatus:  http.StatusInternalServerError,
-		RequestHeaders:  null.String{},
-		CheckedURL:      gofakeit.URL(),
+		ID:             domain.NewID().String(),
+		MonitorID:      monitorID.String(),
+		ResolvedAt:     null.Time{},
+		Cause:          null.String{},
+		ResponseStatus: null.Int16From(http.StatusInternalServerError),
+		CheckedURL:     gofakeit.URL(),
 	}
 	require.NoError(t, model.Insert(ctx, db, boil.Infer()))
 }

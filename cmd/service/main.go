@@ -139,7 +139,7 @@ func main() {
 
 	logger.Info("Connected successfully to RabbitMQ")
 
-	httpChecker, err := endpoint_checkers.NewHttpChecker(config.Region, config.EndpointCheckTimeoutInSeconds)
+	httpChecker, err := endpoint_checkers.NewHttpChecker(config.Region, config.EndpointCheckTimeoutInSeconds, logs.New(false))
 	if err != nil {
 		logger.Fatal(err)
 	}
@@ -168,7 +168,7 @@ func main() {
 
 			// Monitor
 			DeleteMonitor:                      observability.NewCommandDecorator[command.DeleteMonitor](command.NewDeleteMonitorHandler(txProvider), logger),
-			CreateIncident:                     observability.NewCommandDecorator[command.CreateIncident](command.NewCreateIncidentHandler(txProvider), logger),
+			CreateIncident:                     observability.NewCommandDecorator[command.CreateIncident](command.NewCreateIncidentHandler(txProvider, monitorRepository), logger),
 			EditMonitor:                        observability.NewCommandDecorator[command.EditMonitor](command.NewEditMonitorHandler(monitorRepository), logger),
 			ResolveIncident:                    observability.NewCommandDecorator[command.ResolveIncident](command.NewResolveIncidentHandler(txProvider), logger),
 			ToggleMonitorPause:                 observability.NewCommandDecorator[command.ToggleMonitorPause](command.NewToggleMonitorPauseHandler(txProvider), logger),

@@ -13,6 +13,7 @@ import (
 	"github.com/flowck/dobermann/backend/internal/adapters/events"
 	"github.com/flowck/dobermann/backend/internal/adapters/psql"
 	"github.com/flowck/dobermann/backend/internal/app/command"
+	"github.com/flowck/dobermann/backend/internal/common/logs"
 	"github.com/flowck/dobermann/backend/internal/domain"
 	"github.com/flowck/dobermann/backend/internal/domain/account"
 	"github.com/flowck/dobermann/backend/internal/domain/monitor"
@@ -35,16 +36,18 @@ func (p mockTxProvider) Transact(ctx context.Context, fn command.TransactFunc) e
 }
 
 func TestNewBulkCheckEndpointsHandler(t *testing.T) {
-	endpointsChecker, err := endpoint_checkers.NewHttpChecker("europe", 5)
+	endpointsChecker, err := endpoint_checkers.NewHttpChecker("europe", 5, logs.New(false))
 	require.NoError(t, err)
+
+	eventPublisher := events.NewPublisherMock()
 	txProvider := mockTxProvider{
-		EventPublisher:    events.NewPublisherMock(),
+		EventPublisher:    eventPublisher,
 		MonitorRepository: psql.NewMonitorRepositoryMock(),
 	}
 	monitorRepository := psql.NewMonitorRepositoryMock()
 
 	account00 := tests.FixtureAccount(t)
-	handler := command.NewBulkCheckEndpointsHandler(endpointsChecker, txProvider, monitorRepository)
+	handler := command.NewBulkCheckEndpointsHandler(endpointsChecker, txProvider, eventPublisher, monitorRepository)
 
 	testCases := []struct {
 		name         string
