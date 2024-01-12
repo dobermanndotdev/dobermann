@@ -62,24 +62,26 @@ func (h HttpChecker) Check(ctx context.Context, endpointUrl string) (*monitor.Ch
 		Timeout: h.timeout / 2,
 	}
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, endpointUrl, http.NoBody)
-	if err != nil {
-		return nil, fmt.Errorf("unable to create request: %v", err)
-	}
-
-	req.Header.Add("Accept-Encoding", "gzip, deflate, br")
-	req.Header.Add("Accept-Language", "en-GB,en-US;q=0.9,en;q=0.8")
-	req.Header.Add("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8")
-	req.Header.Add("User-Agent", randomUserAgent(&userAgents, len(userAgents)-1))
-
 	counter := 0
-
+	var err error
+	var req *http.Request
 	var resp *http.Response
 	var startedAt time.Time
 
 	for counter < maxRetries {
 		counter++
 		startedAt = time.Now()
+
+		req, err = http.NewRequestWithContext(ctx, http.MethodGet, endpointUrl, http.NoBody)
+		if err != nil {
+			return nil, fmt.Errorf("unable to create request: %v", err)
+		}
+		req.Close = true
+
+		req.Header.Add("Accept-Encoding", "gzip, deflate, br")
+		req.Header.Add("Accept-Language", "en-GB,en-US;q=0.9,en;q=0.8")
+		req.Header.Add("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8")
+		req.Header.Add("User-Agent", randomUserAgent(&userAgents, len(userAgents)-1))
 
 		resp, err = client.Do(req)
 		if err != nil {
