@@ -3,16 +3,23 @@ package monitor
 import (
 	"errors"
 	"time"
+
+	"github.com/flowck/dobermann/backend/internal/domain"
 )
 
 type CheckResult struct {
-	statusCode       int16
+	id               domain.ID
+	statusCode       *int16
 	responseTimeInMs int16
 	region           Region
 	checkedAt        time.Time
 }
 
-func (c *CheckResult) StatusCode() int16 {
+func (c *CheckResult) ID() domain.ID {
+	return c.id
+}
+
+func (c *CheckResult) StatusCode() *int16 {
 	return c.statusCode
 }
 
@@ -29,24 +36,36 @@ func (c *CheckResult) CheckedAt() time.Time {
 }
 
 func (c *CheckResult) IsEndpointDown() bool {
-	return c.statusCode >= 400
+	if c.statusCode != nil {
+		return *c.statusCode >= 400
+	}
+
+	return true
 }
 
 func NewCheckResult(
-	statusCode int16,
+	id domain.ID,
+	statusCode *int16,
 	region Region,
 	checkedAt time.Time,
 	responseTimeInMs int16,
 ) (*CheckResult, error) {
-	if statusCode < 100 || statusCode > 599 {
-		return nil, errors.New("invalid status code")
+	if statusCode != nil {
+		if *statusCode < 100 || *statusCode > 599 {
+			return nil, errors.New("invalid status code")
+		}
 	}
 
 	if time.Now().Before(checkedAt) {
 		return nil, errors.New("checkedAt cannot be set in the past")
 	}
 
+	if id.IsEmpty() {
+		return nil, errors.New("id cannot be invalid")
+	}
+
 	return &CheckResult{
+		id:               id,
 		statusCode:       statusCode,
 		region:           region,
 		checkedAt:        checkedAt,

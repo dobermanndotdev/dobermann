@@ -10,23 +10,34 @@ import (
 )
 
 type CreateIncident struct {
-	MonitorID  domain.ID
-	CheckedURL string
-	Details    monitor.IncidentDetails
+	MonitorID     domain.ID
+	CheckResultID domain.ID
+	CheckedUrl    string
+}
+
+type checkResultFinder interface {
+	FindById(ctx context.Context, id domain.ID) (*monitor.CheckResult, error)
 }
 
 type CreateIncidentHandler struct {
-	txProvider TransactionProvider
+	txProvider        TransactionProvider
+	checkResultFinder checkResultFinder
 }
 
-func NewCreateIncidentHandler(txProvider TransactionProvider) CreateIncidentHandler {
+func NewCreateIncidentHandler(txProvider TransactionProvider, checkResultFinder checkResultFinder) CreateIncidentHandler {
 	return CreateIncidentHandler{
-		txProvider: txProvider,
+		txProvider:        txProvider,
+		checkResultFinder: checkResultFinder,
 	}
 }
 
 // TODO: Test this command's logic ;)
 func (h CreateIncidentHandler) Execute(ctx context.Context, cmd CreateIncident) error {
+	checkResult, err := h.checkResultFinder.FindById(ctx, cmd.CheckResultID)
+	if err != nil {
+		return err
+	}
+
 	return h.txProvider.Transact(ctx, func(adapters TransactableAdapters) error {
 		foundMonitor, err := adapters.MonitorRepository.FindByID(ctx, cmd.MonitorID)
 		if err != nil {
@@ -37,7 +48,16 @@ func (h CreateIncidentHandler) Execute(ctx context.Context, cmd CreateIncident) 
 			return nil
 		}
 
-		incident, err := monitor.NewIncident(domain.NewID(), foundMonitor.ID(), nil, time.Now().UTC(), cmd.CheckedURL, nil, cmd.Details)
+		incident, err := monitor.NewIncident(
+			domain.NewID(),
+			foundMonitor.ID(),
+			nil,
+			time.Now().UTC(),
+			cmd.CheckedUrl,
+			nil,
+			fmt.Sprintf("Monitor with url %s is unresponsive", cmd.CheckedUrl),
+			checkResult.StatusCode(),
+		)
 		if err != nil {
 			return err
 		}

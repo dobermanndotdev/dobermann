@@ -2,16 +2,14 @@ package endpoint_checkers
 
 import (
 	"context"
-	"encoding/json"
-	"errors"
 	"fmt"
 	"math/rand"
 	"net/http"
 	"time"
 
-	"github.com/cenkalti/backoff/v3"
-
-	"github.com/flowck/dobermann/backend/internal/app/command"
+	"github.com/flowck/dobermann/backend/internal/common/logs"
+	"github.com/flowck/dobermann/backend/internal/common/ptr"
+	"github.com/flowck/dobermann/backend/internal/domain"
 	"github.com/flowck/dobermann/backend/internal/domain/monitor"
 )
 
@@ -31,12 +29,18 @@ var userAgents = []string{
 	"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.3",
 }
 
+const (
+	maxRetries            = 3
+	delayPerReqFailedInMs = 500
+)
+
 type HttpChecker struct {
 	timeout time.Duration
 	region  monitor.Region
+	logger  *logs.Logger
 }
 
-func NewHttpChecker(region string, timeoutInSeconds int) (HttpChecker, error) {
+func NewHttpChecker(region string, timeoutInSeconds int, logger *logs.Logger) (HttpChecker, error) {
 	reg, err := monitor.NewRegion(region)
 	if err != nil {
 		return HttpChecker{}, err
@@ -47,112 +51,63 @@ func NewHttpChecker(region string, timeoutInSeconds int) (HttpChecker, error) {
 	}
 
 	return HttpChecker{
-		timeout: time.Second * time.Duration(timeoutInSeconds),
 		region:  reg,
+		logger:  logger,
+		timeout: time.Second * time.Duration(timeoutInSeconds),
 	}, nil
 }
 
-func (h HttpChecker) Check(_ context.Context, endpointUrl string) (command.CheckResult, error) {
-	requestCtx, cancel := context.WithTimeout(context.Background(), h.timeout)
-	defer cancel()
+func (h HttpChecker) Check(ctx context.Context, endpointUrl string) (*monitor.CheckResult, error) {
+	client := http.Client{
+		Timeout: time.Second * 15,
+	}
 
-	exponentialBackoff := backoff.NewExponentialBackOff()
-	exponentialBackoff.MaxElapsedTime = h.timeout
-	exponentialBackoff.InitialInterval = time.Millisecond * 250
-	backoffStrategy := backoff.WithContext(exponentialBackoff, requestCtx)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, endpointUrl, http.NoBody)
+	if err != nil {
+		return nil, fmt.Errorf("unable to create request: %v", err)
+	}
 
-	var result command.CheckResult
+	req.Header.Add("Accept-Encoding", "gzip, deflate, br")
+	req.Header.Add("Accept-Language", "en-GB,en-US;q=0.9,en;q=0.8")
+	req.Header.Add("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8")
+	req.Header.Add("User-Agent", randomUserAgent(&userAgents, len(userAgents)-1))
 
-	err := backoff.Retry(func() error {
-		result = command.CheckResult{}
+	counter := 0
 
-		client := http.Client{
-			Timeout: time.Second * 5,
-		}
+	var resp *http.Response
+	var startedAt time.Time
 
-		req, err := http.NewRequestWithContext(requestCtx, http.MethodGet, endpointUrl, nil)
+	for counter < maxRetries {
+		counter++
+		startedAt = time.Now()
+
+		resp, err = client.Do(req)
 		if err != nil {
-			return fmt.Errorf("unable to create request: %v", err)
-		}
+			h.logger.Errorf("GET request to %s failed due to: %v", endpointUrl, err)
 
-		req.Header.Add("Accept-Encoding", "gzip, deflate, br")
-		req.Header.Add("Accept-Language", "en-GB,en-US;q=0.9,en;q=0.8")
-		req.Header.Add("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8")
-		req.Header.Add("User-Agent", randomUserAgent(&userAgents, len(userAgents)-1))
-
-		startedAt := time.Now()
-		resp, err := client.Do(req)
-		if err != nil {
-			// fmt.Printf("context canceled? --> %v // context deadline exceeded? --> %v\n", errors.Is(requestCtx.Err(), context.Canceled), errors.Is(requestCtx.Err(), context.DeadlineExceeded))
-
-			if errors.Is(requestCtx.Err(), context.DeadlineExceeded) {
-				result, err = h.createCheckResults(startedAt, req, nil, true)
-				if err != nil {
-					return err
-				}
-
-				return nil
+			if bErr := resp.Body.Close(); bErr != nil {
+				h.logger.Errorf("unable to close the body of GET %s due to: %v", endpointUrl, bErr)
 			}
 
-			// fmt.Println("error --> ", err)
-			return fmt.Errorf("unable to check endpoint %s: %v", endpointUrl, err)
-		}
-		defer func() { _ = resp.Body.Close() }()
-
-		result, err = h.createCheckResults(startedAt, req, resp, false)
-		if err != nil {
-			return err
+			time.Sleep(delayPerReqFailedInMs)
+			continue
 		}
 
-		return nil
-	}, backoffStrategy)
+		_ = resp.Body.Close()
+	}
 
-	return result, err
-}
-
-func (h HttpChecker) createCheckResults(
-	startedAt time.Time,
-	req *http.Request,
-	resp *http.Response,
-	isForcedTimeout bool,
-) (command.CheckResult, error) {
-	checkDuration := time.Since(startedAt)
-
-	var statusCode int16
-	var reqHeaders http.Header
-	var resHeaders http.Header
-
+	var responseStatusCode *int16
 	if resp != nil {
-		resHeaders = resp.Header
-		reqHeaders = req.Header
-		statusCode = int16(resp.StatusCode)
+		responseStatusCode = ptr.ToPtr(int16(resp.StatusCode))
 	}
 
-	if isForcedTimeout {
-		statusCode = int16(http.StatusRequestTimeout)
-	}
-
-	result, err := monitor.NewCheckResult(statusCode, h.region, time.Now(), int16(checkDuration.Milliseconds()))
-	if err != nil {
-		return command.CheckResult{}, fmt.Errorf("unable to create CheckResult: %v", err)
-	}
-
-	return command.CheckResult{
-		Result:          result,
-		ResponseStatus:  statusCode,
-		ResponseBody:    "",
-		ResponseHeaders: mapHeadersToString(resHeaders),
-		RequestHeaders:  mapHeadersToString(reqHeaders),
-	}, nil
-}
-
-func mapHeadersToString(headers http.Header) string {
-	data, err := json.Marshal(headers)
-	if err != nil {
-		return ""
-	}
-
-	return string(data)
+	return monitor.NewCheckResult(
+		domain.NewID(),
+		responseStatusCode,
+		h.region,
+		startedAt,
+		int16(time.Since(startedAt).Milliseconds()),
+	)
 }
 
 func randomUserAgent(userAgents *[]string, max int) string {

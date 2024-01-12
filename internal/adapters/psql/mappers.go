@@ -175,16 +175,13 @@ func mapModelToSubscriber(model *models.User) (*monitor.Subscriber, error) {
 
 func mapIncidentToModel(incident *monitor.Incident) *models.Incident {
 	return &models.Incident{
-		ID:              incident.ID().String(),
-		MonitorID:       incident.MonitorID().String(),
-		ResolvedAt:      null.TimeFromPtr(incident.ResolvedAt()),
-		Cause:           null.StringFrom(incident.Details().Cause),
-		ResponseBody:    null.StringFrom(incident.Details().ResponseBody),
-		ResponseHeaders: null.StringFrom(incident.Details().ResponseHeaders),
-		ResponseStatus:  incident.Details().Status,
-		RequestHeaders:  null.StringFrom(incident.Details().RequestHeaders),
-		CheckedURL:      incident.CheckedURL(),
-		CreatedAt:       incident.CreatedAt(),
+		ID:             incident.ID().String(),
+		MonitorID:      incident.MonitorID().String(),
+		ResolvedAt:     null.TimeFromPtr(incident.ResolvedAt()),
+		Cause:          null.StringFrom(incident.Cause()),
+		ResponseStatus: null.Int16FromPtr(incident.ResponseStatusCode()),
+		CheckedURL:     incident.CheckedURL(),
+		CreatedAt:      incident.CreatedAt(),
 	}
 }
 
@@ -199,15 +196,15 @@ func mapModelToIncident(model *models.Incident) (*monitor.Incident, error) {
 		return nil, err
 	}
 
-	details := monitor.IncidentDetails{
-		Cause:           model.Cause.String,
-		Status:          model.ResponseStatus,
-		ResponseBody:    model.ResponseBody.String,
-		ResponseHeaders: model.ResponseHeaders.String,
-		RequestHeaders:  model.RequestHeaders.String,
-	}
-
-	return monitor.NewIncident(id, monitorID, model.ResolvedAt.Ptr(), model.CreatedAt, model.CheckedURL, nil, details)
+	return monitor.NewIncident(id,
+		monitorID,
+		model.ResolvedAt.Ptr(),
+		model.CreatedAt,
+		model.CheckedURL,
+		nil,
+		model.Cause.String,
+		model.ResponseStatus.Ptr(),
+	)
 }
 
 func mapModelsToIncidents(modelList []*models.Incident) ([]*monitor.Incident, error) {
@@ -267,11 +264,12 @@ func mapIncidentActionToModel(action *monitor.IncidentAction, incidentID domain.
 
 func mapCheckResultToModel(monitorID domain.ID, checkResult *monitor.CheckResult) models.MonitorCheckResult {
 	return models.MonitorCheckResult{
+		ID:               checkResult.ID().String(),
 		MonitorID:        monitorID.String(),
-		StatusCode:       checkResult.StatusCode(),
-		Region:           checkResult.Region().String(),
 		CheckedAt:        checkResult.CheckedAt(),
+		Region:           checkResult.Region().String(),
 		ResponseTimeInMS: checkResult.ResponseTimeInMs(),
+		StatusCode:       null.Int16FromPtr(checkResult.StatusCode()),
 	}
 }
 

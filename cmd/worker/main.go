@@ -11,6 +11,7 @@ import (
 	_ "github.com/lib/pq"
 
 	"github.com/flowck/dobermann/backend/internal/adapters/endpoint_checkers"
+	"github.com/flowck/dobermann/backend/internal/adapters/events"
 	"github.com/flowck/dobermann/backend/internal/adapters/psql"
 	"github.com/flowck/dobermann/backend/internal/adapters/transaction"
 	"github.com/flowck/dobermann/backend/internal/app"
@@ -69,17 +70,18 @@ func main() {
 		logger.Fatal(err)
 	}
 
-	httpChecker, err := endpoint_checkers.NewHttpChecker(config.Region, config.EndpointCheckTimeoutInSeconds)
+	httpChecker, err := endpoint_checkers.NewHttpChecker(config.Region, config.EndpointCheckTimeoutInSeconds, logger)
 	if err != nil {
 		logger.Fatal(err)
 	}
 
 	monitorRepository := psql.NewMonitorRepository(db)
+	eventPublisher := events.NewPublisher(publisher)
 	txProvider := transaction.NewPsqlProvider(db, publisher, logger)
 
 	application := &app.App{
 		Commands: app.Commands{
-			BulkCheckEndpoints: observability.NewCommandDecorator[command.BulkCheckEndpoints](command.NewBulkCheckEndpointsHandler(httpChecker, txProvider, monitorRepository), logger),
+			BulkCheckEndpoints: observability.NewCommandDecorator[command.BulkCheckEndpoints](command.NewBulkCheckEndpointsHandler(httpChecker, txProvider, eventPublisher, monitorRepository), logger),
 		},
 	}
 

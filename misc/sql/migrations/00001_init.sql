@@ -40,10 +40,7 @@ CREATE TABLE incidents (
     monitor_id VARCHAR(26) NOT NULL,
     resolved_at TIMESTAMPTZ,
     cause VARCHAR(300),
-    response_body TEXT,
-    response_headers TEXT,
-    response_status SMALLINT NOT NULL,
-    request_headers TEXT,
+    response_status SMALLINT,
     checked_url VARCHAR(2048) NOT NULL,
     created_at TIMESTAMPTZ DEFAULT now() NOT NULL,
 
