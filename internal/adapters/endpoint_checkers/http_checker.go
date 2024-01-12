@@ -59,7 +59,7 @@ func NewHttpChecker(region string, timeoutInSeconds int, logger *logs.Logger) (H
 
 func (h HttpChecker) Check(ctx context.Context, endpointUrl string) (*monitor.CheckResult, error) {
 	client := http.Client{
-		Timeout: time.Second * 15,
+		Timeout: h.timeout / 2,
 	}
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, endpointUrl, http.NoBody)
@@ -84,16 +84,13 @@ func (h HttpChecker) Check(ctx context.Context, endpointUrl string) (*monitor.Ch
 		resp, err = client.Do(req)
 		if err != nil {
 			h.logger.Errorf("GET request to %s failed due to: %v", endpointUrl, err)
-
-			if bErr := resp.Body.Close(); bErr != nil {
-				h.logger.Errorf("unable to close the body of GET %s due to: %v", endpointUrl, bErr)
-			}
-
 			time.Sleep(delayPerReqFailedInMs)
 			continue
 		}
 
-		_ = resp.Body.Close()
+		if resp != nil {
+			_ = resp.Body.Close()
+		}
 	}
 
 	var responseStatusCode *int16
