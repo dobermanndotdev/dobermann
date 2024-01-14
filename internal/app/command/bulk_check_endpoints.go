@@ -31,11 +31,6 @@ func NewBulkCheckEndpointsHandler(
 	}
 }
 
-type result struct {
-	Monitor     *monitor.Monitor
-	CheckResult *monitor.CheckResult
-}
-
 func (c BulkCheckEndpointsHandler) Execute(ctx context.Context, cmd BulkCheckEndpoints) error {
 	return c.txProvider.Transact(ctx, func(adapters TransactableAdapters) error {
 		return adapters.MonitorRepository.UpdateForCheck(ctx, func(foundMonitors []*monitor.Monitor) error {

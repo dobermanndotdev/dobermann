@@ -54,9 +54,10 @@ func (a *App) createMonitor(ctx context.Context, url string) error {
 
 	endpointUrl := fmt.Sprintf("https://%s", strings.TrimPrefix(url, "https://"))
 
+	// nolint
 	checkResp, err := http.Get(endpointUrl)
 	if err != nil || checkResp.StatusCode > 299 {
-		logs.Warnf("skipping %s because it's unresponsive: %v", url, err)
+		logs.Warnf("skipping %s because it's unresponsive: %v", endpointUrl, err)
 		_ = checkResp.Body.Close()
 		return nil
 	}
