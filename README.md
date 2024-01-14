@@ -1,6 +1,8 @@
 <h1 style="text-align: center">Dobermann 🦮</h1>
-<p style="text-align: center">Endpoint monitoring</p>
+<p style="text-align: center">Uptime monitoring</p>
 <hr>
+
+
 
 ## Design and Modelling
 

@@ -44,7 +44,7 @@ func (c BulkCheckEndpointsHandler) Execute(ctx context.Context, cmd BulkCheckEnd
 					return fmt.Errorf("error checking endpoint %s due to: %v", foundMonitor.EndpointUrl(), err)
 				}
 
-				err = c.monitorRepository.SaveCheckResult(ctx, foundMonitor.ID(), checkResult)
+				err = adapters.MonitorRepository.SaveCheckResult(ctx, foundMonitor.ID(), checkResult)
 				if err != nil {
 					return fmt.Errorf("unable to save the check result: %v", err)
 				}
