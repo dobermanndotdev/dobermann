@@ -18,9 +18,10 @@ import (
 )
 
 const (
-	maxMonitors      = 100
-	delayPerPostInMs = 100
-	columnWebsite    = 1
+	maxMonitors        = 10
+	delayPerPostInMs   = 0
+	columnWebsite      = 1
+	startFromRowNumber = 7
 )
 
 func main() {
@@ -36,7 +37,7 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	err = loadDatasetInStreams(ctx, "cmd/dogfooding/Web_Scrapped_websites.csv", app.createMonitor)
+	err = loadDatasetInStreams(ctx, "cmd/dogfooding/data.csv", app.createMonitor)
 	if err != nil {
 		logs.Fatal(err)
 	}
@@ -51,9 +52,18 @@ type App struct {
 func (a *App) createMonitor(ctx context.Context, url string) error {
 	logs.Infof("URL: %s", url)
 
+	endpointUrl := fmt.Sprintf("https://%s", strings.TrimPrefix(url, "https://"))
+
+	checkResp, err := http.Get(endpointUrl)
+	if err != nil || checkResp.StatusCode > 299 {
+		logs.Warnf("skipping %s because it's unresponsive: %v", url, err)
+		_ = checkResp.Body.Close()
+		return nil
+	}
+
 	resp, err := a.cli.CreateMonitor(ctx, client.CreateMonitorRequest{
 		CheckIntervalInSeconds: 30,
-		EndpointUrl:            fmt.Sprintf("https://%s", strings.TrimPrefix(url, "https://")),
+		EndpointUrl:            endpointUrl,
 	})
 	if err != nil {
 		return err
@@ -91,7 +101,7 @@ func loadDatasetInStreams(ctx context.Context, fileName string, handler func(ctx
 			return fmt.Errorf("an error occurred while reading the csv: %v", err)
 		}
 
-		if counter == 0 {
+		if counter == -1 || counter < startFromRowNumber {
 			counter++
 			continue
 		}

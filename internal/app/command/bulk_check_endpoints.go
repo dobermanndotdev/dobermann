@@ -37,9 +37,7 @@ type result struct {
 }
 
 func (c BulkCheckEndpointsHandler) Execute(ctx context.Context, cmd BulkCheckEndpoints) error {
-	var results []result
-
-	err := c.txProvider.Transact(ctx, func(adapters TransactableAdapters) error {
+	return c.txProvider.Transact(ctx, func(adapters TransactableAdapters) error {
 		return adapters.MonitorRepository.UpdateForCheck(ctx, func(foundMonitors []*monitor.Monitor) error {
 			for _, foundMonitor := range foundMonitors {
 				if foundMonitor.IsPaused() {
@@ -51,41 +49,29 @@ func (c BulkCheckEndpointsHandler) Execute(ctx context.Context, cmd BulkCheckEnd
 					return fmt.Errorf("error checking endpoint %s due to: %v", foundMonitor.EndpointUrl(), err)
 				}
 
-				results = append(results, result{
-					Monitor:     foundMonitor,
-					CheckResult: checkResult,
-				})
+				err = c.monitorRepository.SaveCheckResult(ctx, foundMonitor.ID(), checkResult)
+				if err != nil {
+					return fmt.Errorf("unable to save the check result: %v", err)
+				}
+
+				if checkResult.IsEndpointDown() {
+					err = c.handleEndpointDown(ctx, foundMonitor, checkResult)
+					if err != nil {
+						return err
+					}
+
+					continue
+				}
+
+				err = c.handleEndpointIsUp(ctx, foundMonitor)
+				if err != nil {
+					return err
+				}
 			}
 
 			return nil
 		})
 	})
-	if err != nil {
-		return err
-	}
-
-	for _, r := range results {
-		err = c.monitorRepository.SaveCheckResult(ctx, r.Monitor.ID(), r.CheckResult)
-		if err != nil {
-			return fmt.Errorf("unable to save the check result: %v", err)
-		}
-
-		if r.CheckResult.IsEndpointDown() {
-			err = c.handleEndpointDown(ctx, r.Monitor, r.CheckResult)
-			if err != nil {
-				return err
-			}
-
-			continue
-		}
-
-		err = c.handleEndpointIsUp(ctx, r.Monitor)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
 }
 
 func (c BulkCheckEndpointsHandler) handleEndpointDown(

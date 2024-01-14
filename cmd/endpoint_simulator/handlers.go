@@ -9,13 +9,20 @@ import (
 )
 
 const (
-	minLatencyMs = 50
-	maxLatencyMs = 60 * 1000
+	minLatencyMs = 150
+	maxLatencyMs = 300
 )
 
 func randomFailureHandler(c echo.Context) error {
 	time.Sleep(time.Millisecond * time.Duration(gofakeit.Number(minLatencyMs, maxLatencyMs)))
-	return c.JSON(http.StatusOK, map[string]string{
+
+	status := http.StatusOK
+
+	if !gofakeit.Bool() {
+		status = http.StatusInternalServerError
+	}
+
+	return c.JSON(status, map[string]string{
 		"message": "ok",
 	})
 }
