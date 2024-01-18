@@ -67,10 +67,10 @@ func (h HttpChecker) Check(ctx context.Context, endpointUrl string) (*monitor.Ch
 	var req *http.Request
 	var resp *http.Response
 	var startedAt time.Time
+	var responseTimeInMs int16
 
 	for counter < maxRetries {
 		counter++
-		startedAt = time.Now()
 
 		req, err = http.NewRequestWithContext(ctx, http.MethodGet, endpointUrl, http.NoBody)
 		if err != nil {
@@ -78,11 +78,13 @@ func (h HttpChecker) Check(ctx context.Context, endpointUrl string) (*monitor.Ch
 		}
 		req.Close = true
 
+		req.Header.Add("Cache-Control", "no-cache")
 		req.Header.Add("Accept-Encoding", "gzip, deflate, br")
 		req.Header.Add("Accept-Language", "en-GB,en-US;q=0.9,en;q=0.8")
-		req.Header.Add("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8")
 		req.Header.Add("User-Agent", randomUserAgent(&userAgents, len(userAgents)-1))
+		req.Header.Add("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8")
 
+		startedAt = time.Now()
 		resp, err = client.Do(req)
 		if err != nil {
 			h.logger.Errorf("GET request to %s failed due to: %v", endpointUrl, err)
@@ -93,6 +95,8 @@ func (h HttpChecker) Check(ctx context.Context, endpointUrl string) (*monitor.Ch
 		if resp != nil {
 			_ = resp.Body.Close()
 		}
+
+		responseTimeInMs = int16(time.Since(startedAt).Milliseconds())
 	}
 
 	var responseStatusCode *int16
@@ -105,7 +109,7 @@ func (h HttpChecker) Check(ctx context.Context, endpointUrl string) (*monitor.Ch
 		responseStatusCode,
 		h.region,
 		startedAt,
-		int16(time.Since(startedAt).Milliseconds()),
+		responseTimeInMs,
 	)
 }
 
