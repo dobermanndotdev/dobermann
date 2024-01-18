@@ -2,6 +2,8 @@
 <p style="text-align: center">Uptime monitoring</p>
 <hr>
 
+[![main](https://github.com/flowck/dobermann/actions/workflows/main.yml/badge.svg)](https://github.com/flowck/dobermann/actions/workflows/main.yml)
+
 ## Primary Components
 
 - Core service ([./cmd/service](./cmd/service)): The main service responsible for all operations except for recurrent monitor's checks. 
