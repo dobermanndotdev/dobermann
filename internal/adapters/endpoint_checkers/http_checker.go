@@ -88,7 +88,7 @@ func (h HttpChecker) Check(ctx context.Context, endpointUrl string) (*monitor.Ch
 		resp, err = client.Do(req)
 		if err != nil {
 			h.logger.Errorf("GET request to %s failed due to: %v", endpointUrl, err)
-			time.Sleep(delayPerReqFailedInMs)
+			time.Sleep(time.Millisecond * delayPerReqFailedInMs)
 			continue
 		}
 
