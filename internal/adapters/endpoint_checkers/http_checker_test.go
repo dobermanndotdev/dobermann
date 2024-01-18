@@ -51,4 +51,28 @@ func TestHttpChecker(t *testing.T) {
 		require.NoError(t, err)
 		assert.True(t, result.IsEndpointDown())
 	})
+
+	/*t.Run("demo", func(t *testing.T) {
+		t.Parallel()
+
+		checker, err := endpoint_checkers.NewHttpChecker(monitor.RegionEurope.String(), 30, logs.New(true))
+		require.NoError(t, err)
+
+		ctx, cancel := context.WithCancel(context.Background())
+
+		go func() {
+			time.Sleep(time.Second * 2)
+			cancel()
+		}()
+
+		for {
+			result, err := checker.Check(ctx, "https://google.com")
+			require.NoError(t, err)
+			assert.False(t, result.IsEndpointDown())
+
+			t.Logf("response time --> %dms", result.ResponseTimeInMs())
+
+			time.Sleep(time.Second * 5)
+		}
+	})*/
 }
