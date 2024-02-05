@@ -36,12 +36,20 @@ func NewUser(
 	firstName = strings.TrimSpace(firstName)
 	lastName = strings.TrimSpace(lastName)
 
+	if id.IsEmpty() {
+		return nil, errors.New("id cannot be invalid")
+	}
+
 	if email.IsEmpty() {
 		return nil, errors.New("email cannot be invalid")
 	}
 
 	if password.IsEmpty() {
 		return nil, errors.New("password cannot be invalid")
+	}
+
+	if role.IsEmpty() {
+		return nil, errors.New("role cannot be invalid")
 	}
 
 	if time.Now().Before(createdAt) {

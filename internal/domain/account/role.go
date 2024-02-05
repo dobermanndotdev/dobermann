@@ -28,3 +28,7 @@ func NewRole(role string) (Role, error) {
 func (r Role) String() string {
 	return r.name
 }
+
+func (r Role) IsEmpty() bool {
+	return r.name == ""
+}
