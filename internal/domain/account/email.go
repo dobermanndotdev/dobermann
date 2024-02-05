@@ -6,6 +6,7 @@ import (
 	"strings"
 )
 
+// loose validation
 var emailRegexp = regexp.MustCompile(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`)
 
 type Email struct {
@@ -13,7 +14,8 @@ type Email struct {
 }
 
 func NewEmail(address string) (Email, error) {
-	if strings.TrimSpace(address) == "" {
+	address = strings.TrimSpace(address)
+	if address == "" {
 		return Email{}, errors.New("address cannot be empty")
 	}
 
@@ -21,7 +23,9 @@ func NewEmail(address string) (Email, error) {
 		return Email{}, errors.New("the address provided is invalid")
 	}
 
-	return Email{address: strings.TrimSpace(address)}, nil
+	return Email{
+		address: address,
+	}, nil
 }
 
 func (e Email) Address() string {
