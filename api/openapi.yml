@@ -252,6 +252,25 @@ paths:
                 $ref: '#/components/schemas/GetProfileDetailsPayload'
         default:
           $ref: '#/components/responses/DefaultError'
+  /accounts/members/invite:
+    post:
+      tags:
+        - Members
+      operationId: bulkInviteMembersByEmail
+      summary: Bulk invite members by email
+      security:
+        - BearerAuth: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BulkInviteMembersByEmail'
+      responses:
+        '200':
+          description: OK
+        default:
+          $ref: '#/components/responses/DefaultError'
   /auth/accounts:
     post:
       tags:
@@ -264,6 +283,23 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/CreateAccountRequest'
+      responses:
+        '201':
+          description: CREATED
+        default:
+          $ref: '#/components/responses/DefaultError'
+  /auth/accounts/confirm-invitation:
+    post:
+      tags:
+        - Auth
+      operationId: confirmInvitation
+      summary: Creates a user in a team
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConfirmInvitationRequest'
       responses:
         '201':
           description: CREATED
@@ -292,6 +328,13 @@ paths:
           $ref: '#/components/responses/DefaultError'
 components:
   schemas:
+    BulkInviteMembersByEmail:
+      required: [ pause ]
+      properties:
+        emails:
+          type: array
+          items:
+            type: string
     GetProfileDetailsPayload:
       required: [data]
       properties:
@@ -433,6 +476,15 @@ components:
       required: [ account_name, email, password ]
       properties:
         account_name:
+          type: string
+        email:
+          type: string
+        password:
+          type: string
+    ConfirmInvitationRequest:
+      required: [ invitation_token, email, password ]
+      properties:
+        invitation_token:
           type: string
         email:
           type: string
