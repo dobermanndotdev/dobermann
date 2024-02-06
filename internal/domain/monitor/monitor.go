@@ -2,8 +2,6 @@ package monitor
 
 import (
 	"errors"
-	"fmt"
-	"net/url"
 	"time"
 
 	"github.com/flowck/dobermann/backend/internal/common/ptr"
@@ -15,7 +13,7 @@ const minIntervalInSeconds = 30
 type Monitor struct {
 	id            domain.ID
 	accountID     domain.ID
-	endpointUrl   string
+	endpointUrl   URL
 	isEndpointUp  bool
 	isPaused      bool
 	subscribers   []*Subscriber
@@ -30,7 +28,7 @@ func NewMonitor(
 	id domain.ID,
 	endpointUrl string,
 	accountID domain.ID,
-	isEndpointUp bool,
+	isEndpointUp,
 	isPaused bool,
 	incidents []*Incident,
 	subscribers []*Subscriber,
@@ -42,10 +40,6 @@ func NewMonitor(
 		return nil, errors.New("id cannot be invalid")
 	}
 
-	if _, err := url.Parse(endpointUrl); err != nil {
-		return nil, errors.New("endpointUrl cannot be invalid")
-	}
-
 	if accountID.IsEmpty() {
 		return nil, errors.New("accountID cannot be invalid")
 	}
@@ -54,9 +48,22 @@ func NewMonitor(
 		return nil, errors.New("checkInterval cannot be less than 30 seconds")
 	}
 
+	eURL, err := NewURL(endpointUrl)
+	if err != nil {
+		return nil, err
+	}
+
+	if lastCheckedAt != nil && lastCheckedAt.After(time.Now()) {
+		return nil, errors.New("lastCheckedAt cannot be set in the future")
+	}
+
+	if createdAt.After(time.Now()) {
+		return nil, errors.New("createdAt cannot be set in the future")
+	}
+
 	return &Monitor{
 		id:            id,
-		endpointUrl:   endpointUrl,
+		endpointUrl:   eURL,
 		accountID:     accountID,
 		isEndpointUp:  isEndpointUp,
 		isPaused:      isPaused,
@@ -73,7 +80,7 @@ func (m *Monitor) ID() domain.ID {
 }
 
 func (m *Monitor) EndpointUrl() string {
-	return m.endpointUrl
+	return m.endpointUrl.String()
 }
 
 func (m *Monitor) AccountID() domain.ID {
@@ -163,12 +170,12 @@ func (m *Monitor) UnPause() {
 }
 
 func (m *Monitor) Edit(endpointUrl string, checkIntervalInSeconds time.Duration) error {
-	_, err := url.Parse(endpointUrl)
+	eURL, err := NewURL(endpointUrl)
 	if err != nil {
-		return fmt.Errorf("endpointUrl cannot be invalid")
+		return err
 	}
 
-	m.endpointUrl = endpointUrl
+	m.endpointUrl = eURL
 	m.checkInterval = checkIntervalInSeconds
 
 	return nil
