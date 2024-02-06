@@ -253,6 +253,7 @@ func mustNewMonitor(t *testing.T) *monitor.Monitor {
 			"unresponsive url",
 			tests.ToPtr(int16(http.StatusInternalServerError)),
 		)
+		require.NoError(t, err)
 
 		incidents = append(incidents, incident)
 	}

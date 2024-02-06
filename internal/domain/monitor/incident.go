@@ -1,11 +1,7 @@
 package monitor
 
 import (
-	"context"
 	"errors"
-	"fmt"
-	"net/url"
-	"strings"
 	"time"
 
 	"github.com/flowck/dobermann/backend/internal/domain"
@@ -16,26 +12,10 @@ type Incident struct {
 	monitorID          domain.ID
 	createdAt          time.Time
 	resolvedAt         *time.Time
-	checkedURL         string
+	checkedURL         URL
 	cause              string
 	responseStatusCode *int16
 	actions            []IncidentAction
-}
-
-func (i *Incident) Cause() string {
-	return i.cause
-}
-
-func (i *Incident) ResponseStatusCode() *int16 {
-	return i.responseStatusCode
-}
-
-func (i *Incident) MonitorID() domain.ID {
-	return i.monitorID
-}
-
-func (i *Incident) CheckedURL() string {
-	return i.checkedURL
 }
 
 func NewIncident(
@@ -50,6 +30,11 @@ func NewIncident(
 ) (*Incident, error) {
 	if id.IsEmpty() {
 		return nil, errors.New("id cannot be empty or invalid")
+	}
+
+	parsedCheckedURL, err := NewURL(checkedURL)
+	if err != nil {
+		return nil, err
 	}
 
 	var resolvedAtUTC *time.Time
@@ -68,25 +53,32 @@ func NewIncident(
 		}
 	}
 
-	checkedURL = strings.TrimSpace(checkedURL)
-	if checkedURL == "" {
-		return nil, errors.New("checkedURL cannot be empty")
-	}
-
-	if _, err := url.Parse(checkedURL); err != nil {
-		return nil, fmt.Errorf("the url provided is invalid")
-	}
-
 	return &Incident{
 		id:                 id,
 		cause:              cause,
 		actions:            actions,
 		monitorID:          monitorID,
-		checkedURL:         checkedURL,
+		checkedURL:         parsedCheckedURL,
 		resolvedAt:         resolvedAtUTC,
 		createdAt:          createdAt.UTC(),
 		responseStatusCode: responseStatusCode,
 	}, nil
+}
+
+func (i *Incident) Cause() string {
+	return i.cause
+}
+
+func (i *Incident) ResponseStatusCode() *int16 {
+	return i.responseStatusCode
+}
+
+func (i *Incident) MonitorID() domain.ID {
+	return i.monitorID
+}
+
+func (i *Incident) CheckedURL() string {
+	return i.checkedURL.String()
 }
 
 func (i *Incident) ID() domain.ID {
@@ -112,15 +104,4 @@ func (i *Incident) Resolve() {
 
 func (i *Incident) ResolvedAt() *time.Time {
 	return i.resolvedAt
-}
-
-//
-// Repo
-//
-
-type IncidentRepository interface {
-	FindByID(ctx context.Context, id domain.ID) (*Incident, error)
-	Create(ctx context.Context, incident *Incident) error
-	Update(ctx context.Context, id domain.ID, fn func(incident *Incident) error) error
-	AppendIncidentAction(ctx context.Context, incidentID domain.ID, incidentAction *IncidentAction) error
 }

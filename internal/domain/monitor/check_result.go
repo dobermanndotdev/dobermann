@@ -15,34 +15,6 @@ type CheckResult struct {
 	checkedAt        time.Time
 }
 
-func (c *CheckResult) ID() domain.ID {
-	return c.id
-}
-
-func (c *CheckResult) StatusCode() *int16 {
-	return c.statusCode
-}
-
-func (c *CheckResult) ResponseTimeInMs() int16 {
-	return c.responseTimeInMs
-}
-
-func (c *CheckResult) Region() Region {
-	return c.region
-}
-
-func (c *CheckResult) CheckedAt() time.Time {
-	return c.checkedAt
-}
-
-func (c *CheckResult) IsEndpointDown() bool {
-	if c.statusCode != nil {
-		return *c.statusCode >= 400
-	}
-
-	return true
-}
-
 func NewCheckResult(
 	id domain.ID,
 	statusCode *int16,
@@ -71,4 +43,32 @@ func NewCheckResult(
 		checkedAt:        checkedAt,
 		responseTimeInMs: responseTimeInMs,
 	}, nil
+}
+
+func (c *CheckResult) ID() domain.ID {
+	return c.id
+}
+
+func (c *CheckResult) StatusCode() *int16 {
+	return c.statusCode
+}
+
+func (c *CheckResult) ResponseTimeInMs() int16 {
+	return c.responseTimeInMs
+}
+
+func (c *CheckResult) Region() Region {
+	return c.region
+}
+
+func (c *CheckResult) CheckedAt() time.Time {
+	return c.checkedAt
+}
+
+func (c *CheckResult) IsEndpointDown() bool {
+	if c.statusCode != nil {
+		return *c.statusCode >= 400
+	}
+
+	return true
 }
