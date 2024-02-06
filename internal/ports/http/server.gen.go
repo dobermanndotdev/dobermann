@@ -23,6 +23,18 @@ const (
 	BearerAuthScopes = "BearerAuth.Scopes"
 )
 
+// BulkInviteMembersByEmail defines model for BulkInviteMembersByEmail.
+type BulkInviteMembersByEmail struct {
+	Emails []string `json:"emails"`
+}
+
+// ConfirmInvitationRequest defines model for ConfirmInvitationRequest.
+type ConfirmInvitationRequest struct {
+	Email           string `json:"email"`
+	InvitationToken string `json:"invitation_token"`
+	Password        string `json:"password"`
+}
+
 // CreateAccountRequest defines model for CreateAccountRequest.
 type CreateAccountRequest struct {
 	AccountName string `json:"account_name"`
@@ -176,8 +188,14 @@ type GetMonitorResponseTimeStatsParams struct {
 	RangeInDays *int `form:"range_in_days,omitempty" json:"range_in_days,omitempty"`
 }
 
+// BulkInviteMembersByEmailJSONRequestBody defines body for BulkInviteMembersByEmail for application/json ContentType.
+type BulkInviteMembersByEmailJSONRequestBody = BulkInviteMembersByEmail
+
 // CreateAccountJSONRequestBody defines body for CreateAccount for application/json ContentType.
 type CreateAccountJSONRequestBody = CreateAccountRequest
+
+// ConfirmInvitationJSONRequestBody defines body for ConfirmInvitation for application/json ContentType.
+type ConfirmInvitationJSONRequestBody = ConfirmInvitationRequest
 
 // LoginJSONRequestBody defines body for Login for application/json ContentType.
 type LoginJSONRequestBody = LogInRequest
@@ -193,12 +211,18 @@ type EditMonitorJSONRequestBody = EditMonitorRequest
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
+	// Bulk invite members by email
+	// (POST /accounts/members/invite)
+	BulkInviteMembersByEmail(ctx echo.Context) error
 	// Get details about the user currently logged in
 	// (GET /accounts/profile)
 	GetProfileDetails(ctx echo.Context) error
 	// Creates a new account
 	// (POST /auth/accounts)
 	CreateAccount(ctx echo.Context) error
+	// Creates a user in a team
+	// (POST /auth/accounts/confirm-invitation)
+	ConfirmInvitation(ctx echo.Context) error
 	// Log in
 	// (POST /auth/login)
 	Login(ctx echo.Context) error
@@ -236,6 +260,17 @@ type ServerInterfaceWrapper struct {
 	Handler ServerInterface
 }
 
+// BulkInviteMembersByEmail converts echo context to params.
+func (w *ServerInterfaceWrapper) BulkInviteMembersByEmail(ctx echo.Context) error {
+	var err error
+
+	ctx.Set(BearerAuthScopes, []string{})
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.BulkInviteMembersByEmail(ctx)
+	return err
+}
+
 // GetProfileDetails converts echo context to params.
 func (w *ServerInterfaceWrapper) GetProfileDetails(ctx echo.Context) error {
 	var err error
@@ -253,6 +288,15 @@ func (w *ServerInterfaceWrapper) CreateAccount(ctx echo.Context) error {
 
 	// Invoke the callback with all the unmarshaled arguments
 	err = w.Handler.CreateAccount(ctx)
+	return err
+}
+
+// ConfirmInvitation converts echo context to params.
+func (w *ServerInterfaceWrapper) ConfirmInvitation(ctx echo.Context) error {
+	var err error
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.ConfirmInvitation(ctx)
 	return err
 }
 
@@ -475,8 +519,10 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 		Handler: si,
 	}
 
+	router.POST(baseURL+"/accounts/members/invite", wrapper.BulkInviteMembersByEmail)
 	router.GET(baseURL+"/accounts/profile", wrapper.GetProfileDetails)
 	router.POST(baseURL+"/auth/accounts", wrapper.CreateAccount)
+	router.POST(baseURL+"/auth/accounts/confirm-invitation", wrapper.ConfirmInvitation)
 	router.POST(baseURL+"/auth/login", wrapper.Login)
 	router.GET(baseURL+"/incidents", wrapper.GetAllIncidents)
 	router.GET(baseURL+"/incidents/:incidentID", wrapper.GetIncidentByID)
@@ -493,34 +539,36 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"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",
+	"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",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

@@ -70,3 +70,8 @@ func (h handlers) Login(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, LogInPayload{Token: token})
 }
+
+func (h handlers) ConfirmInvitation(ctx echo.Context) error {
+	//TODO implement me
+	panic("implement me")
+}

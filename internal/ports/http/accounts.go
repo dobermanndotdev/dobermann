@@ -30,3 +30,8 @@ func (h handlers) GetProfileDetails(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, mapUserToResponse(user))
 }
+
+func (h handlers) BulkInviteMembersByEmail(ctx echo.Context) error {
+	//TODO implement me
+	panic("implement me")
+}
