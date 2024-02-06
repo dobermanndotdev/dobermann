@@ -2,6 +2,5 @@ package monitor_test
 
 import "testing"
 
-func TestName(t *testing.T) {
-
+func TestIncident_NewIncident(t *testing.T) {
 }
