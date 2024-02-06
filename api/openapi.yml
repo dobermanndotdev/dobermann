@@ -329,7 +329,7 @@ paths:
 components:
   schemas:
     BulkInviteMembersByEmail:
-      required: [ pause ]
+      required: [ emails ]
       properties:
         emails:
           type: array
