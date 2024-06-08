@@ -13,8 +13,8 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 	oapimiddleware "github.com/oapi-codegen/echo-middleware"
 
-	"github.com/flowck/dobermann/backend/internal/app"
-	"github.com/flowck/dobermann/backend/internal/common/logs"
+	"github.com/dobermanndotdev/dobermann/internal/app"
+	"github.com/dobermanndotdev/dobermann/internal/common/logs"
 )
 
 type Port struct {

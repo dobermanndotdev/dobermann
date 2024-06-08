@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 
-	"github.com/flowck/dobermann/backend/internal/domain"
+	"github.com/dobermanndotdev/dobermann/internal/domain"
 )
 
 type contextKey string

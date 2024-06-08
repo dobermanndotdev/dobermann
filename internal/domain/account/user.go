@@ -6,8 +6,8 @@ import (
 
 	"errors"
 
-	"github.com/flowck/dobermann/backend/internal/common/hashing"
-	"github.com/flowck/dobermann/backend/internal/domain"
+	"github.com/dobermanndotdev/dobermann/internal/common/hashing"
+	"github.com/dobermanndotdev/dobermann/internal/domain"
 )
 
 type User struct {

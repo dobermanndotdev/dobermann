@@ -8,8 +8,8 @@ import (
 
 	"github.com/ThreeDotsLabs/watermill/message"
 
-	"github.com/flowck/dobermann/backend/internal/common/observability"
-	"github.com/flowck/dobermann/backend/internal/domain"
+	"github.com/dobermanndotdev/dobermann/internal/common/observability"
+	"github.com/dobermanndotdev/dobermann/internal/domain"
 )
 
 type Event interface {

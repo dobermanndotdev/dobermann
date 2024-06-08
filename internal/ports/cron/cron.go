@@ -3,8 +3,8 @@ package cron
 import (
 	"time"
 
-	"github.com/flowck/dobermann/backend/internal/app"
-	"github.com/flowck/dobermann/backend/internal/common/kron"
+	"github.com/dobermanndotdev/dobermann/internal/app"
+	"github.com/dobermanndotdev/dobermann/internal/common/kron"
 )
 
 type handlers struct {

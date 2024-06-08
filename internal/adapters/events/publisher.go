@@ -5,7 +5,7 @@ import (
 
 	"github.com/ThreeDotsLabs/watermill/message"
 
-	"github.com/flowck/dobermann/backend/internal/app/command"
+	"github.com/dobermanndotdev/dobermann/internal/app/command"
 )
 
 type Publisher struct {

@@ -3,7 +3,7 @@ package command
 import (
 	"context"
 
-	"github.com/flowck/dobermann/backend/internal/domain"
+	"github.com/dobermanndotdev/dobermann/internal/domain"
 )
 
 type DeleteMonitor struct {

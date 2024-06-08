@@ -3,8 +3,8 @@ package query
 import (
 	"context"
 
-	"github.com/flowck/dobermann/backend/internal/domain"
-	"github.com/flowck/dobermann/backend/internal/domain/account"
+	"github.com/dobermanndotdev/dobermann/internal/domain"
+	"github.com/dobermanndotdev/dobermann/internal/domain/account"
 )
 
 type UserByID struct {

@@ -3,7 +3,7 @@ package observability
 import (
 	"context"
 
-	"github.com/flowck/dobermann/backend/internal/common/logs"
+	"github.com/dobermanndotdev/dobermann/internal/common/logs"
 )
 
 type commandDecorator[C any] struct {

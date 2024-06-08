@@ -8,9 +8,9 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/flowck/dobermann/backend/internal/adapters/psql"
-	"github.com/flowck/dobermann/backend/internal/domain/account"
-	"github.com/flowck/dobermann/backend/tests"
+	"github.com/dobermanndotdev/dobermann/internal/adapters/psql"
+	"github.com/dobermanndotdev/dobermann/internal/domain/account"
+	"github.com/dobermanndotdev/dobermann/tests"
 )
 
 func TestUserRepository_Lifecycle(t *testing.T) {

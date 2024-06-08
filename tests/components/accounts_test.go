@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/flowck/dobermann/backend/internal/adapters/models"
+	"github.com/dobermanndotdev/dobermann/internal/adapters/models"
 )
 
 func TestAccounts_Lifecycle(t *testing.T) {

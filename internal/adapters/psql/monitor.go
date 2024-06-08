@@ -10,10 +10,10 @@ import (
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
 
-	"github.com/flowck/dobermann/backend/internal/adapters/models"
-	"github.com/flowck/dobermann/backend/internal/app/query"
-	"github.com/flowck/dobermann/backend/internal/domain"
-	"github.com/flowck/dobermann/backend/internal/domain/monitor"
+	"github.com/dobermanndotdev/dobermann/internal/adapters/models"
+	"github.com/dobermanndotdev/dobermann/internal/app/query"
+	"github.com/dobermanndotdev/dobermann/internal/domain"
+	"github.com/dobermanndotdev/dobermann/internal/domain/monitor"
 )
 
 func NewMonitorRepository(db boil.ContextExecutor) MonitorRepository {

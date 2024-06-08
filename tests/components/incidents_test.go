@@ -8,10 +8,10 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/flowck/dobermann/backend/internal/adapters/models"
-	"github.com/flowck/dobermann/backend/internal/domain"
-	"github.com/flowck/dobermann/backend/tests"
-	"github.com/flowck/dobermann/backend/tests/client"
+	"github.com/dobermanndotdev/dobermann/internal/adapters/models"
+	"github.com/dobermanndotdev/dobermann/internal/domain"
+	"github.com/dobermanndotdev/dobermann/tests"
+	"github.com/dobermanndotdev/dobermann/tests/client"
 )
 
 func TestIncidents(t *testing.T) {

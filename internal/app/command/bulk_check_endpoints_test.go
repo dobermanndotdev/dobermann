@@ -9,15 +9,15 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/flowck/dobermann/backend/internal/adapters/endpoint_checkers"
-	"github.com/flowck/dobermann/backend/internal/adapters/events"
-	"github.com/flowck/dobermann/backend/internal/adapters/psql"
-	"github.com/flowck/dobermann/backend/internal/app/command"
-	"github.com/flowck/dobermann/backend/internal/common/logs"
-	"github.com/flowck/dobermann/backend/internal/domain"
-	"github.com/flowck/dobermann/backend/internal/domain/account"
-	"github.com/flowck/dobermann/backend/internal/domain/monitor"
-	"github.com/flowck/dobermann/backend/tests"
+	"github.com/dobermanndotdev/dobermann/internal/adapters/endpoint_checkers"
+	"github.com/dobermanndotdev/dobermann/internal/adapters/events"
+	"github.com/dobermanndotdev/dobermann/internal/adapters/psql"
+	"github.com/dobermanndotdev/dobermann/internal/app/command"
+	"github.com/dobermanndotdev/dobermann/internal/common/logs"
+	"github.com/dobermanndotdev/dobermann/internal/domain"
+	"github.com/dobermanndotdev/dobermann/internal/domain/account"
+	"github.com/dobermanndotdev/dobermann/internal/domain/monitor"
+	"github.com/dobermanndotdev/dobermann/tests"
 )
 
 type mockTxProvider struct {

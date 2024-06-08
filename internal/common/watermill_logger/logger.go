@@ -4,7 +4,7 @@ import (
 	"github.com/ThreeDotsLabs/watermill"
 	"github.com/sirupsen/logrus"
 
-	"github.com/flowck/dobermann/backend/internal/common/logs"
+	"github.com/dobermanndotdev/dobermann/internal/common/logs"
 )
 
 type WatermillLogger struct {

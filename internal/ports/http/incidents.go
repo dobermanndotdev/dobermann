@@ -5,8 +5,8 @@ import (
 
 	"github.com/labstack/echo/v4"
 
-	"github.com/flowck/dobermann/backend/internal/app/query"
-	"github.com/flowck/dobermann/backend/internal/domain"
+	"github.com/dobermanndotdev/dobermann/internal/app/query"
+	"github.com/dobermanndotdev/dobermann/internal/domain"
 )
 
 func (h handlers) GetIncidentByID(c echo.Context, incidentID string) error {

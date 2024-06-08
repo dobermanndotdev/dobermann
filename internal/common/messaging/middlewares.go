@@ -3,8 +3,8 @@ package messaging
 import (
 	"github.com/ThreeDotsLabs/watermill/message"
 
-	"github.com/flowck/dobermann/backend/internal/common/logs"
-	"github.com/flowck/dobermann/backend/internal/common/observability"
+	"github.com/dobermanndotdev/dobermann/internal/common/logs"
+	"github.com/dobermanndotdev/dobermann/internal/common/observability"
 )
 
 func CorrelationIdMiddleware(h message.HandlerFunc) message.HandlerFunc {

@@ -4,8 +4,8 @@ import (
 	"errors"
 	"time"
 
-	"github.com/flowck/dobermann/backend/internal/common/ptr"
-	"github.com/flowck/dobermann/backend/internal/domain"
+	"github.com/dobermanndotdev/dobermann/internal/common/ptr"
+	"github.com/dobermanndotdev/dobermann/internal/domain"
 )
 
 const minIntervalInSeconds = 30

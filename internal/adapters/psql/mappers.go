@@ -7,11 +7,11 @@ import (
 
 	"github.com/volatiletech/null/v8"
 
-	"github.com/flowck/dobermann/backend/internal/adapters/models"
-	"github.com/flowck/dobermann/backend/internal/app/query"
-	"github.com/flowck/dobermann/backend/internal/domain"
-	"github.com/flowck/dobermann/backend/internal/domain/account"
-	"github.com/flowck/dobermann/backend/internal/domain/monitor"
+	"github.com/dobermanndotdev/dobermann/internal/adapters/models"
+	"github.com/dobermanndotdev/dobermann/internal/app/query"
+	"github.com/dobermanndotdev/dobermann/internal/domain"
+	"github.com/dobermanndotdev/dobermann/internal/domain/account"
+	"github.com/dobermanndotdev/dobermann/internal/domain/monitor"
 )
 
 func mapUserToModel(user *account.User) models.User {

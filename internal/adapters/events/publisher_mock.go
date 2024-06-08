@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/flowck/dobermann/backend/internal/app/command"
+	"github.com/dobermanndotdev/dobermann/internal/app/command"
 )
 
 type PublisherMock struct {

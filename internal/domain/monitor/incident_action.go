@@ -4,7 +4,7 @@ import (
 	"errors"
 	"time"
 
-	"github.com/flowck/dobermann/backend/internal/domain"
+	"github.com/dobermanndotdev/dobermann/internal/domain"
 )
 
 var (

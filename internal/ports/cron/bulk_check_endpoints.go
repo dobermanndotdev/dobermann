@@ -3,7 +3,7 @@ package cron
 import (
 	"context"
 
-	"github.com/flowck/dobermann/backend/internal/app/command"
+	"github.com/dobermanndotdev/dobermann/internal/app/command"
 )
 
 func (s handlers) BulkCheckEndpoints(ctx context.Context) error {

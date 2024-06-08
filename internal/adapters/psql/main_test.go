@@ -9,9 +9,9 @@ import (
 
 	_ "github.com/lib/pq"
 
-	"github.com/flowck/dobermann/backend/internal/adapters/psql"
-	"github.com/flowck/dobermann/backend/internal/common/postgres"
-	"github.com/flowck/dobermann/backend/tests"
+	"github.com/dobermanndotdev/dobermann/internal/adapters/psql"
+	"github.com/dobermanndotdev/dobermann/internal/common/postgres"
+	"github.com/dobermanndotdev/dobermann/tests"
 )
 
 var (

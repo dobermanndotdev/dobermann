@@ -13,9 +13,9 @@ import (
 	"github.com/labstack/echo/v4"
 	_ "github.com/lib/pq"
 
-	"github.com/flowck/dobermann/backend/internal/common/postgres"
-	"github.com/flowck/dobermann/backend/tests"
-	"github.com/flowck/dobermann/backend/tests/client"
+	"github.com/dobermanndotdev/dobermann/internal/common/postgres"
+	"github.com/dobermanndotdev/dobermann/tests"
+	"github.com/dobermanndotdev/dobermann/tests/client"
 )
 
 var (

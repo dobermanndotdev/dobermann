@@ -3,7 +3,7 @@ package messaging
 import (
 	"github.com/ThreeDotsLabs/watermill/message"
 
-	"github.com/flowck/dobermann/backend/internal/common/observability"
+	"github.com/dobermanndotdev/dobermann/internal/common/observability"
 )
 
 const correlationIdContextKey = "correlation_id"

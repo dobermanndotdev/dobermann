@@ -7,10 +7,10 @@ import (
 	"github.com/ThreeDotsLabs/watermill/message"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 
-	"github.com/flowck/dobermann/backend/internal/adapters/events"
-	"github.com/flowck/dobermann/backend/internal/adapters/psql"
-	"github.com/flowck/dobermann/backend/internal/app/command"
-	"github.com/flowck/dobermann/backend/internal/common/logs"
+	"github.com/dobermanndotdev/dobermann/internal/adapters/events"
+	"github.com/dobermanndotdev/dobermann/internal/adapters/psql"
+	"github.com/dobermanndotdev/dobermann/internal/app/command"
+	"github.com/dobermanndotdev/dobermann/internal/common/logs"
 )
 
 type PsqlProvider struct {

@@ -3,7 +3,7 @@ package cron
 import (
 	"context"
 
-	"github.com/flowck/dobermann/backend/internal/common/observability"
+	"github.com/dobermanndotdev/dobermann/internal/common/observability"
 )
 
 func withCorrelationIdMiddleware(ctx context.Context) (context.Context, error) {
