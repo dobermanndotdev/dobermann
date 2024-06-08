@@ -16,7 +16,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 
-	"github.com/flowck/dobermann/backend/internal/common/logs"
+	"github.com/dobermanndotdev/dobermann/internal/common/logs"
 )
 
 var failureStatusCode = []int{

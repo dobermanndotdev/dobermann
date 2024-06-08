@@ -3,7 +3,7 @@ package command
 import (
 	"context"
 
-	"github.com/flowck/dobermann/backend/internal/domain/account"
+	"github.com/dobermanndotdev/dobermann/internal/domain/account"
 )
 
 type LogIn struct {

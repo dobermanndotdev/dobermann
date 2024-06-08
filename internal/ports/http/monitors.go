@@ -7,10 +7,10 @@ import (
 
 	"github.com/labstack/echo/v4"
 
-	"github.com/flowck/dobermann/backend/internal/app/command"
-	"github.com/flowck/dobermann/backend/internal/app/query"
-	"github.com/flowck/dobermann/backend/internal/domain"
-	"github.com/flowck/dobermann/backend/internal/domain/monitor"
+	"github.com/dobermanndotdev/dobermann/internal/app/command"
+	"github.com/dobermanndotdev/dobermann/internal/app/query"
+	"github.com/dobermanndotdev/dobermann/internal/domain"
+	"github.com/dobermanndotdev/dobermann/internal/domain/monitor"
 )
 
 func (h handlers) CreateMonitor(c echo.Context) error {

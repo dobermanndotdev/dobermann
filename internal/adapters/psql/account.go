@@ -6,7 +6,7 @@ import (
 
 	"github.com/volatiletech/sqlboiler/v4/boil"
 
-	"github.com/flowck/dobermann/backend/internal/domain/account"
+	"github.com/dobermanndotdev/dobermann/internal/domain/account"
 )
 
 func NewAccountRepository(db boil.ContextExecutor) AccountRepository {

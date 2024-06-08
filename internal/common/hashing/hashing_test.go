@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/flowck/dobermann/backend/internal/common/hashing"
+	"github.com/dobermanndotdev/dobermann/internal/common/hashing"
 )
 
 func TestHash(t *testing.T) {

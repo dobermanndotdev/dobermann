@@ -11,11 +11,11 @@ import (
 	"github.com/volatiletech/null/v8"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 
-	"github.com/flowck/dobermann/backend/internal/adapters/models"
-	"github.com/flowck/dobermann/backend/internal/app/query"
-	"github.com/flowck/dobermann/backend/internal/domain"
-	"github.com/flowck/dobermann/backend/internal/domain/monitor"
-	"github.com/flowck/dobermann/backend/tests"
+	"github.com/dobermanndotdev/dobermann/internal/adapters/models"
+	"github.com/dobermanndotdev/dobermann/internal/app/query"
+	"github.com/dobermanndotdev/dobermann/internal/domain"
+	"github.com/dobermanndotdev/dobermann/internal/domain/monitor"
+	"github.com/dobermanndotdev/dobermann/tests"
 )
 
 func TestMonitorRepository_Lifecycle(t *testing.T) {

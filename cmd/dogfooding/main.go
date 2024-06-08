@@ -13,8 +13,8 @@ import (
 
 	"github.com/labstack/echo/v4"
 
-	"github.com/flowck/dobermann/backend/internal/common/logs"
-	"github.com/flowck/dobermann/backend/tests/client"
+	"github.com/dobermanndotdev/dobermann/internal/common/logs"
+	"github.com/dobermanndotdev/dobermann/tests/client"
 )
 
 const (

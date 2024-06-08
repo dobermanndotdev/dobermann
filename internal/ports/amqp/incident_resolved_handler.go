@@ -3,10 +3,10 @@ package amqp
 import (
 	"github.com/ThreeDotsLabs/watermill/message"
 
-	"github.com/flowck/dobermann/backend/internal/adapters/events"
-	"github.com/flowck/dobermann/backend/internal/app"
-	"github.com/flowck/dobermann/backend/internal/app/command"
-	"github.com/flowck/dobermann/backend/internal/domain"
+	"github.com/dobermanndotdev/dobermann/internal/adapters/events"
+	"github.com/dobermanndotdev/dobermann/internal/app"
+	"github.com/dobermanndotdev/dobermann/internal/app/command"
+	"github.com/dobermanndotdev/dobermann/internal/domain"
 )
 
 type IncidentResolvedHandler struct {

@@ -6,7 +6,7 @@ import (
 
 	"golang.org/x/crypto/bcrypt"
 
-	"github.com/flowck/dobermann/backend/internal/common/hashing"
+	"github.com/dobermanndotdev/dobermann/internal/common/hashing"
 )
 
 type Password struct {

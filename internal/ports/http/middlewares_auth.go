@@ -11,8 +11,8 @@ import (
 	"github.com/labstack/echo/v4"
 	oapimiddleware "github.com/oapi-codegen/echo-middleware"
 
-	"github.com/flowck/dobermann/backend/internal/domain"
-	"github.com/flowck/dobermann/backend/internal/domain/account"
+	"github.com/dobermanndotdev/dobermann/internal/domain"
+	"github.com/dobermanndotdev/dobermann/internal/domain/account"
 )
 
 const ctxAuthenticatedUser = "authenticated_user"

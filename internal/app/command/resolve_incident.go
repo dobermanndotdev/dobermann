@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/flowck/dobermann/backend/internal/domain"
-	"github.com/flowck/dobermann/backend/internal/domain/monitor"
+	"github.com/dobermanndotdev/dobermann/internal/domain"
+	"github.com/dobermanndotdev/dobermann/internal/domain/monitor"
 )
 
 type ResolveIncident struct {

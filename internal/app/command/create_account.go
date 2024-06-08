@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/flowck/dobermann/backend/internal/domain/account"
+	"github.com/dobermanndotdev/dobermann/internal/domain/account"
 )
 
 type CreateAccount struct {

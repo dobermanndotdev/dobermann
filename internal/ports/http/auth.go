@@ -6,8 +6,8 @@ import (
 
 	"github.com/labstack/echo/v4"
 
-	"github.com/flowck/dobermann/backend/internal/app/command"
-	"github.com/flowck/dobermann/backend/internal/domain/account"
+	"github.com/dobermanndotdev/dobermann/internal/app/command"
+	"github.com/dobermanndotdev/dobermann/internal/domain/account"
 )
 
 func (h handlers) CreateAccount(c echo.Context) error {

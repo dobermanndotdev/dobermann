@@ -9,8 +9,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/flowck/dobermann/backend/tests"
-	"github.com/flowck/dobermann/backend/tests/client"
+	"github.com/dobermanndotdev/dobermann/tests"
+	"github.com/dobermanndotdev/dobermann/tests/client"
 )
 
 func TestAccessToProtectedEndpoints(t *testing.T) {

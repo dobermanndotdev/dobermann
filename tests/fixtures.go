@@ -12,11 +12,11 @@ import (
 	"github.com/volatiletech/null/v8"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 
-	"github.com/flowck/dobermann/backend/internal/adapters/models"
-	"github.com/flowck/dobermann/backend/internal/common/ptr"
-	"github.com/flowck/dobermann/backend/internal/domain"
-	"github.com/flowck/dobermann/backend/internal/domain/account"
-	"github.com/flowck/dobermann/backend/internal/domain/monitor"
+	"github.com/dobermanndotdev/dobermann/internal/adapters/models"
+	"github.com/dobermanndotdev/dobermann/internal/common/ptr"
+	"github.com/dobermanndotdev/dobermann/internal/domain"
+	"github.com/dobermanndotdev/dobermann/internal/domain/account"
+	"github.com/dobermanndotdev/dobermann/internal/domain/monitor"
 )
 
 const (

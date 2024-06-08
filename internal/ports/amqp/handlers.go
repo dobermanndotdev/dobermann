@@ -3,7 +3,7 @@ package amqp
 import (
 	"github.com/ThreeDotsLabs/watermill/message"
 
-	"github.com/flowck/dobermann/backend/internal/app"
+	"github.com/dobermanndotdev/dobermann/internal/app"
 )
 
 type Handler interface {

@@ -5,7 +5,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/flowck/dobermann/backend/internal/domain"
+	"github.com/dobermanndotdev/dobermann/internal/domain"
 )
 
 type Account struct {

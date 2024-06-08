@@ -7,10 +7,10 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/flowck/dobermann/backend/internal/app/query"
-	"github.com/flowck/dobermann/backend/internal/domain"
-	"github.com/flowck/dobermann/backend/internal/domain/monitor"
-	"github.com/flowck/dobermann/backend/tests"
+	"github.com/dobermanndotdev/dobermann/internal/app/query"
+	"github.com/dobermanndotdev/dobermann/internal/domain"
+	"github.com/dobermanndotdev/dobermann/internal/domain/monitor"
+	"github.com/dobermanndotdev/dobermann/tests"
 )
 
 func TestIncidentRepository_Lifecycle(t *testing.T) {

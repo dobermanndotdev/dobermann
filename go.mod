@@ -1,6 +1,6 @@
-module github.com/flowck/dobermann/backend
+module github.com/dobermanndotdev/dobermann
 
-go 1.21
+go 1.22.0
 
 require (
 	github.com/ThreeDotsLabs/watermill v1.3.5

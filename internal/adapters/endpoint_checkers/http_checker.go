@@ -7,10 +7,10 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/flowck/dobermann/backend/internal/common/logs"
-	"github.com/flowck/dobermann/backend/internal/common/ptr"
-	"github.com/flowck/dobermann/backend/internal/domain"
-	"github.com/flowck/dobermann/backend/internal/domain/monitor"
+	"github.com/dobermanndotdev/dobermann/internal/common/logs"
+	"github.com/dobermanndotdev/dobermann/internal/common/ptr"
+	"github.com/dobermanndotdev/dobermann/internal/domain"
+	"github.com/dobermanndotdev/dobermann/internal/domain/monitor"
 )
 
 var userAgents = []string{

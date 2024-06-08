@@ -3,9 +3,9 @@ package transaction
 import (
 	"context"
 
-	"github.com/flowck/dobermann/backend/internal/adapters/events"
-	"github.com/flowck/dobermann/backend/internal/adapters/psql"
-	"github.com/flowck/dobermann/backend/internal/app/command"
+	"github.com/dobermanndotdev/dobermann/internal/adapters/events"
+	"github.com/dobermanndotdev/dobermann/internal/adapters/psql"
+	"github.com/dobermanndotdev/dobermann/internal/app/command"
 )
 
 type PsqlProviderMock struct {

@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/flowck/dobermann/backend/internal/common/auth"
+	"github.com/dobermanndotdev/dobermann/internal/common/auth"
 )
 
 func TestTokenSigner(t *testing.T) {

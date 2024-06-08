@@ -3,10 +3,10 @@ package resend
 import (
 	"context"
 
-	"github.com/flowck/dobermann/backend/internal/common/logs"
-	"github.com/flowck/dobermann/backend/internal/domain"
-	"github.com/flowck/dobermann/backend/internal/domain/account"
-	"github.com/flowck/dobermann/backend/internal/domain/monitor"
+	"github.com/dobermanndotdev/dobermann/internal/common/logs"
+	"github.com/dobermanndotdev/dobermann/internal/domain"
+	"github.com/dobermanndotdev/dobermann/internal/domain/account"
+	"github.com/dobermanndotdev/dobermann/internal/domain/monitor"
 )
 
 type serviceMock struct {

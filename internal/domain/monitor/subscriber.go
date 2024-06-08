@@ -3,7 +3,7 @@ package monitor
 import (
 	"errors"
 
-	"github.com/flowck/dobermann/backend/internal/domain"
+	"github.com/dobermanndotdev/dobermann/internal/domain"
 )
 
 type Subscriber struct {

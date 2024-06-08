@@ -6,9 +6,9 @@ import (
 
 	resendsdk "github.com/resendlabs/resend-go/v2"
 
-	"github.com/flowck/dobermann/backend/internal/domain"
-	"github.com/flowck/dobermann/backend/internal/domain/account"
-	"github.com/flowck/dobermann/backend/internal/domain/monitor"
+	"github.com/dobermanndotdev/dobermann/internal/domain"
+	"github.com/dobermanndotdev/dobermann/internal/domain/account"
+	"github.com/dobermanndotdev/dobermann/internal/domain/monitor"
 )
 
 // Service This interface is needed to allow the initialisation of either the concrete struct service or a mock
