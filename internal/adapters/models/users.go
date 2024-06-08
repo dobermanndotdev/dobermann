@@ -24,79 +24,79 @@ import (
 
 // User is an object representing the database table.
 type User struct {
-	ID        string      `boil:"id" json:"id" toml:"id" yaml:"id"`
-	FirstName null.String `boil:"first_name" json:"first_name,omitempty" toml:"first_name" yaml:"first_name,omitempty"`
-	LastName  null.String `boil:"last_name" json:"last_name,omitempty" toml:"last_name" yaml:"last_name,omitempty"`
-	Email     string      `boil:"email" json:"email" toml:"email" yaml:"email"`
-	Password  string      `boil:"password" json:"password" toml:"password" yaml:"password"`
-	Role      string      `boil:"role" json:"role" toml:"role" yaml:"role"`
-	AccountID string      `boil:"account_id" json:"account_id" toml:"account_id" yaml:"account_id"`
-	CreatedAt time.Time   `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
+	ID              string      `boil:"id" json:"id" toml:"id" yaml:"id"`
+	FirstName       null.String `boil:"first_name" json:"first_name,omitempty" toml:"first_name" yaml:"first_name,omitempty"`
+	LastName        null.String `boil:"last_name" json:"last_name,omitempty" toml:"last_name" yaml:"last_name,omitempty"`
+	Email           string      `boil:"email" json:"email" toml:"email" yaml:"email"`
+	LoginProviderID string      `boil:"login_provider_id" json:"login_provider_id" toml:"login_provider_id" yaml:"login_provider_id"`
+	Role            string      `boil:"role" json:"role" toml:"role" yaml:"role"`
+	AccountID       string      `boil:"account_id" json:"account_id" toml:"account_id" yaml:"account_id"`
+	CreatedAt       time.Time   `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
 
 	R *userR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L userL  `boil:"-" json:"-" toml:"-" yaml:"-"`
 }
 
 var UserColumns = struct {
-	ID        string
-	FirstName string
-	LastName  string
-	Email     string
-	Password  string
-	Role      string
-	AccountID string
-	CreatedAt string
+	ID              string
+	FirstName       string
+	LastName        string
+	Email           string
+	LoginProviderID string
+	Role            string
+	AccountID       string
+	CreatedAt       string
 }{
-	ID:        "id",
-	FirstName: "first_name",
-	LastName:  "last_name",
-	Email:     "email",
-	Password:  "password",
-	Role:      "role",
-	AccountID: "account_id",
-	CreatedAt: "created_at",
+	ID:              "id",
+	FirstName:       "first_name",
+	LastName:        "last_name",
+	Email:           "email",
+	LoginProviderID: "login_provider_id",
+	Role:            "role",
+	AccountID:       "account_id",
+	CreatedAt:       "created_at",
 }
 
 var UserTableColumns = struct {
-	ID        string
-	FirstName string
-	LastName  string
-	Email     string
-	Password  string
-	Role      string
-	AccountID string
-	CreatedAt string
+	ID              string
+	FirstName       string
+	LastName        string
+	Email           string
+	LoginProviderID string
+	Role            string
+	AccountID       string
+	CreatedAt       string
 }{
-	ID:        "users.id",
-	FirstName: "users.first_name",
-	LastName:  "users.last_name",
-	Email:     "users.email",
-	Password:  "users.password",
-	Role:      "users.role",
-	AccountID: "users.account_id",
-	CreatedAt: "users.created_at",
+	ID:              "users.id",
+	FirstName:       "users.first_name",
+	LastName:        "users.last_name",
+	Email:           "users.email",
+	LoginProviderID: "users.login_provider_id",
+	Role:            "users.role",
+	AccountID:       "users.account_id",
+	CreatedAt:       "users.created_at",
 }
 
 // Generated where
 
 var UserWhere = struct {
-	ID        whereHelperstring
-	FirstName whereHelpernull_String
-	LastName  whereHelpernull_String
-	Email     whereHelperstring
-	Password  whereHelperstring
-	Role      whereHelperstring
-	AccountID whereHelperstring
-	CreatedAt whereHelpertime_Time
+	ID              whereHelperstring
+	FirstName       whereHelpernull_String
+	LastName        whereHelpernull_String
+	Email           whereHelperstring
+	LoginProviderID whereHelperstring
+	Role            whereHelperstring
+	AccountID       whereHelperstring
+	CreatedAt       whereHelpertime_Time
 }{
-	ID:        whereHelperstring{field: "\"users\".\"id\""},
-	FirstName: whereHelpernull_String{field: "\"users\".\"first_name\""},
-	LastName:  whereHelpernull_String{field: "\"users\".\"last_name\""},
-	Email:     whereHelperstring{field: "\"users\".\"email\""},
-	Password:  whereHelperstring{field: "\"users\".\"password\""},
-	Role:      whereHelperstring{field: "\"users\".\"role\""},
-	AccountID: whereHelperstring{field: "\"users\".\"account_id\""},
-	CreatedAt: whereHelpertime_Time{field: "\"users\".\"created_at\""},
+	ID:              whereHelperstring{field: "\"users\".\"id\""},
+	FirstName:       whereHelpernull_String{field: "\"users\".\"first_name\""},
+	LastName:        whereHelpernull_String{field: "\"users\".\"last_name\""},
+	Email:           whereHelperstring{field: "\"users\".\"email\""},
+	LoginProviderID: whereHelperstring{field: "\"users\".\"login_provider_id\""},
+	Role:            whereHelperstring{field: "\"users\".\"role\""},
+	AccountID:       whereHelperstring{field: "\"users\".\"account_id\""},
+	CreatedAt:       whereHelpertime_Time{field: "\"users\".\"created_at\""},
 }
 
 // UserRels is where relationship names are stored.
@@ -147,8 +147,8 @@ func (r *userR) GetMonitors() MonitorSlice {
 type userL struct{}
 
 var (
-	userAllColumns            = []string{"id", "first_name", "last_name", "email", "password", "role", "account_id", "created_at"}
-	userColumnsWithoutDefault = []string{"id", "email", "password", "account_id"}
+	userAllColumns            = []string{"id", "first_name", "last_name", "email", "login_provider_id", "role", "account_id", "created_at"}
+	userColumnsWithoutDefault = []string{"id", "email", "login_provider_id", "account_id"}
 	userColumnsWithDefault    = []string{"first_name", "last_name", "role", "created_at"}
 	userPrimaryKeyColumns     = []string{"id"}
 	userGeneratedColumns      = []string{}

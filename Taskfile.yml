@@ -3,6 +3,7 @@ version: 3
 dotenv:
   - ./.env.local
   - ./.env
+  - ./.env.secrets
 
 tasks:
   service:
@@ -22,6 +23,10 @@ tasks:
       - |
         reflex -r '\.go' -s -- sh -c '{{.CLI_ARGS}}'
 
+  webhook:
+    cmds:
+      - ngrok http --domain=$NGROK_URL 8080
+
   mig:up:
     cmds:
       - goose -s -dir ./misc/sql/migrations up
@@ -29,6 +34,10 @@ tasks:
   mig:down:
     cmds:
       - goose -s -dir ./misc/sql/migrations down
+
+  mig:reset:
+    cmds:
+      - goose -s -dir ./misc/sql/migrations reset
 
   mig:create:
     cmds:
@@ -48,7 +57,7 @@ tasks:
 
   orm:
     cmds:
-      - task mig:down
+      - task mig:reset
       - task mig:up
       - sqlboiler psql --wipe --no-tests -o ./internal/adapters/models
 

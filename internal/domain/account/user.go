@@ -6,78 +6,40 @@ import (
 
 	"errors"
 
-	"github.com/dobermanndotdev/dobermann/internal/common/hashing"
 	"github.com/dobermanndotdev/dobermann/internal/domain"
 )
 
 type User struct {
-	id                domain.ID
-	firstName         string
-	lastName          string
-	email             Email
-	password          Password
-	role              Role
-	verificationToken *domain.ID
-	verifiedAt        *time.Time
-	accountID         domain.ID
-	createdAt         time.Time
+	id              domain.ID
+	loginProviderID string
+	email           Email
+	role            Role
+	accountID       domain.ID
+	createdAt       time.Time
 }
 
 func NewUser(
-	id domain.ID,
-	firstName,
-	lastName string,
-	email Email,
 	role Role,
-	password Password,
+	email Email,
+	loginProviderID string,
 	accountID domain.ID,
-	createdAt time.Time,
 ) (*User, error) {
-	firstName = strings.TrimSpace(firstName)
-	lastName = strings.TrimSpace(lastName)
-
-	if id.IsEmpty() {
-		return nil, errors.New("id cannot be invalid")
-	}
-
-	if email.IsEmpty() {
-		return nil, errors.New("email cannot be invalid")
-	}
-
-	if password.IsEmpty() {
-		return nil, errors.New("password cannot be invalid")
-	}
-
 	if role.IsEmpty() {
 		return nil, errors.New("role cannot be invalid")
 	}
 
-	if time.Now().Before(createdAt) {
-		return nil, errors.New("createdAt cannot be set in the future")
+	if strings.TrimSpace(loginProviderID) == "" {
+		return nil, errors.New("loginProviderID cannot be empty")
 	}
 
 	return &User{
-		id:        id,
-		firstName: firstName,
-		lastName:  lastName,
-		email:     email,
-		password:  password,
-		role:      role,
-		accountID: accountID,
-		createdAt: createdAt.UTC(),
+		id:              domain.NewID(),
+		role:            role,
+		email:           email,
+		accountID:       accountID,
+		createdAt:       time.Now().UTC(),
+		loginProviderID: loginProviderID,
 	}, nil
-}
-
-func (u *User) Password() Password {
-	return u.password
-}
-
-func (u *User) VerificationToken() *domain.ID {
-	return u.verificationToken
-}
-
-func (u *User) VerifiedAt() *time.Time {
-	return u.verifiedAt
 }
 
 func (u *User) CreatedAt() time.Time {
@@ -88,18 +50,6 @@ func (u *User) ID() domain.ID {
 	return u.id
 }
 
-func (u *User) FirstName() string {
-	return u.firstName
-}
-
-func (u *User) LastName() string {
-	return u.lastName
-}
-
-func (u *User) Email() Email {
-	return u.email
-}
-
 func (u *User) Role() Role {
 	return u.role
 }
@@ -108,11 +58,10 @@ func (u *User) AccountID() domain.ID {
 	return u.accountID
 }
 
-func (u *User) Authenticate(plainTextPassword string) error {
-	err := hashing.Compare(plainTextPassword, u.password.hash)
-	if err != nil {
-		return ErrAuthenticationFailed
-	}
+func (u *User) Email() Email {
+	return u.email
+}
 
-	return nil
+func (u *User) LoginProviderID() string {
+	return u.loginProviderID
 }

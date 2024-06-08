@@ -5,7 +5,6 @@ import (
 
 	"github.com/dobermanndotdev/dobermann/internal/app/query"
 	"github.com/dobermanndotdev/dobermann/internal/domain"
-	"github.com/dobermanndotdev/dobermann/internal/domain/account"
 	"github.com/dobermanndotdev/dobermann/internal/domain/monitor"
 )
 
@@ -106,15 +105,4 @@ func mapMonitorResponseTimeStatsToResponse(stats []query.ResponseTimeStat) GetMo
 	return GetMonitorResponseTimeStatsPayload{
 		Data: result,
 	}
-}
-
-func mapUserToResponse(user *account.User) GetProfileDetailsPayload {
-	return GetProfileDetailsPayload{Data: User{
-		Id:        user.ID().String(),
-		Email:     user.Email().Address(),
-		FirstName: user.FirstName(),
-		LastName:  user.LastName(),
-		Role:      user.Role().String(),
-		CreatedAt: user.CreatedAt(),
-	}}
 }

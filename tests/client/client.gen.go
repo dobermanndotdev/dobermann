@@ -25,23 +25,107 @@ const (
 	BearerAuthScopes = "BearerAuth.Scopes"
 )
 
-// BulkInviteMembersByEmail defines model for BulkInviteMembersByEmail.
-type BulkInviteMembersByEmail struct {
-	Emails []string `json:"emails"`
-}
-
-// ConfirmInvitationRequest defines model for ConfirmInvitationRequest.
-type ConfirmInvitationRequest struct {
-	Email           string `json:"email"`
-	InvitationToken string `json:"invitation_token"`
-	Password        string `json:"password"`
-}
-
 // CreateAccountRequest defines model for CreateAccountRequest.
 type CreateAccountRequest struct {
-	AccountName string `json:"account_name"`
-	Email       string `json:"email"`
-	Password    string `json:"password"`
+	Data *struct {
+		// Birthday User's birthday (empty string if not set)
+		Birthday *string `json:"birthday,omitempty"`
+
+		// CreatedAt Timestamp (epoch milliseconds) representing user creation time
+		CreatedAt      *int `json:"created_at,omitempty"`
+		EmailAddresses *[]struct {
+			// EmailAddress User's email address
+			EmailAddress *string `json:"email_address,omitempty"`
+
+			// Id Unique identifier for the email address
+			Id *string `json:"id,omitempty"`
+
+			// LinkedTo (Array is empty for this event)
+			LinkedTo *[]map[string]interface{} `json:"linked_to,omitempty"`
+
+			// Object Object type (always "email_address" for this event)
+			Object       *string `json:"object,omitempty"`
+			Verification *struct {
+				// Status Verification status (e.g., "verified", "unverified")
+				Status *string `json:"status,omitempty"`
+
+				// Strategy Verification strategy (e.g., "ticket", "link")
+				Strategy *string `json:"strategy,omitempty"`
+			} `json:"verification,omitempty"`
+		} `json:"email_addresses,omitempty"`
+
+		// ExternalAccounts (Array is empty for this event)
+		ExternalAccounts *[]map[string]interface{} `json:"external_accounts,omitempty"`
+
+		// ExternalId User's external identifier
+		ExternalId *string `json:"external_id"`
+
+		// FirstName User's first name
+		FirstName *string `json:"first_name"`
+
+		// Gender User's gender (empty string if not set)
+		Gender *string `json:"gender,omitempty"`
+
+		// Id Unique identifier for the user
+		Id string `json:"id"`
+
+		// ImageUrl User's image URL (may be redacted)
+		ImageUrl *string `json:"image_url,omitempty"`
+
+		// LastName User's last name
+		LastName *string `json:"last_name"`
+
+		// LastSignInAt Timestamp (epoch milliseconds) representing last sign-in time
+		LastSignInAt *int `json:"last_sign_in_at"`
+
+		// Object Object type (always "user" for this event)
+		Object *string `json:"object,omitempty"`
+
+		// PasswordEnabled Whether the user has password authentication enabled
+		PasswordEnabled bool `json:"password_enabled"`
+
+		// PhoneNumbers (Array is empty for this event)
+		PhoneNumbers *[]map[string]interface{} `json:"phone_numbers,omitempty"`
+
+		// PrimaryEmailAddressId Unique identifier for the primary email address
+		PrimaryEmailAddressId *string `json:"primary_email_address_id"`
+
+		// PrimaryPhoneNumberId Unique identifier for the primary phone number (null if not set)
+		PrimaryPhoneNumberId *string `json:"primary_phone_number_id"`
+
+		// PrimaryWeb3WalletId Unique identifier for the primary web3 wallet (null if not set)
+		PrimaryWeb3WalletId *string `json:"primary_web3_wallet_id"`
+
+		// PrivateMetadata User's private metadata (empty object for this event)
+		PrivateMetadata *map[string]interface{} `json:"private_metadata,omitempty"`
+
+		// ProfileImageUrl User's profile image URL (may be redacted)
+		ProfileImageUrl *string `json:"profile_image_url,omitempty"`
+
+		// PublicMetadata User's public metadata (empty object for this event)
+		PublicMetadata *map[string]interface{} `json:"public_metadata,omitempty"`
+
+		// TwoFactorEnabled Whether two-factor authentication is enabled
+		TwoFactorEnabled bool `json:"two_factor_enabled"`
+
+		// UnsafeMetadata User's unsafe metadata (empty object for this event)
+		UnsafeMetadata *map[string]interface{} `json:"unsafe_metadata,omitempty"`
+
+		// UpdatedAt Timestamp (epoch milliseconds) representing user update time
+		UpdatedAt *int `json:"updated_at,omitempty"`
+
+		// Username Username (null if not set)
+		Username *string `json:"username"`
+
+		// Web3Wallets (Array is empty for this event)
+		Web3Wallets *[]map[string]interface{} `json:"web3_wallets,omitempty"`
+	} `json:"data,omitempty"`
+
+	// Object Event type (always "user.created" for this event)
+	Object *string `json:"object,omitempty"`
+
+	// Type Event type (always "user.created" for this event)
+	Type *string `json:"type,omitempty"`
 }
 
 // CreateMonitorRequest defines model for CreateMonitorRequest.
@@ -109,11 +193,6 @@ type GetMonitorResponseTimeStatsPayload struct {
 	Data []ResponseTimeStat `json:"data"`
 }
 
-// GetProfileDetailsPayload defines model for GetProfileDetailsPayload.
-type GetProfileDetailsPayload struct {
-	Data User `json:"data"`
-}
-
 // Incident defines model for Incident.
 type Incident struct {
 	Cause      string     `json:"cause"`
@@ -121,17 +200,6 @@ type Incident struct {
 	CreatedAt  time.Time  `json:"created_at"`
 	Id         string     `json:"id"`
 	ResolvedAt *time.Time `json:"resolved_at,omitempty"`
-}
-
-// LogInPayload defines model for LogInPayload.
-type LogInPayload struct {
-	Token string `json:"token"`
-}
-
-// LogInRequest defines model for LogInRequest.
-type LogInRequest struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
 }
 
 // Monitor defines model for Monitor.
@@ -160,16 +228,6 @@ type ToggleMonitorPauseRequest struct {
 	Pause bool `json:"pause"`
 }
 
-// User defines model for User.
-type User struct {
-	CreatedAt time.Time `json:"created_at"`
-	Email     string    `json:"email"`
-	FirstName string    `json:"first_name"`
-	Id        string    `json:"id"`
-	LastName  string    `json:"last_name"`
-	Role      string    `json:"role"`
-}
-
 // DefaultError defines model for DefaultError.
 type DefaultError = ErrorResponse
 
@@ -190,18 +248,6 @@ type GetMonitorResponseTimeStatsParams struct {
 	RangeInDays *int `form:"range_in_days,omitempty" json:"range_in_days,omitempty"`
 }
 
-// BulkInviteMembersByEmailJSONRequestBody defines body for BulkInviteMembersByEmail for application/json ContentType.
-type BulkInviteMembersByEmailJSONRequestBody = BulkInviteMembersByEmail
-
-// CreateAccountJSONRequestBody defines body for CreateAccount for application/json ContentType.
-type CreateAccountJSONRequestBody = CreateAccountRequest
-
-// ConfirmInvitationJSONRequestBody defines body for ConfirmInvitation for application/json ContentType.
-type ConfirmInvitationJSONRequestBody = ConfirmInvitationRequest
-
-// LoginJSONRequestBody defines body for Login for application/json ContentType.
-type LoginJSONRequestBody = LogInRequest
-
 // CreateMonitorJSONRequestBody defines body for CreateMonitor for application/json ContentType.
 type CreateMonitorJSONRequestBody = CreateMonitorRequest
 
@@ -210,6 +256,9 @@ type ToggleMonitorPauseJSONRequestBody = ToggleMonitorPauseRequest
 
 // EditMonitorJSONRequestBody defines body for EditMonitor for application/json ContentType.
 type EditMonitorJSONRequestBody = EditMonitorRequest
+
+// CreateAccountJSONRequestBody defines body for CreateAccount for application/json ContentType.
+type CreateAccountJSONRequestBody = CreateAccountRequest
 
 // RequestEditorFn  is the function signature for the RequestEditor callback function
 type RequestEditorFn func(ctx context.Context, req *http.Request) error
@@ -284,29 +333,6 @@ func WithRequestEditorFn(fn RequestEditorFn) ClientOption {
 
 // The interface specification for the client above.
 type ClientInterface interface {
-	// BulkInviteMembersByEmailWithBody request with any body
-	BulkInviteMembersByEmailWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	BulkInviteMembersByEmail(ctx context.Context, body BulkInviteMembersByEmailJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	// GetProfileDetails request
-	GetProfileDetails(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	// CreateAccountWithBody request with any body
-	CreateAccountWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	CreateAccount(ctx context.Context, body CreateAccountJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	// ConfirmInvitationWithBody request with any body
-	ConfirmInvitationWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	ConfirmInvitation(ctx context.Context, body ConfirmInvitationJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	// LoginWithBody request with any body
-	LoginWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	Login(ctx context.Context, body LoginJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
-
 	// GetAllIncidents request
 	GetAllIncidents(ctx context.Context, params *GetAllIncidentsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -339,114 +365,11 @@ type ClientInterface interface {
 
 	// GetMonitorResponseTimeStats request
 	GetMonitorResponseTimeStats(ctx context.Context, monitorID string, params *GetMonitorResponseTimeStatsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
-}
 
-func (c *Client) BulkInviteMembersByEmailWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewBulkInviteMembersByEmailRequestWithBody(c.Server, contentType, body)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
+	// CreateAccountWithBody request with any body
+	CreateAccountWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-func (c *Client) BulkInviteMembersByEmail(ctx context.Context, body BulkInviteMembersByEmailJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewBulkInviteMembersByEmailRequest(c.Server, body)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) GetProfileDetails(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetProfileDetailsRequest(c.Server)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) CreateAccountWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewCreateAccountRequestWithBody(c.Server, contentType, body)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) CreateAccount(ctx context.Context, body CreateAccountJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewCreateAccountRequest(c.Server, body)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) ConfirmInvitationWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewConfirmInvitationRequestWithBody(c.Server, contentType, body)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) ConfirmInvitation(ctx context.Context, body ConfirmInvitationJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewConfirmInvitationRequest(c.Server, body)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) LoginWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewLoginRequestWithBody(c.Server, contentType, body)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) Login(ctx context.Context, body LoginJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewLoginRequest(c.Server, body)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
+	CreateAccount(ctx context.Context, body CreateAccountJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 }
 
 func (c *Client) GetAllIncidents(ctx context.Context, params *GetAllIncidentsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
@@ -593,191 +516,28 @@ func (c *Client) GetMonitorResponseTimeStats(ctx context.Context, monitorID stri
 	return c.Client.Do(req)
 }
 
-// NewBulkInviteMembersByEmailRequest calls the generic BulkInviteMembersByEmail builder with application/json body
-func NewBulkInviteMembersByEmailRequest(server string, body BulkInviteMembersByEmailJSONRequestBody) (*http.Request, error) {
-	var bodyReader io.Reader
-	buf, err := json.Marshal(body)
+func (c *Client) CreateAccountWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateAccountRequestWithBody(c.Server, contentType, body)
 	if err != nil {
 		return nil, err
 	}
-	bodyReader = bytes.NewReader(buf)
-	return NewBulkInviteMembersByEmailRequestWithBody(server, "application/json", bodyReader)
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
 }
 
-// NewBulkInviteMembersByEmailRequestWithBody generates requests for BulkInviteMembersByEmail with any type of body
-func NewBulkInviteMembersByEmailRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
-	var err error
-
-	serverURL, err := url.Parse(server)
+func (c *Client) CreateAccount(ctx context.Context, body CreateAccountJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateAccountRequest(c.Server, body)
 	if err != nil {
 		return nil, err
 	}
-
-	operationPath := fmt.Sprintf("/accounts/members/invite")
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
 		return nil, err
 	}
-
-	req, err := http.NewRequest("POST", queryURL.String(), body)
-	if err != nil {
-		return nil, err
-	}
-
-	req.Header.Add("Content-Type", contentType)
-
-	return req, nil
-}
-
-// NewGetProfileDetailsRequest generates requests for GetProfileDetails
-func NewGetProfileDetailsRequest(server string) (*http.Request, error) {
-	var err error
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/accounts/profile")
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := http.NewRequest("GET", queryURL.String(), nil)
-	if err != nil {
-		return nil, err
-	}
-
-	return req, nil
-}
-
-// NewCreateAccountRequest calls the generic CreateAccount builder with application/json body
-func NewCreateAccountRequest(server string, body CreateAccountJSONRequestBody) (*http.Request, error) {
-	var bodyReader io.Reader
-	buf, err := json.Marshal(body)
-	if err != nil {
-		return nil, err
-	}
-	bodyReader = bytes.NewReader(buf)
-	return NewCreateAccountRequestWithBody(server, "application/json", bodyReader)
-}
-
-// NewCreateAccountRequestWithBody generates requests for CreateAccount with any type of body
-func NewCreateAccountRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
-	var err error
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/auth/accounts")
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := http.NewRequest("POST", queryURL.String(), body)
-	if err != nil {
-		return nil, err
-	}
-
-	req.Header.Add("Content-Type", contentType)
-
-	return req, nil
-}
-
-// NewConfirmInvitationRequest calls the generic ConfirmInvitation builder with application/json body
-func NewConfirmInvitationRequest(server string, body ConfirmInvitationJSONRequestBody) (*http.Request, error) {
-	var bodyReader io.Reader
-	buf, err := json.Marshal(body)
-	if err != nil {
-		return nil, err
-	}
-	bodyReader = bytes.NewReader(buf)
-	return NewConfirmInvitationRequestWithBody(server, "application/json", bodyReader)
-}
-
-// NewConfirmInvitationRequestWithBody generates requests for ConfirmInvitation with any type of body
-func NewConfirmInvitationRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
-	var err error
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/auth/accounts/confirm-invitation")
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := http.NewRequest("POST", queryURL.String(), body)
-	if err != nil {
-		return nil, err
-	}
-
-	req.Header.Add("Content-Type", contentType)
-
-	return req, nil
-}
-
-// NewLoginRequest calls the generic Login builder with application/json body
-func NewLoginRequest(server string, body LoginJSONRequestBody) (*http.Request, error) {
-	var bodyReader io.Reader
-	buf, err := json.Marshal(body)
-	if err != nil {
-		return nil, err
-	}
-	bodyReader = bytes.NewReader(buf)
-	return NewLoginRequestWithBody(server, "application/json", bodyReader)
-}
-
-// NewLoginRequestWithBody generates requests for Login with any type of body
-func NewLoginRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
-	var err error
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/auth/login")
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := http.NewRequest("POST", queryURL.String(), body)
-	if err != nil {
-		return nil, err
-	}
-
-	req.Header.Add("Content-Type", contentType)
-
-	return req, nil
+	return c.Client.Do(req)
 }
 
 // NewGetAllIncidentsRequest generates requests for GetAllIncidents
@@ -1202,6 +962,46 @@ func NewGetMonitorResponseTimeStatsRequest(server string, monitorID string, para
 	return req, nil
 }
 
+// NewCreateAccountRequest calls the generic CreateAccount builder with application/json body
+func NewCreateAccountRequest(server string, body CreateAccountJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewCreateAccountRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewCreateAccountRequestWithBody generates requests for CreateAccount with any type of body
+func NewCreateAccountRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/webhooks/create-account")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
 func (c *Client) applyEditors(ctx context.Context, req *http.Request, additionalEditors []RequestEditorFn) error {
 	for _, r := range c.RequestEditors {
 		if err := r(ctx, req); err != nil {
@@ -1245,29 +1045,6 @@ func WithBaseURL(baseURL string) ClientOption {
 
 // ClientWithResponsesInterface is the interface specification for the client with responses above.
 type ClientWithResponsesInterface interface {
-	// BulkInviteMembersByEmailWithBodyWithResponse request with any body
-	BulkInviteMembersByEmailWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*BulkInviteMembersByEmailResponse, error)
-
-	BulkInviteMembersByEmailWithResponse(ctx context.Context, body BulkInviteMembersByEmailJSONRequestBody, reqEditors ...RequestEditorFn) (*BulkInviteMembersByEmailResponse, error)
-
-	// GetProfileDetailsWithResponse request
-	GetProfileDetailsWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetProfileDetailsResponse, error)
-
-	// CreateAccountWithBodyWithResponse request with any body
-	CreateAccountWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateAccountResponse, error)
-
-	CreateAccountWithResponse(ctx context.Context, body CreateAccountJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateAccountResponse, error)
-
-	// ConfirmInvitationWithBodyWithResponse request with any body
-	ConfirmInvitationWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*ConfirmInvitationResponse, error)
-
-	ConfirmInvitationWithResponse(ctx context.Context, body ConfirmInvitationJSONRequestBody, reqEditors ...RequestEditorFn) (*ConfirmInvitationResponse, error)
-
-	// LoginWithBodyWithResponse request with any body
-	LoginWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*LoginResponse, error)
-
-	LoginWithResponse(ctx context.Context, body LoginJSONRequestBody, reqEditors ...RequestEditorFn) (*LoginResponse, error)
-
 	// GetAllIncidentsWithResponse request
 	GetAllIncidentsWithResponse(ctx context.Context, params *GetAllIncidentsParams, reqEditors ...RequestEditorFn) (*GetAllIncidentsResponse, error)
 
@@ -1300,118 +1077,11 @@ type ClientWithResponsesInterface interface {
 
 	// GetMonitorResponseTimeStatsWithResponse request
 	GetMonitorResponseTimeStatsWithResponse(ctx context.Context, monitorID string, params *GetMonitorResponseTimeStatsParams, reqEditors ...RequestEditorFn) (*GetMonitorResponseTimeStatsResponse, error)
-}
 
-type BulkInviteMembersByEmailResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSONDefault  *DefaultError
-}
+	// CreateAccountWithBodyWithResponse request with any body
+	CreateAccountWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateAccountResponse, error)
 
-// Status returns HTTPResponse.Status
-func (r BulkInviteMembersByEmailResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r BulkInviteMembersByEmailResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-type GetProfileDetailsResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON200      *GetProfileDetailsPayload
-	JSONDefault  *DefaultError
-}
-
-// Status returns HTTPResponse.Status
-func (r GetProfileDetailsResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r GetProfileDetailsResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-type CreateAccountResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSONDefault  *DefaultError
-}
-
-// Status returns HTTPResponse.Status
-func (r CreateAccountResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r CreateAccountResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-type ConfirmInvitationResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSONDefault  *DefaultError
-}
-
-// Status returns HTTPResponse.Status
-func (r ConfirmInvitationResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r ConfirmInvitationResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-type LoginResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON200      *LogInPayload
-	JSONDefault  *DefaultError
-}
-
-// Status returns HTTPResponse.Status
-func (r LoginResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r LoginResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
+	CreateAccountWithResponse(ctx context.Context, body CreateAccountJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateAccountResponse, error)
 }
 
 type GetAllIncidentsResponse struct {
@@ -1617,81 +1287,26 @@ func (r GetMonitorResponseTimeStatsResponse) StatusCode() int {
 	return 0
 }
 
-// BulkInviteMembersByEmailWithBodyWithResponse request with arbitrary body returning *BulkInviteMembersByEmailResponse
-func (c *ClientWithResponses) BulkInviteMembersByEmailWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*BulkInviteMembersByEmailResponse, error) {
-	rsp, err := c.BulkInviteMembersByEmailWithBody(ctx, contentType, body, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseBulkInviteMembersByEmailResponse(rsp)
+type CreateAccountResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSONDefault  *DefaultError
 }
 
-func (c *ClientWithResponses) BulkInviteMembersByEmailWithResponse(ctx context.Context, body BulkInviteMembersByEmailJSONRequestBody, reqEditors ...RequestEditorFn) (*BulkInviteMembersByEmailResponse, error) {
-	rsp, err := c.BulkInviteMembersByEmail(ctx, body, reqEditors...)
-	if err != nil {
-		return nil, err
+// Status returns HTTPResponse.Status
+func (r CreateAccountResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
 	}
-	return ParseBulkInviteMembersByEmailResponse(rsp)
+	return http.StatusText(0)
 }
 
-// GetProfileDetailsWithResponse request returning *GetProfileDetailsResponse
-func (c *ClientWithResponses) GetProfileDetailsWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetProfileDetailsResponse, error) {
-	rsp, err := c.GetProfileDetails(ctx, reqEditors...)
-	if err != nil {
-		return nil, err
+// StatusCode returns HTTPResponse.StatusCode
+func (r CreateAccountResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
 	}
-	return ParseGetProfileDetailsResponse(rsp)
-}
-
-// CreateAccountWithBodyWithResponse request with arbitrary body returning *CreateAccountResponse
-func (c *ClientWithResponses) CreateAccountWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateAccountResponse, error) {
-	rsp, err := c.CreateAccountWithBody(ctx, contentType, body, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseCreateAccountResponse(rsp)
-}
-
-func (c *ClientWithResponses) CreateAccountWithResponse(ctx context.Context, body CreateAccountJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateAccountResponse, error) {
-	rsp, err := c.CreateAccount(ctx, body, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseCreateAccountResponse(rsp)
-}
-
-// ConfirmInvitationWithBodyWithResponse request with arbitrary body returning *ConfirmInvitationResponse
-func (c *ClientWithResponses) ConfirmInvitationWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*ConfirmInvitationResponse, error) {
-	rsp, err := c.ConfirmInvitationWithBody(ctx, contentType, body, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseConfirmInvitationResponse(rsp)
-}
-
-func (c *ClientWithResponses) ConfirmInvitationWithResponse(ctx context.Context, body ConfirmInvitationJSONRequestBody, reqEditors ...RequestEditorFn) (*ConfirmInvitationResponse, error) {
-	rsp, err := c.ConfirmInvitation(ctx, body, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseConfirmInvitationResponse(rsp)
-}
-
-// LoginWithBodyWithResponse request with arbitrary body returning *LoginResponse
-func (c *ClientWithResponses) LoginWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*LoginResponse, error) {
-	rsp, err := c.LoginWithBody(ctx, contentType, body, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseLoginResponse(rsp)
-}
-
-func (c *ClientWithResponses) LoginWithResponse(ctx context.Context, body LoginJSONRequestBody, reqEditors ...RequestEditorFn) (*LoginResponse, error) {
-	rsp, err := c.Login(ctx, body, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseLoginResponse(rsp)
+	return 0
 }
 
 // GetAllIncidentsWithResponse request returning *GetAllIncidentsResponse
@@ -1799,148 +1414,21 @@ func (c *ClientWithResponses) GetMonitorResponseTimeStatsWithResponse(ctx contex
 	return ParseGetMonitorResponseTimeStatsResponse(rsp)
 }
 
-// ParseBulkInviteMembersByEmailResponse parses an HTTP response from a BulkInviteMembersByEmailWithResponse call
-func ParseBulkInviteMembersByEmailResponse(rsp *http.Response) (*BulkInviteMembersByEmailResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
+// CreateAccountWithBodyWithResponse request with arbitrary body returning *CreateAccountResponse
+func (c *ClientWithResponses) CreateAccountWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateAccountResponse, error) {
+	rsp, err := c.CreateAccountWithBody(ctx, contentType, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-
-	response := &BulkInviteMembersByEmailResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
-		var dest DefaultError
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSONDefault = &dest
-
-	}
-
-	return response, nil
+	return ParseCreateAccountResponse(rsp)
 }
 
-// ParseGetProfileDetailsResponse parses an HTTP response from a GetProfileDetailsWithResponse call
-func ParseGetProfileDetailsResponse(rsp *http.Response) (*GetProfileDetailsResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
+func (c *ClientWithResponses) CreateAccountWithResponse(ctx context.Context, body CreateAccountJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateAccountResponse, error) {
+	rsp, err := c.CreateAccount(ctx, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-
-	response := &GetProfileDetailsResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest GetProfileDetailsPayload
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
-		var dest DefaultError
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSONDefault = &dest
-
-	}
-
-	return response, nil
-}
-
-// ParseCreateAccountResponse parses an HTTP response from a CreateAccountWithResponse call
-func ParseCreateAccountResponse(rsp *http.Response) (*CreateAccountResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &CreateAccountResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
-		var dest DefaultError
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSONDefault = &dest
-
-	}
-
-	return response, nil
-}
-
-// ParseConfirmInvitationResponse parses an HTTP response from a ConfirmInvitationWithResponse call
-func ParseConfirmInvitationResponse(rsp *http.Response) (*ConfirmInvitationResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &ConfirmInvitationResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
-		var dest DefaultError
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSONDefault = &dest
-
-	}
-
-	return response, nil
-}
-
-// ParseLoginResponse parses an HTTP response from a LoginWithResponse call
-func ParseLoginResponse(rsp *http.Response) (*LoginResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &LoginResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest LogInPayload
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
-		var dest DefaultError
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSONDefault = &dest
-
-	}
-
-	return response, nil
+	return ParseCreateAccountResponse(rsp)
 }
 
 // ParseGetAllIncidentsResponse parses an HTTP response from a GetAllIncidentsWithResponse call
@@ -2212,39 +1700,70 @@ func ParseGetMonitorResponseTimeStatsResponse(rsp *http.Response) (*GetMonitorRe
 	return response, nil
 }
 
+// ParseCreateAccountResponse parses an HTTP response from a CreateAccountWithResponse call
+func ParseCreateAccountResponse(rsp *http.Response) (*CreateAccountResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &CreateAccountResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest DefaultError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"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",
+	"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",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

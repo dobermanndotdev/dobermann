@@ -36,7 +36,6 @@ type Commands struct {
 
 	// IAM
 	CreateAccount CommandHandler[command.CreateAccount]
-	LogIn         CommandHandlerWithResult[command.LogIn, string]
 }
 
 type Queries struct {

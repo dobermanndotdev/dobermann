@@ -1,5 +1,3 @@
-version: '3.9'
-
 services:
   rabbitmq:
     image: heidiks/rabbitmq-delayed-message-exchange:3.9.13-management

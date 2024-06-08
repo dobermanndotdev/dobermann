@@ -2,8 +2,6 @@ package psql
 
 import (
 	"context"
-	"database/sql"
-	"errors"
 	"fmt"
 
 	"github.com/volatiletech/sqlboiler/v4/boil"
@@ -24,33 +22,17 @@ type UserRepository struct {
 }
 
 func (p UserRepository) FindByID(ctx context.Context, id domain.ID) (*account.User, error) {
-	model, err := models.FindUser(ctx, p.db, id.String())
-	if errors.Is(err, sql.ErrNoRows) {
-		return nil, account.ErrUserNotFound
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	return mapModelToUser(model)
+	panic("implement me")
 }
 
 func (p UserRepository) FindByEmail(ctx context.Context, email account.Email) (*account.User, error) {
-	model, err := models.Users(models.UserWhere.Email.EQ(email.Address())).One(ctx, p.db)
-	if errors.Is(err, sql.ErrNoRows) {
-		return nil, account.ErrUserNotFound
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	return mapModelToUser(model)
+	panic("implement me")
 }
 
 func (p UserRepository) Insert(ctx context.Context, user *account.User) error {
-	exists, err := models.Users(models.UserWhere.Email.EQ(user.Email().Address())).Exists(ctx, p.db)
+	exists, err := models.Users(
+		models.UserWhere.Email.EQ(user.Email().Address()),
+	).Exists(ctx, p.db)
 	if err != nil {
 		return fmt.Errorf("unable to check if %s is already taken: %v", user.Email(), err)
 	}

@@ -164,7 +164,6 @@ func main() {
 		Commands: app.Commands{
 			// Auth
 			CreateAccount: observability.NewCommandDecorator[command.CreateAccount](command.NewCreateAccountHandler(txProvider), logger),
-			LogIn:         observability.NewCommandWithResultDecorator[command.LogIn, string](command.NewLoginHandler(userRepository, tokenSigner), logger),
 
 			// Monitor
 			DeleteMonitor:                      observability.NewCommandDecorator[command.DeleteMonitor](command.NewDeleteMonitorHandler(txProvider), logger),
