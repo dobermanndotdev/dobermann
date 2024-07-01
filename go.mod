@@ -4,7 +4,7 @@ go 1.22.0
 
 require (
 	github.com/ThreeDotsLabs/watermill v1.3.5
-	github.com/ThreeDotsLabs/watermill-amqp/v2 v2.1.1
+	github.com/ThreeDotsLabs/watermill-amqp/v2 v2.1.2
 	github.com/brianvoe/gofakeit v3.18.0+incompatible
 	github.com/friendsofgo/errors v0.9.2
 	github.com/getkin/kin-openapi v0.125.0
